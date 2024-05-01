@@ -1,0 +1,39 @@
+<style>
+  .ladi-gallery-view-item {
+    cursor: pointer !important;
+  }
+</style>
+
+<script>
+  // Vanced Images LightBox FullScreen v1.0a
+  const Vx_LightBoxHolders = document.querySelector(".Vx_LightBoxHolder");
+  const Vx_LightBoxIms = Vx_LightBoxHolders.querySelectorAll(
+    ".ladi-gallery-view-item"
+  );
+
+  const Vx_PseudoIms = document.createElement("div");
+  Vx_PseudoIms.style = "display: none";
+  Vx_LightBoxHolders.appendChild(Vx_PseudoIms);
+
+  var AvenueGallery = null;
+
+  const AvenueOnClickFunc = () => {
+    //
+    for (let index = 0; index < Vx_LightBoxIms.length; index++) {
+      //
+      let PseudoImages = document.createElement("img");
+      PseudoImages.style = "display: none";
+      let style =
+        Vx_LightBoxIms[index].currentStyle ||
+        window.getComputedStyle(Vx_LightBoxIms[index], false);
+      PseudoImages.src = style.backgroundImage.slice(4, -1).replace(/"/g, "");
+      Vx_PseudoIms.appendChild(PseudoImages);
+    }
+    AvenueGallery = new Viewer(Vx_PseudoIms);
+    AvenueGallery.show();
+  };
+
+  for (let index = 0; index < Vx_LightBoxIms.length; index++) {
+    Vx_LightBoxIms[index].addEventListener("click", AvenueOnClickFunc);
+  }
+</script>
