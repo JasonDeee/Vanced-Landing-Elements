@@ -4,8 +4,8 @@
   width: 62vw;
   top: 0;
 }
-.ladi-gallery-view-item {
-  cursor: pointer !important;
+.Vx_LightBoxHolder .ladi-gallery-view-item {
+  cursor: zoom-in !important;
 }
 .Vx_HoverGarelly {
   .ladi-gallery-view-item {
@@ -15,8 +15,44 @@
     transform: scale(1.13) !important;
   }
 }
-.Vx_HoverGarelly::before,
-.Vx_HoverGarelly::after {
-  transition: all 1.33s cubic-bezier(0.25, 0, 0, 1) !important;
-  opacity: 0;
+.Vx_HoverGarelly {
+  .ladi-gallery-view::after,
+  .ladi-gallery-view::before {
+    transition: all 1.33s cubic-bezier(0.25, 0, 0, 1) !important;
+    opacity: 0;
+    display: block;
+    pointer-events: none;
+  }
+}
+
+.Vx_LightBoxHolder {
+  .ladi-gallery-view::before {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+  }
+}
+
+.Vx_LightBoxHolder {
+  .ladi-gallery-view::after {
+    background-image: url("http://package.vanced.media/Assets/Vx_ZoomInIconsvg.svg");
+    background-size: cover;
+    width: 256px;
+    height: 256px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+  }
+}
+
+.Vx_HoverGarelly:hover {
+  .ladi-gallery-view::after,
+  .ladi-gallery-view::before {
+    opacity: 1 !important;
+  }
 }
