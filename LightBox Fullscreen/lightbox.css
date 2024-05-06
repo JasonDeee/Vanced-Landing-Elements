@@ -4,4 +4,25 @@
   width: 62vw;
   top: 0;
 }
+
+.ladi-gallery-view-item {
+  cursor: pointer !important;
+}
+
+.Vx_HoverGarelly .ladi-gallery-view-item {
+  -webkit-transition: all 1.33s cubic-bezier(0.25, 0, 0, 1) !important;
+  transition: all 1.33s cubic-bezier(0.25, 0, 0, 1) !important;
+}
+
+.Vx_HoverGarelly .ladi-gallery-view-item:hover {
+  -webkit-transform: scale(1.13) !important;
+          transform: scale(1.13) !important;
+}
+
+.Vx_HoverGarelly::before,
+.Vx_HoverGarelly::after {
+  -webkit-transition: all 1.33s cubic-bezier(0.25, 0, 0, 1) !important;
+  transition: all 1.33s cubic-bezier(0.25, 0, 0, 1) !important;
+  opacity: 0;
+}
 /*# sourceMappingURL=lightbox.css.map */
