@@ -4,7 +4,7 @@
   width: 62vw;
   top: 0;
 }
-.Vx_LightBoxHolder .ladi-gallery-view-item {
+.Vx_LightBoxHolder .ladi-gallery-bottom-item {
   cursor: zoom-in !important;
 }
 .Vx_HoverGarelly {
@@ -16,43 +16,58 @@
   }
 }
 .Vx_HoverGarelly {
-  .ladi-gallery-view::after,
-  .ladi-gallery-view::before {
+  .ladi-gallery-bottom::after,
+  .ladi-gallery-view::after {
     transition: all 1.33s cubic-bezier(0.25, 0, 0, 1) !important;
     opacity: 0;
     display: block;
     pointer-events: none;
-  }
-}
-
-.Vx_LightBoxHolder {
-  .ladi-gallery-view::before {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
+    content: "";
   }
 }
 
 .Vx_LightBoxHolder {
   .ladi-gallery-view::after {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: #00000056;
+  }
+}
+
+.Vx_LightBoxHolder {
+  .ladi-gallery-bottom::after {
     background-image: url("http://package.vanced.media/Assets/Vx_ZoomInIconsvg.svg");
     background-size: cover;
-    width: 256px;
-    height: 256px;
+    width: 512px;
+    height: 512px;
     position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
     margin: auto;
+    transform: scale(1.23);
+  }
+}
+
+// Breakpoint cho Kích thước Icon Zoon-in
+
+@media screen and (max-width: 960px) {
+  .Vx_LightBoxHolder {
+    .ladi-gallery-bottom::after {
+      width: 256px;
+      height: 256px;
+    }
   }
 }
 
 .Vx_HoverGarelly:hover {
-  .ladi-gallery-view::after,
-  .ladi-gallery-view::before {
+  .ladi-gallery-bottom::after,
+  .ladi-gallery-view::after {
     opacity: 1 !important;
+    transform: scale(1);
   }
 }
