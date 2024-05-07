@@ -5,9 +5,13 @@
   top: 0;
 }
 
-.Vx_LightBoxHolder .ladi-gallery-bottom-item {
+.Vx_LightBoxHolder .ladi-gallery-bottom-item,
+.Vx_LightBoxHolder .ladi-frame-background,
+.Vx_LightBoxHolder .ladi-box,
+.Vx_LightBoxHolder .ladi-image .ladi-image-background {
   cursor: -webkit-zoom-in !important;
   cursor: zoom-in !important;
+  pointer-events: all;
 }
 
 .Vx_HoverGarelly .ladi-gallery-view-item {

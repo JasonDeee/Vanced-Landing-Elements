@@ -4,8 +4,14 @@
   width: 62vw;
   top: 0;
 }
-.Vx_LightBoxHolder .ladi-gallery-bottom-item {
-  cursor: zoom-in !important;
+.Vx_LightBoxHolder {
+  .ladi-gallery-bottom-item,
+  .ladi-frame-background,
+  .ladi-box,
+  .ladi-image .ladi-image-background {
+    cursor: zoom-in !important;
+    pointer-events: all;
+  }
 }
 .Vx_HoverGarelly {
   .ladi-gallery-view-item {
