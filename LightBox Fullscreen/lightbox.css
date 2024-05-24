@@ -58,6 +58,20 @@
           transform: scale(1.23);
 }
 
+.Vx_TabsTransition .ladi-tabs .ladi-element {
+  display: block !important;
+  -webkit-transition: all 1.33s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 1.33s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.Vx_TabsTransitionFade .ladi-tabs > .ladi-element {
+  opacity: 0 !important;
+}
+
+.Vx_TabsTransitionFade .ladi-tabs > .selected {
+  opacity: 1 !important;
+}
+
 @media screen and (max-width: 960px) {
   .Vx_LightBoxHolder .ladi-gallery-bottom::after {
     width: 256px;
