@@ -1,39 +1,36 @@
-<style>
-  .ladi-gallery-view-item {
-    cursor: pointer !important;
-  }
-</style>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <!-- https://package.vanced.media/ -->
+  </head>
+  <body></body>
 
-<script>
-  // Vanced Images LightBox FullScreen v1.0a
-  const Vx_LightBoxHolders = document.querySelector(".Vx_LightBoxHolder");
-  const Vx_LightBoxIms = Vx_LightBoxHolders.querySelectorAll(
-    ".ladi-gallery-view-item"
-  );
-
-  const Vx_PseudoIms = document.createElement("div");
-  Vx_PseudoIms.style = "display: none";
-  Vx_LightBoxHolders.appendChild(Vx_PseudoIms);
-
-  var AvenueGallery = null;
-
-  const AvenueOnClickFunc = () => {
-    //
-    for (let index = 0; index < Vx_LightBoxIms.length; index++) {
-      //
-      let PseudoImages = document.createElement("img");
-      PseudoImages.style = "display: none";
-      let style =
-        Vx_LightBoxIms[index].currentStyle ||
-        window.getComputedStyle(Vx_LightBoxIms[index], false);
-      PseudoImages.src = style.backgroundImage.slice(4, -1).replace(/"/g, "");
-      Vx_PseudoIms.appendChild(PseudoImages);
-    }
-    AvenueGallery = new Viewer(Vx_PseudoIms);
-    AvenueGallery.show();
-  };
-
-  for (let index = 0; index < Vx_LightBoxIms.length; index++) {
-    Vx_LightBoxIms[index].addEventListener("click", AvenueOnClickFunc);
-  }
-</script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.2/viewer.min.css"
+    integrity="sha512-9EosEckNJFma9X2uo5ysGPhVf/dcZTuZUBVW2A9QcWBd0HAx6zs+FK+wsBGhl91uFfDI4ZY+/7MVhtYU4tXEig=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+  <link
+    rel="stylesheet"
+    href="https://package.vanced.media/LightBox Fullscreen/lightbox.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.0/viewer.min.js"
+    integrity="sha512-GT1saHeCyf4p1Vi28cxW92WPl+H/cs4Q+gB8T5rThKJopCrSus/l5VA3in6DouR6kfMLmoaiDVQ+zdBQd9xqEA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script
+    src="https://package.vanced.media/LightBox Fullscreen/LightBoxFullscreen.js"
+    integrity="sha512-GT1saHeCyf4p1Vi28cxW92WPl+H/cs4Q+gB8T5rThKJopCrSus/l5VA3in6DouR6kfMLmoaiDVQ+zdBQd9xqEA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+</html>
