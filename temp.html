@@ -4,34 +4,48 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <!-- https://package.vanced.media/ -->
+    <meta
+      name="google-signin-client_id"
+      content="153083226508-qmlv5ko26irv72rrshs6g2i3vnr4d1g4.apps.googleusercontent.com"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      a {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+    </style>
   </head>
-  <body></body>
+  <body>
+    <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
 
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.2/viewer.min.css"
-    integrity="sha512-9EosEckNJFma9X2uo5ysGPhVf/dcZTuZUBVW2A9QcWBd0HAx6zs+FK+wsBGhl91uFfDI4ZY+/7MVhtYU4tXEig=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
-  <link
-    rel="stylesheet"
-    href="https://package.vanced.media/LightBoxFullscreen/lightbox.css"
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.0/viewer.min.js"
-    integrity="sha512-GT1saHeCyf4p1Vi28cxW92WPl+H/cs4Q+gB8T5rThKJopCrSus/l5VA3in6DouR6kfMLmoaiDVQ+zdBQd9xqEA=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  ></script>
-  <script
-    src="https://package.vanced.media/LightBoxFullscreen/LightBoxFullscreen.js"
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  ></script>
+    <div id="message"></div>
 
-  
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script>
+      function onSignIn(googleUser) {
+        var id_token = googleUser.getAuthResponse().id_token;
+        google.script.run
+          .withSuccessHandler(displayMessage)
+          .verifyToken(id_token);
+      }
+
+      function displayMessage(message) {
+        document.getElementById("message").innerText = message;
+        // Gọi hàm Apps Script khác sau khi đăng nhập thành công
+        // google.script.run.copySpreadsheetAndScripts();
+      }
+    </script>
+  </body>
 </html>
