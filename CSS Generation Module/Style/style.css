@@ -1,0 +1,206 @@
+:root {
+  --global-palette1: #e72166;
+  --global-palette2: #2a38a1;
+  --global-palette3: #0c1136;
+  --global-palette4: #0c1136;
+  --global-palette5: #0c1136;
+  --global-palette6: #7081ff;
+  --global-palette7: #c9c7c7;
+  --global-palette8: #e9e7e7;
+  --global-palette9: #ffffff;
+  --global-palette9rgb: 255, 255, 255;
+}
+
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: stretch;
+      -ms-flex-align: stretch;
+          align-items: stretch;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  gap: 8px;
+}
+
+.Vx_CSS_Gen_Containter fieldset {
+  border: none;
+  outline: none;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: start;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  padding: 16px;
+  gap: 8px;
+  position: relative;
+  background: var(--global-palette8);
+}
+
+.Vx_CSS_Gen_Containter fieldset legend {
+  float: inline-start;
+  width: 100%;
+  position: relative;
+  -webkit-box-align: end;
+      -ms-flex-align: end;
+          align-items: end;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 300;
+  max-height: 1rem;
+}
+
+.Vx_CSS_Gen_Containter fieldset label {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  gap: 8px;
+  width: 100%;
+}
+
+.Vx_CSS_Gen_Containter fieldset label input {
+  -webkit-box-flex: 1;
+      -ms-flex: auto;
+          flex: auto;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: start;
+}
+
+.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable {
+  z-index: 2;
+}
+
+.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable * {
+  -webkit-transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton {
+  width: auto;
+  pointer-events: all;
+  cursor: pointer;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: end;
+      -ms-flex-align: end;
+          align-items: end;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: end;
+  height: -webkit-fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  gap: 4px;
+  padding: 4px;
+  background: var(--global-palette7);
+}
+
+.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton svg {
+  overflow: visible;
+  width: 1rem;
+  height: 1rem;
+  pointer-events: none;
+}
+
+.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton li {
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  background: var(--global-palette8);
+  border: 2px solid #0c1136;
+  list-style: none;
+  position: absolute;
+  height: -webkit-fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  overflow: hidden;
+  right: -0.5rem;
+  top: 0;
+  font-size: 1rem;
+  line-height: 1.2rem;
+  -webkit-transform: translateX(50%);
+          transform: translateX(50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton li ul {
+  list-style: none;
+  width: 100%;
+  text-align: center;
+  padding: 0px 0px;
+}
+
+.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton li ul:hover {
+  color: var(--global-palette9);
+  background: var(--global-palette1);
+}
+
+.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging {
+  background: var(--global-palette6);
+}
+
+.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging li {
+  pointer-events: all;
+  opacity: 1;
+  -webkit-transform: translateX(100%);
+          transform: translateX(100%);
+}
+
+.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging li ul {
+  padding: 6px 24px;
+}
+/*# sourceMappingURL=style.css.map */
