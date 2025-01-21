@@ -1,15 +1,15 @@
-:root {
-  --global-palette1: #e72166;
-  --global-palette2: #2a38a1;
-  --global-palette3: #0c1136;
-  --global-palette4: #0c1136;
-  --global-palette5: #0c1136;
-  --global-palette6: #7081ff;
-  --global-palette7: #c9c7c7;
-  --global-palette8: #e9e7e7;
-  --global-palette9: #ffffff;
-  --global-palette9rgb: 255, 255, 255;
-}
+// :root {
+//   --global-palette1: #e72166;
+//   --global-palette2: #2a38a1;
+//   --global-palette3: #0c1136;
+//   --global-palette4: #0c1136;
+//   --global-palette5: #0c1136;
+//   --global-palette6: #7081ff;
+//   --global-palette7: #c9c7c7;
+//   --global-palette8: #e9e7e7;
+//   --global-palette9: #ffffff;
+//   --global-palette9rgb: 255, 255, 255;
+// }
 
 .Vx_CSS_Gen_Containter {
   .Vx_CSS_Gen_Controls {
@@ -27,11 +27,12 @@
     flex-direction: column;
     align-items: start;
     justify-content: start;
-
+    margin: 0 !important;
     padding: 16px;
     gap: 8px;
 
     position: relative;
+
     background: var(--global-palette8);
 
     legend {
@@ -84,7 +85,6 @@
 
       gap: 4px;
       padding: 4px;
-      background: var(--global-palette7);
 
       svg {
         overflow: visible;
@@ -116,14 +116,15 @@
         font-size: 1rem;
         line-height: 1.2rem;
 
-        transform: translateX(50%);
+        transform: translateX(100%);
         opacity: 0;
 
         ul {
           list-style: none;
           width: 100%;
           text-align: center;
-          padding: 0px 0px;
+          padding: 0px 16px;
+          line-height: 0.1px;
 
           &:hover {
             color: var(--global-palette9);
@@ -135,15 +136,15 @@
       }
 
       &.UnitChanging {
-        background: var(--global-palette6);
+        background: var(--global-palette7);
 
         li {
           pointer-events: all;
           ul {
             padding: 6px 24px;
+            line-height: 1.2rem;
           }
           opacity: 1;
-          transform: translateX(100%);
         }
 
         // svg {

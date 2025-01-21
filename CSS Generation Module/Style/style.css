@@ -1,16 +1,3 @@
-:root {
-  --global-palette1: #e72166;
-  --global-palette2: #2a38a1;
-  --global-palette3: #0c1136;
-  --global-palette4: #0c1136;
-  --global-palette5: #0c1136;
-  --global-palette6: #7081ff;
-  --global-palette7: #c9c7c7;
-  --global-palette8: #e9e7e7;
-  --global-palette9: #ffffff;
-  --global-palette9rgb: 255, 255, 255;
-}
-
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -44,6 +31,7 @@
   -webkit-box-pack: start;
       -ms-flex-pack: start;
           justify-content: start;
+  margin: 0 !important;
   padding: 16px;
   gap: 8px;
   position: relative;
@@ -132,7 +120,6 @@
   height: fit-content;
   gap: 4px;
   padding: 4px;
-  background: var(--global-palette7);
 }
 
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton svg {
@@ -171,8 +158,8 @@
   top: 0;
   font-size: 1rem;
   line-height: 1.2rem;
-  -webkit-transform: translateX(50%);
-          transform: translateX(50%);
+  -webkit-transform: translateX(100%);
+          transform: translateX(100%);
   opacity: 0;
   pointer-events: none;
 }
@@ -181,7 +168,8 @@
   list-style: none;
   width: 100%;
   text-align: center;
-  padding: 0px 0px;
+  padding: 0px 16px;
+  line-height: 0.1px;
 }
 
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton li ul:hover {
@@ -190,17 +178,16 @@
 }
 
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging {
-  background: var(--global-palette6);
+  background: var(--global-palette7);
 }
 
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging li {
   pointer-events: all;
   opacity: 1;
-  -webkit-transform: translateX(100%);
-          transform: translateX(100%);
 }
 
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging li ul {
   padding: 6px 24px;
+  line-height: 1.2rem;
 }
 /*# sourceMappingURL=style.css.map */
