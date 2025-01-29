@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Generator</title>
+  </head>
+  <body>
+    <div
+      class="elementor-element qrActive e-flex e-con-boxed e-con e-parent e-lazyloaded"
+      data-id="32868f2"
+      data-element_type="container"
+      id="QR_ClientForm"
+    >
+      <div class="e-con-inner">
+        <div class="elementor-element e-con-full e-flex e-con e-child">
+          <div
+            class="elementor-element e-con-full Vx_Donate_Section e-flex e-con e-child"
+          >
+            <div class="elementor-widget-container">
+              <h1 class="elementor-heading-title">
+                Mời chúng tôi<br />Một ly Café
+              </h1>
+            </div>
+            <div class="elementor-widget-container">
+              <p>
+                Các pha chế có thể gửi tới anh em tại Vanced Media những giờ
+                phút<br />thật tập trung, thật sáng tạo trong các sản phẩm. Đồng
+                thời<br />hãy ghi tên các pha chế tại bảng tri ân dưới đây.
+              </p>
+            </div>
+
+            <div class="Donater_Name">
+              <input
+                type="text"
+                id="DonateName"
+                placeholder="Nickname - Để chúng mình có thể tri ân bạn"
+                required
+              />
+            </div>
+
+            <div class="Donater_Messages">
+              <textarea
+                id="DonateMessage"
+                placeholder="Để lại lời nhắn tới Vanced"
+              ></textarea>
+            </div>
+
+            <div class="Donate_Price">
+              <input type="text" id="DonatePrice" placeholder="Số tiền" />
+            </div>
+
+            <div class="Donate_Button_Container">
+              <button id="DonateButton" class="elementor-button">
+                <span class="elementor-button-content-wrapper">
+                  <span class="elementor-button-icon">
+                    <svg
+                      aria-hidden="true"
+                      class="e-font-icon-svg e-fas-qrcode"
+                      viewBox="0 0 448 512"
+                    >
+                      <path
+                        d="M0 224h192V32H0v192zM64 96h64v64H64V96zm192-64v192h192V32H256zm128 128h-64V96h64v64zM0 480h192V288H0v192zm64-128h64v64H64v-64zm352-64h32v128h-96v-32h-32v96h-64V288h96v32h64v-32zm0 160h32v32h-32v-32zm-64 0h32v32h-32v-32z"
+                      ></path>
+                    </svg>
+                  </span>
+                  <span class="elementor-button-text">Tạo QR</span>
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR Loading Section -->
+    <div id="QR_Normal_Pending_Icon" class="loading-section">
+      <!-- Add your loading animation here -->
+    </div>
+
+    <!-- QR Generated Section -->
+    <div id="QR_Generated_Section" class="qr-result-section">
+      <p id="QR_Generated_Description">Xin cám ơn các pha chế.</p>
+      <p>Xin cám ơn các pha chế</p>
+      <div id="QRImage">
+        <img src="" alt="QR Code" />
+      </div>
+      <button id="QRUpdateButton">Cập nhật</button>
+      <button id="QR_TurnBack">Quay lại</button>
+    </div>
+    <script>
+      const donateButton = document.getElementById("DonateButton"); // Nút "Tạo QR"
+      const updateButton = document.getElementById("QRUpdateButton"); // Nút "Cập nhật"
+      const qrImage = document.querySelector("#QRImage img"); // Thẻ <img> trong #QRImage
+      const clientFormSection = document.getElementById("QR_ClientForm");
+      const qrGeneratedSection = document.getElementById(
+        "QR_Generated_Section"
+      );
+      const qrLoadingFullSection = document.getElementById(
+        "QR_Normal_Pending_Icon"
+      ); // Section loading
+      const backButton = document.getElementById("QR_TurnBack"); // Nút "Quay lại"
+      var thankMessage;
+
+      function formatAmount(amount) {
+        const value = parseInt(amount.replace(/\D/g, ""));
+
+        if (value < 1000000) {
+          // Dưới 1 triệu: format x,xxx hoặc xx,xxx hoặc xxx,xxx
+          const thousands = Math.floor(value / 1000);
+          const remainder = value % 1000;
+          return `${thousands},${remainder.toString().padStart(3, "0")}`;
+        } else {
+          // Trên 1 triệu: format x,xxx,xxx
+          const millions = Math.floor(value / 1000000);
+          const thousands = Math.floor((value % 1000000) / 1000);
+          const remainder = value % 1000;
+          return `${millions},${thousands
+            .toString()
+            .padStart(3, "0")},${remainder.toString().padStart(3, "0")}`;
+        }
+      }
+
+      function crc16(str) {
+        const polynomial = 0x1021;
+        let crc = 0xffff;
+        const data = new TextEncoder().encode(str);
+        for (const byte of data) {
+          crc ^= byte << 8;
+          for (let i = 0; i < 8; i++) {
+            if (crc & 0x8000) {
+              crc = ((crc << 1) ^ polynomial) & 0xffff;
+            } else {
+              crc = (crc << 1) & 0xffff;
+            }
+          }
+        }
+        return crc;
+      }
+
+      function removeDiacritics(str) {
+        // Mảng mapping các ký tự có dấu sang không dấu
+        const from =
+          "àáãảạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệđùúủũụưừứửữựòóỏõọôồốổỗộơờớởỡợìíỉĩịäëïîöüûñçýỳỹỵỷ";
+        const to =
+          "aaaaaaaaaaaaaaaaaeeeeeeeeeeeduuuuuuuuuuuoooooooooooooooooiiiiiaeiiouuncyyyyy";
+
+        // Thay thế từng ký tự có dấu
+        for (let i = 0; i < from.length; i++) {
+          str = str.replace(new RegExp(from[i], "gi"), to[i]);
+        }
+
+        return str;
+      }
+
+      function generateQRString() {
+        const amount = document.getElementById("DonatePrice").value;
+        const name = document.getElementById("DonateName").value;
+        const message = document.getElementById("DonateMessage").value;
+
+        // Thay thế ký tự ₫ bằng d và bỏ dấu tiếng Việt cho QR code
+        const amountForQR = amount.replace("₫", "d");
+        const nameForQR = removeDiacritics(name);
+        const messageForQR = removeDiacritics(message);
+
+        // Rút gọn addInfo để tránh overflow
+        const truncatedName = nameForQR.substring(0, 20);
+        const truncatedMessage = messageForQR.substring(0, 30);
+        const addInfo = `${truncatedName}-${truncatedMessage}-${amountForQR}`;
+        console.log("AddInfo length:", addInfo.length);
+        console.log("AddInfo:", addInfo);
+
+        // Format số tiền và thêm prefix
+        const formattedAmount = formatAmount(amount);
+        const value = parseInt(amount.replace(/\D/g, ""));
+        let amountPrefix;
+
+        if (value < 10000) {
+          amountPrefix = "5405"; // Dưới 10 nghìn
+          thankMessage = "Vanced ghi nhận tấm lòng của Pha chế.";
+        } else if (value < 100000) {
+          amountPrefix = "5406"; // 10-100 nghìn
+          thankMessage = "Xin cám ơn các Pha chế.";
+        } else if (value < 1000000) {
+          amountPrefix = "5407"; // 100 nghìn - 1 triệu
+          thankMessage = "Cám ơn các pha chế với cốc Cafe đầy Topping";
+        } else if (value < 10000000) {
+          amountPrefix = "5409"; // 1-10 triệu
+          thankMessage = "Cafe của Pha chế hôm nay thật &apos;hào phóng&apos;";
+        } else {
+          amountPrefix = "5410"; // Trên 10 triệu
+          thankMessage = "Cafe của Pha chế hôm nay thật &apos;hào phóng&apos;";
+        }
+
+        const amountField = `${amountPrefix}${formattedAmount}`;
+
+        // Tạo các phần của mã QR
+        const header =
+          "00020101021238500010A000000727012000069704360106VANCED0208QRIBFTTA";
+        const currency = "5303704";
+        const country = "5802VN";
+        const additionalDataLength = (addInfo.length + 4)
+          .toString()
+          .padStart(2, "0");
+        const additionalData = `62${additionalDataLength}08${addInfo.length
+          .toString()
+          .padStart(2, "0")}${addInfo}`;
+
+        // Ghép mã QR và tính checksum
+        const qrWithoutChecksum = `${header}${currency}${amountField}${country}${additionalData}`;
+        const checksumValue = crc16(qrWithoutChecksum + "6304");
+        const checksumHex = checksumValue
+          .toString(16)
+          .toUpperCase()
+          .padStart(4, "0");
+
+        return `${qrWithoutChecksum}6304${checksumHex}`;
+      }
+
+      // Sửa lại hàm tạo QR code
+      function createQRCode(container, text) {
+        const qrImage = container.querySelector("img");
+        // Sử dụng QR Server API
+        qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
+          text
+        )}&size=768x768&margin=0&format=png&ecc=H`;
+      }
+
+      // Sửa lại event listener cho nút "Tạo QR"
+      donateButton.addEventListener("click", () => {
+        clientFormSection.classList.remove("qrActive");
+        qrLoadingFullSection.classList.add("qrActive");
+
+        const qrString = generateQRString();
+        const qrcodeContainer = document.getElementById("QRImage");
+        createQRCode(qrcodeContainer, qrString);
+
+        // Gửi dữ liệu lên Google Sheets (giữ nguyên ký tự ₫)
+        const formData = {
+          QRDonateName: document.getElementById("DonateName").value,
+          QRDonateMessage: document.getElementById("DonateMessage").value,
+          QRDonatePrice: document.getElementById("DonatePrice").value, // Giữ nguyên ₫
+        };
+
+        fetch(
+          "https://script.google.com/macros/s/AKfycbxMaSr80UK7yGnCvWZtU1VIdyCHFTl3hc4bkQ59OHniUNYjk5tyvnOAEOHvCBedMgM9og/exec",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: JSON.stringify(formData),
+          }
+        )
+          .then((response) => response.text())
+          .then((data) => console.log(data))
+          .catch((error) => console.error("Lỗi:", error))
+          .finally(() => {
+            // Cập nhật lời nhắn
+            document.querySelector("#QR_Generated_Description p").textContent =
+              thankMessage;
+
+            // Ẩn section loading và hiển thị section "Grazie"
+            qrLoadingFullSection.classList.remove("qrActive");
+            qrGeneratedSection.classList.add("qrActive");
+          });
+      });
+
+      // Sửa lại hàm format giá trị hiển thị
+      function formatDisplayPrice(price) {
+        // Loại bỏ tất cả ký tự không phải số
+        const value = parseInt(price.replace(/\D/g, ""));
+
+        // Format số với dấu chấm và thêm ký tự ₫
+        return value.toLocaleString("en-US").replace(/,/g, ".") + "₫";
+      }
+
+      // Sửa lại event listener cho nút "Cập nhật"
+      updateButton.addEventListener("click", () => {
+        const priceInput = document.getElementById("DonatePrice");
+        const currentPrice = priceInput.value;
+
+        // Tạo QR code mới
+        const qrString = generateQRString();
+        const qrcodeContainer = document.getElementById("QRImage");
+        createQRCode(qrcodeContainer, qrString);
+
+        // Format lại giá trị trong input
+        priceInput.value = formatDisplayPrice(currentPrice);
+      });
+
+      // Thêm event listener để format giá khi người dùng rời khỏi input
+      document
+        .getElementById("DonatePrice")
+        .addEventListener("blur", function () {
+          if (this.value) {
+            this.value = formatDisplayPrice(this.value);
+          }
+        });
+
+      // Thêm event listener để bỏ format khi người dùng focus vào input
+      document
+        .getElementById("DonatePrice")
+        .addEventListener("focus", function () {
+          // Chỉ giữ lại số
+          this.value = this.value.replace(/\D/g, "");
+        });
+
+      // Giữ nguyên event listener cho nút "Quay lại"
+      backButton.addEventListener("click", () => {
+        clientFormSection.classList.add("qrActive");
+        qrGeneratedSection.classList.remove("qrActive");
+      });
+    </script>
+  </body>
+</html>

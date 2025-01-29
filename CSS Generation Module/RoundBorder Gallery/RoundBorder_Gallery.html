@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS Generation Module</title>
+    <style>
+      .container {
+        display: flex;
+        align-items: start;
+        justify-content: start;
+        padding: 2rem;
+        border: 2px solid #0c1136;
+        box-shadow: 6px 6px 0px #e72166;
+      }
+    </style>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Lexend", serif;
+        font-optical-sizing: auto;
+      }
+      body {
+        width: 100vw;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-direction: row-reverse;
+        gap: 32px;
+
+        padding: 32px;
+      }
+      .SampleHolder {
+        width: 62vw;
+        height: 100vh;
+        position: relative;
+      }
+    </style>
+    <style>
+      /* CSS cho gallery */
+      .ladi-element {
+        width: 100%;
+      }
+
+      .ladi-gallery {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      /* Phần hiển thị ảnh chính */
+      .ladi-gallery .ladi-gallery-view {
+        position: absolute;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+      }
+
+      .ladi-gallery .ladi-gallery-view > .ladi-gallery-view-item {
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+        width: 100%;
+        height: 100%;
+        position: relative;
+        display: none;
+        transition: transform 500ms ease-in-out;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000px;
+        perspective: 1000px;
+      }
+
+      /* Hiệu ứng chuyển slide */
+      .ladi-gallery .ladi-gallery-view > .ladi-gallery-view-item.next,
+      .ladi-gallery
+        .ladi-gallery-view
+        > .ladi-gallery-view-item.selected.right {
+        transform: translate3d(100%, 0, 0);
+      }
+
+      .ladi-gallery .ladi-gallery-view > .ladi-gallery-view-item.prev,
+      .ladi-gallery .ladi-gallery-view > .ladi-gallery-view-item.selected.left {
+        transform: translate3d(-100%, 0, 0);
+      }
+
+      .ladi-gallery .ladi-gallery-view > .selected {
+        display: block;
+      }
+
+      /* Phần thumbnail control */
+      .ladi-gallery .ladi-gallery-control {
+        position: absolute;
+        overflow: hidden;
+      }
+
+      .ladi-gallery.ladi-gallery-bottom .ladi-gallery-control {
+        width: 100%;
+        bottom: 0;
+      }
+
+      /* Style cho thumbnails */
+      .ladi-gallery .ladi-gallery-control .ladi-gallery-control-box {
+        position: relative;
+      }
+
+      .ladi-gallery
+        .ladi-gallery-control
+        .ladi-gallery-control-box
+        .ladi-gallery-control-item {
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+        float: left;
+        position: relative;
+        cursor: pointer;
+        filter: invert(15%);
+      }
+
+      .ladi-gallery
+        .ladi-gallery-control
+        .ladi-gallery-control-box
+        .ladi-gallery-control-item.selected {
+        filter: none;
+        border-color: #fff;
+      }
+
+      /* Nút điều hướng */
+      .ladi-gallery .ladi-gallery-view .ladi-gallery-view-arrow {
+        position: absolute;
+        width: 33px;
+        height: 33px;
+        top: calc(50% - 33px / 2);
+        background: rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        z-index: 90000040;
+      }
+
+      .ladi-gallery .ladi-gallery-view .ladi-gallery-view-arrow-left {
+        left: 5px;
+        transform: rotateY(180deg);
+      }
+
+      .ladi-gallery .ladi-gallery-view .ladi-gallery-view-arrow-right {
+        right: 5px;
+      }
+
+      /* Kích thước cho gallery */
+      #GALLERY1 {
+        width: 655px;
+        height: 431px;
+      }
+
+      /* #GALLERY1 > .ladi-gallery > .ladi-gallery-view {
+        height: calc(100% - 80px);
+      } */
+
+      #GALLERY1 > .ladi-gallery > .ladi-gallery-control {
+        height: 80px;
+      }
+
+      #GALLERY1
+        > .ladi-gallery
+        > .ladi-gallery-control
+        > .ladi-gallery-control-box
+        > .ladi-gallery-control-item {
+        width: 80px;
+        height: 80px;
+        margin-right: 10px;
+      }
+
+      /* Responsive */
+      @media (max-width: 767px) {
+        #GALLERY1 {
+          width: 420px;
+          height: 450px;
+        }
+      }
+
+      /* Background images cho gallery items */
+      .ladi-gallery .ladi-gallery-view-item[data-index="0"] {
+        background-image: url("https://w.ladicdn.com/s1000x750/57b167c9ca57d39c18a1c57c/unsplash_3i9gioc6i0-20220812141325.png");
+      }
+
+      .ladi-gallery .ladi-gallery-view-item[data-index="1"] {
+        background-image: url("https://w.ladicdn.com/s1000x750/57b167c9ca57d39c18a1c57c/unsplash_fouetbpb6my-20220812141326.png");
+      }
+
+      .ladi-gallery .ladi-gallery-view-item[data-index="2"] {
+        background-image: url("https://w.ladicdn.com/s1000x750/57b167c9ca57d39c18a1c57c/unsplash_-mrbabonvns-20220812141326.png");
+      }
+
+      .ladi-gallery .ladi-gallery-view-item[data-index="3"] {
+        background-image: url("https://w.ladicdn.com/s1000x750/57b167c9ca57d39c18a1c57c/unsplash_wy7ok3cfqay-20220812141326.png");
+      }
+
+      .ladi-gallery .ladi-gallery-view-item[data-index="4"] {
+        background-image: url("https://w.ladicdn.com/s1000x750/57b167c9ca57d39c18a1c57c/unsplash_oxyoft9gtoe-20220812141326.png");
+      }
+
+      .ladi-gallery .ladi-gallery-view-item[data-index="5"] {
+        background-image: url("https://w.ladicdn.com/s1000x750/57b167c9ca57d39c18a1c57c/H5Z3c4cf20220812013406.jpeg");
+      }
+
+      /* Background images cho thumbnails */
+      .ladi-gallery .ladi-gallery-control-item[data-index="0"] {
+        background-image: url("https://w.ladicdn.com/s400x400/57b167c9ca57d39c18a1c57c/unsplash_3i9gioc6i0-20220812141325.png");
+      }
+
+      .ladi-gallery .ladi-gallery-control-item[data-index="1"] {
+        background-image: url("https://w.ladicdn.com/s400x400/57b167c9ca57d39c18a1c57c/unsplash_fouetbpb6my-20220812141326.png");
+      }
+
+      .ladi-gallery .ladi-gallery-control-item[data-index="2"] {
+        background-image: url("https://w.ladicdn.com/s400x400/57b167c9ca57d39c18a1c57c/unsplash_-mrbabonvns-20220812141326.png");
+      }
+
+      .ladi-gallery .ladi-gallery-control-item[data-index="3"] {
+        background-image: url("https://w.ladicdn.com/s400x400/57b167c9ca57d39c18a1c57c/unsplash_wy7ok3cfqay-20220812141326.png");
+      }
+
+      .ladi-gallery .ladi-gallery-control-item[data-index="4"] {
+        background-image: url("https://w.ladicdn.com/s400x400/57b167c9ca57d39c18a1c57c/unsplash_oxyoft9gtoe-20220812141326.png");
+      }
+
+      .ladi-gallery .ladi-gallery-control-item[data-index="5"] {
+        background-image: url("https://w.ladicdn.com/s400x400/57b167c9ca57d39c18a1c57c/H5Z3c4cf20220812013406.jpeg");
+      }
+    </style>
+
+    <link rel="stylesheet" href="../Style/style.css" />
+    <style id="preview-style">
+      /* CSS preview sẽ được inject vào đây */
+    </style>
+    <script>
+      window.GALLERY_PRESET_CSS = {
+        "ladi-gallery": {
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+        },
+        "ladi-gallery-view": {
+          position: "absolute",
+          width: "100%",
+          height: "calc(100% - 85px)",
+        },
+        "ladi-gallery-control": {
+          position: "absolute",
+          bottom: "0",
+          width: "100%",
+          height: "85px",
+        },
+      };
+    </script>
+    <script src="../js/CSSGenerator.js"></script>
+  </head>
+  <body>
+    <div class="SampleHolder">
+      <div id="GALLERY1" class="ladi-element CustomPart">
+        <div class="ladi-gallery ladi-gallery-bottom">
+          <div class="ladi-gallery-view" style="cursor: pointer">
+            <div
+              class="ladi-gallery-view-arrow ladi-gallery-view-arrow-left"
+            ></div>
+            <div
+              class="ladi-gallery-view-arrow ladi-gallery-view-arrow-right"
+            ></div>
+            <div class="ladi-gallery-view-item"></div>
+            <div class="ladi-gallery-view-item" data-index="1"></div>
+            <div class="ladi-gallery-view-item" data-index="2"></div>
+            <div class="ladi-gallery-view-item" data-index="3"></div>
+            <div class="ladi-gallery-view-item selected" data-index="4"></div>
+            <div class="ladi-gallery-view-item" data-index="5"></div>
+          </div>
+          <div class="ladi-gallery-control">
+            <div class="ladi-gallery-control-box">
+              <div class="ladi-gallery-control-item" data-index="0"></div>
+              <div class="ladi-gallery-control-item" data-index="1"></div>
+              <div class="ladi-gallery-control-item" data-index="2"></div>
+              <div class="ladi-gallery-control-item" data-index="3"></div>
+              <div
+                class="ladi-gallery-control-item selected"
+                data-index="4"
+              ></div>
+              <div class="ladi-gallery-control-item" data-index="5"></div>
+            </div>
+            <div
+              class="ladi-gallery-control-arrow ladi-gallery-control-arrow-left"
+            ></div>
+            <div
+              class="ladi-gallery-control-arrow ladi-gallery-control-arrow-right opacity-0"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <main class="Vx_CSS_Gen_Containter">
+        <input
+          type="text"
+          name="MainClassInput"
+          id="MainClassInput_1"
+          placeholder="Enter main class name"
+          class="MainClassInput"
+        />
+        <div class="Vx_CSS_Gen_Controls">
+          <fieldset
+            data-class="ladi-gallery-view"
+            class="Fieldset_Unit_Changable"
+          >
+            <legend>Image</legend>
+            <label class="RangeInput">
+              Border Radius
+              <input type="range" data-css-label="border-radius" />
+              <div class="UnitChangeButton">
+                px
+                <li>
+                  <ul>
+                    px
+                  </ul>
+                  <ul>
+                    vw
+                  </ul>
+                  <ul>
+                    rem
+                  </ul>
+                  <ul>
+                    custom
+                  </ul>
+                </li>
+                <svg
+                  class="ChangeButtonIcon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5 17.9999H9.24C9.37161 18.0007 9.50207 17.9755 9.62391 17.9257C9.74574 17.8759 9.85656 17.8026 9.95 17.7099L16.87 10.7799L19.71 7.99994C19.8037 7.90698 19.8781 7.79637 19.9289 7.67452C19.9797 7.55266 20.0058 7.42195 20.0058 7.28994C20.0058 7.15793 19.9797 7.02722 19.9289 6.90536C19.8781 6.7835 19.8037 6.6729 19.71 6.57994L15.47 2.28994C15.377 2.19621 15.2664 2.12182 15.1446 2.07105C15.0227 2.02028 14.892 1.99414 14.76 1.99414C14.628 1.99414 14.4973 2.02028 14.3754 2.07105C14.2536 2.12182 14.143 2.19621 14.05 2.28994L11.23 5.11994L4.29 12.0499C4.19732 12.1434 4.12399 12.2542 4.07423 12.376C4.02446 12.4979 3.99924 12.6283 4 12.7599V16.9999C4 17.2652 4.10536 17.5195 4.29289 17.707C4.48043 17.8946 4.73478 17.9999 5 17.9999ZM14.76 4.40994L17.59 7.23994L16.17 8.65994L13.34 5.82994L14.76 4.40994ZM6 13.1699L11.93 7.23994L14.76 10.0699L8.83 15.9999H6V13.1699ZM21 19.9999H3C2.73478 19.9999 2.48043 20.1053 2.29289 20.2928C2.10536 20.4804 2 20.7347 2 20.9999C2 21.2652 2.10536 21.5195 2.29289 21.707C2.48043 21.8946 2.73478 21.9999 3 21.9999H21C21.2652 21.9999 21.5196 21.8946 21.7071 21.707C21.8946 21.5195 22 21.2652 22 20.9999C22 20.7347 21.8946 20.4804 21.7071 20.2928C21.5196 20.1053 21.2652 19.9999 21 19.9999Z"
+                    fill="black"
+                  />
+                </svg>
+              </div>
+            </label>
+            <label class="RadialInput"
+              >Overflow
+              <input
+                type="radio"
+                name="ImageBorderRadius"
+                value="hidden"
+                data-css-label="overflow"
+              />
+              hidden</label
+            >
+            <label class="RadialInput">
+              <input
+                type="radio"
+                name="ImageBorderRadius"
+                value="visible"
+                data-css-label="overflow"
+              />
+              visible</label
+            >
+          </fieldset>
+
+          <fieldset
+            data-class="ladi-gallery-control-item"
+            class="Fieldset_Unit_Changable"
+          >
+            <legend>Thumbnail</legend>
+            <label class="RangeInput"
+              >Border Radius
+              <input type="range" data-css-label="border-radius" />
+              <div class="UnitChangeButton">
+                px
+                <li>
+                  <ul>
+                    px
+                  </ul>
+                  <ul>
+                    vw
+                  </ul>
+                  <ul>
+                    rem
+                  </ul>
+                  <ul>
+                    custom
+                  </ul>
+                </li>
+                <svg
+                  class="ChangeButtonIcon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5 17.9999H9.24C9.37161 18.0007 9.50207 17.9755 9.62391 17.9257C9.74574 17.8759 9.85656 17.8026 9.95 17.7099L16.87 10.7799L19.71 7.99994C19.8037 7.90698 19.8781 7.79637 19.9289 7.67452C19.9797 7.55266 20.0058 7.42195 20.0058 7.28994C20.0058 7.15793 19.9797 7.02722 19.9289 6.90536C19.8781 6.7835 19.8037 6.6729 19.71 6.57994L15.47 2.28994C15.377 2.19621 15.2664 2.12182 15.1446 2.07105C15.0227 2.02028 14.892 1.99414 14.76 1.99414C14.628 1.99414 14.4973 2.02028 14.3754 2.07105C14.2536 2.12182 14.143 2.19621 14.05 2.28994L11.23 5.11994L4.29 12.0499C4.19732 12.1434 4.12399 12.2542 4.07423 12.376C4.02446 12.4979 3.99924 12.6283 4 12.7599V16.9999C4 17.2652 4.10536 17.5195 4.29289 17.707C4.48043 17.8946 4.73478 17.9999 5 17.9999ZM14.76 4.40994L17.59 7.23994L16.17 8.65994L13.34 5.82994L14.76 4.40994ZM6 13.1699L11.93 7.23994L14.76 10.0699L8.83 15.9999H6V13.1699ZM21 19.9999H3C2.73478 19.9999 2.48043 20.1053 2.29289 20.2928C2.10536 20.4804 2 20.7347 2 20.9999C2 21.2652 2.10536 21.5195 2.29289 21.707C2.48043 21.8946 2.73478 21.9999 3 21.9999H21C21.2652 21.9999 21.5196 21.8946 21.7071 21.707C21.8946 21.5195 22 21.2652 22 20.9999C22 20.7347 21.8946 20.4804 21.7071 20.2928C21.5196 20.1053 21.2652 19.9999 21 19.9999Z"
+                    fill="black"
+                  />
+                </svg>
+              </div>
+            </label>
+          </fieldset>
+
+          <fieldset data-class="Item-No-02">
+            <legend>Item No.02</legend>
+            <label class="RadialInput">
+              <input
+                type="radio"
+                name="Item-No-02"
+                value="start"
+                data-css-label="justify-content"
+              />
+              start</label
+            >
+            <label class="RadialInput">
+              <input
+                type="radio"
+                name="Item-No-02"
+                value="center"
+                data-css-label="justify-content"
+              />
+              center</label
+            >
+            <label class="RadialInput">
+              <input
+                type="radio"
+                name="Item-No-02"
+                value="end"
+                data-css-label="justify-content"
+              />
+              end</label
+            >
+          </fieldset>
+
+          <fieldset data-class="Item-No-03">
+            <legend>Item No.03</legend>
+            <label class="CheckboxInput">
+              <input
+                type="checkbox"
+                name="Item-No-03"
+                value="visible"
+                data-css-label="visibility"
+              />
+              Visible
+            </label>
+            <label class="CheckboxInput">
+              <input
+                type="checkbox"
+                name="Item-No-03"
+                value="hidden"
+                data-css-label="visibility"
+              />
+              Hidden
+            </label>
+          </fieldset>
+
+          <fieldset data-class="Item-No-04">
+            <legend>Item No.04</legend>
+            <label class="ColorInput">
+              Background Color
+              <input
+                type="color"
+                name="Item-No-04"
+                value="#ffffff"
+                data-css-label="background-color"
+              />
+            </label>
+            <label class="ColorInput">
+              Border Color
+              <input
+                type="color"
+                name="Item-No-04"
+                value="#000000"
+                data-css-label="border-color"
+              />
+            </label>
+          </fieldset>
+
+          <fieldset data-class="Item-No-05">
+            <legend>Item No.05</legend>
+            <label class="TextInput">
+              Font Family
+              <input
+                type="text"
+                name="Item-No-05"
+                placeholder="Enter font name"
+                data-css-label="font-family"
+              />
+            </label>
+            <label class="TextInput">
+              Custom Class
+              <input
+                type="text"
+                name="Item-No-05"
+                placeholder="Enter class name"
+                data-css-label="class"
+              />
+            </label>
+          </fieldset>
+
+          <fieldset data-class="Item-No-06" class="Fieldset_Unit_Changable">
+            <legend>Item No.06</legend>
+            <label class="RangeInput">
+              Margin Top
+              <input type="range" data-css-label="margin-top" />
+              <div class="UnitChangeButton">
+                px
+                <li>
+                  <ul>
+                    px
+                  </ul>
+                  <ul>
+                    vw
+                  </ul>
+                  <ul>
+                    rem
+                  </ul>
+                  <ul>
+                    custom
+                  </ul>
+                </li>
+                <svg
+                  class="ChangeButtonIcon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5 17.9999H9.24C9.37161 18.0007 9.50207 17.9755 9.62391 17.9257C9.74574 17.8759 9.85656 17.8026 9.95 17.7099L16.87 10.7799L19.71 7.99994C19.8037 7.90698 19.8781 7.79637 19.9289 7.67452C19.9797 7.55266 20.0058 7.42195 20.0058 7.28994C20.0058 7.15793 19.9797 7.02722 19.9289 6.90536C19.8781 6.7835 19.8037 6.6729 19.71 6.57994L15.47 2.28994C15.377 2.19621 15.2664 2.12182 15.1446 2.07105C15.0227 2.02028 14.892 1.99414 14.76 1.99414C14.628 1.99414 14.4973 2.02028 14.3754 2.07105C14.2536 2.12182 14.143 2.19621 14.05 2.28994L11.23 5.11994L4.29 12.0499C4.19732 12.1434 4.12399 12.2542 4.07423 12.376C4.02446 12.4979 3.99924 12.6283 4 12.7599V16.9999C4 17.2652 4.10536 17.5195 4.29289 17.707C4.48043 17.8946 4.73478 17.9999 5 17.9999ZM14.76 4.40994L17.59 7.23994L16.17 8.65994L13.34 5.82994L14.76 4.40994ZM6 13.1699L11.93 7.23994L14.76 10.0699L8.83 15.9999H6V13.1699ZM21 19.9999H3C2.73478 19.9999 2.48043 20.1053 2.29289 20.2928C2.10536 20.4804 2 20.7347 2 20.9999C2 21.2652 2.10536 21.5195 2.29289 21.707C2.48043 21.8946 2.73478 21.9999 3 21.9999H21C21.2652 21.9999 21.5196 21.8946 21.7071 21.707C21.8946 21.5195 22 21.2652 22 20.9999C22 20.7347 21.8946 20.4804 21.7071 20.2928C21.5196 20.1053 21.2652 19.9999 21 19.9999Z"
+                    fill="black"
+                  />
+                </svg>
+              </div>
+            </label>
+            <label class="RangeInput">
+              Margin Top
+              <input type="range" data-css-label="margin-bottom" />
+              <div class="UnitChangeButton">
+                px
+                <li>
+                  <ul>
+                    px
+                  </ul>
+                  <ul>
+                    vw
+                  </ul>
+                  <ul>
+                    rem
+                  </ul>
+                  <ul>
+                    custom
+                  </ul>
+                </li>
+                <svg
+                  class="ChangeButtonIcon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5 17.9999H9.24C9.37161 18.0007 9.50207 17.9755 9.62391 17.9257C9.74574 17.8759 9.85656 17.8026 9.95 17.7099L16.87 10.7799L19.71 7.99994C19.8037 7.90698 19.8781 7.79637 19.9289 7.67452C19.9797 7.55266 20.0058 7.42195 20.0058 7.28994C20.0058 7.15793 19.9797 7.02722 19.9289 6.90536C19.8781 6.7835 19.8037 6.6729 19.71 6.57994L15.47 2.28994C15.377 2.19621 15.2664 2.12182 15.1446 2.07105C15.0227 2.02028 14.892 1.99414 14.76 1.99414C14.628 1.99414 14.4973 2.02028 14.3754 2.07105C14.2536 2.12182 14.143 2.19621 14.05 2.28994L11.23 5.11994L4.29 12.0499C4.19732 12.1434 4.12399 12.2542 4.07423 12.376C4.02446 12.4979 3.99924 12.6283 4 12.7599V16.9999C4 17.2652 4.10536 17.5195 4.29289 17.707C4.48043 17.8946 4.73478 17.9999 5 17.9999ZM14.76 4.40994L17.59 7.23994L16.17 8.65994L13.34 5.82994L14.76 4.40994ZM6 13.1699L11.93 7.23994L14.76 10.0699L8.83 15.9999H6V13.1699ZM21 19.9999H3C2.73478 19.9999 2.48043 20.1053 2.29289 20.2928C2.10536 20.4804 2 20.7347 2 20.9999C2 21.2652 2.10536 21.5195 2.29289 21.707C2.48043 21.8946 2.73478 21.9999 3 21.9999H21C21.2652 21.9999 21.5196 21.8946 21.7071 21.707C21.8946 21.5195 22 21.2652 22 20.9999C22 20.7347 21.8946 20.4804 21.7071 20.2928C21.5196 20.1053 21.2652 19.9999 21 19.9999Z"
+                    fill="black"
+                  />
+                </svg>
+              </div>
+            </label>
+          </fieldset>
+        </div>
+        <div class="Vx_CSS_Gen_Preview">
+          <section class="Vx_CSS_Gen_FinalResult"></section>
+          <div class="Vx_CSS_Gen_Code">
+            <pre><code class="generated-css"></code></pre>
+          </div>
+
+          <nav class="Vx_CSS_Gen_Toolbar">
+            <button data-action="copy">Copy CSS</button>
+            <button data-action="reset">Reset</button>
+            <button data-action="save">Save Template</button>
+          </nav>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
