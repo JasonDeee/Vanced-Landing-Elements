@@ -11,12 +11,47 @@
   --global-palette9rgb: 255, 255, 255;
 }
 
+.Vx_SampleHolder * {
+  cursor: not-allowed !important;
+}
+
+.Vx_CSS_Gen_Containter {
+  position: relative;
+  padding: 32px;
+}
+.Vx_CSS_Gen_Containter .MainClassInput {
+  border: 1px solid var(--global-palette3);
+  outline: none;
+  padding: 8px;
+  box-shadow: 4px 4px 0 var(--global-palette3);
+  width: 62%;
+  position: absolute;
+  top: 0;
+  transform: translateY(-50%);
+  z-index: 100;
+}
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls {
   display: flex;
   align-items: stretch;
   justify-content: start;
   flex-direction: column;
   gap: 8px;
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput {
+  text-wrap: nowrap;
+  gap: 4px;
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput span {
+  font-size: 0.8rem;
+  font-weight: 300;
+  gap: 2px;
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput input[type=radio] {
+  width: 16px;
+  height: 16px;
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput input:is(:first-child) {
+  margin-left: 16px;
 }
 .Vx_CSS_Gen_Containter fieldset {
   border: none;
@@ -125,6 +160,12 @@
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging li ul {
   padding: 6px 24px;
   line-height: 1.2rem;
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Code {
+  padding-top: 16px;
+  padding-bottom: 16px;
+  max-height: 24vh;
+  overflow-y: scroll;
 }
 
 .RangeInput {

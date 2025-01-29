@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS Generation Module</title>
+    <style>
+      .container {
+        display: flex;
+        align-items: start;
+        justify-content: start;
+        padding: 2rem;
+        border: 2px solid #0c1136;
+        box-shadow: 6px 6px 0px #e72166;
+      }
+    </style>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Lexend", serif;
+        font-optical-sizing: auto;
+      }
+      body {
+        width: 100vw;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+    <link rel="stylesheet" href="./Style/style.css" />
+    <script type="module" src="./js/CSSGenerator.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <main class="Vx_CSS_Gen_Containter">
+        <div class="Vx_CSS_Gen_Controls">
+          <fieldset
+            data-class="Item-No-01"
+            class="Fieldset_Unit_Changable"
+            data-unit="px"
+            data-unit-list="px vw rem"
+          >
+            <legend>
+              Item No.01
+              <div class="UnitChangeButton">
+                px
+                <li>
+                  <ul>
+                    px
+                  </ul>
+                  <ul>
+                    vw
+                  </ul>
+                  <ul>
+                    rem
+                  </ul>
+                  <ul>
+                    custom
+                  </ul>
+                </li>
+                <svg
+                  class="ChangeButtonIcon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5 17.9999H9.24C9.37161 18.0007 9.50207 17.9755 9.62391 17.9257C9.74574 17.8759 9.85656 17.8026 9.95 17.7099L16.87 10.7799L19.71 7.99994C19.8037 7.90698 19.8781 7.79637 19.9289 7.67452C19.9797 7.55266 20.0058 7.42195 20.0058 7.28994C20.0058 7.15793 19.9797 7.02722 19.9289 6.90536C19.8781 6.7835 19.8037 6.6729 19.71 6.57994L15.47 2.28994C15.377 2.19621 15.2664 2.12182 15.1446 2.07105C15.0227 2.02028 14.892 1.99414 14.76 1.99414C14.628 1.99414 14.4973 2.02028 14.3754 2.07105C14.2536 2.12182 14.143 2.19621 14.05 2.28994L11.23 5.11994L4.29 12.0499C4.19732 12.1434 4.12399 12.2542 4.07423 12.376C4.02446 12.4979 3.99924 12.6283 4 12.7599V16.9999C4 17.2652 4.10536 17.5195 4.29289 17.707C4.48043 17.8946 4.73478 17.9999 5 17.9999ZM14.76 4.40994L17.59 7.23994L16.17 8.65994L13.34 5.82994L14.76 4.40994ZM6 13.1699L11.93 7.23994L14.76 10.0699L8.83 15.9999H6V13.1699ZM21 19.9999H3C2.73478 19.9999 2.48043 20.1053 2.29289 20.2928C2.10536 20.4804 2 20.7347 2 20.9999C2 21.2652 2.10536 21.5195 2.29289 21.707C2.48043 21.8946 2.73478 21.9999 3 21.9999H21C21.2652 21.9999 21.5196 21.8946 21.7071 21.707C21.8946 21.5195 22 21.2652 22 20.9999C22 20.7347 21.8946 20.4804 21.7071 20.2928C21.5196 20.1053 21.2652 19.9999 21 19.9999Z"
+                    fill="black"
+                  />
+                </svg>
+              </div>
+            </legend>
+            <label class="RangeInput"
+              >Border Radius
+              <input type="range" data-css-label="border-radius" />
+            </label>
+          </fieldset>
+
+          <fieldset data-class="Item-No-02">
+            <legend>Item No.02</legend>
+            <label class="RadialInput">
+              <input
+                type="radio"
+                name="Item-No-02"
+                value="start"
+                data-css-label="justify-content"
+              />
+              start</label
+            >
+            <label class="RadialInput">
+              <input
+                type="radio"
+                name="Item-No-02"
+                value="center"
+                data-css-label="justify-content"
+              />
+              center</label
+            >
+            <label class="RadialInput">
+              <input
+                type="radio"
+                name="Item-No-02"
+                value="end"
+                data-css-label="justify-content"
+              />
+              end</label
+            >
+          </fieldset>
+
+          <fieldset data-class="Item-No-03">
+            <legend>Item No.03</legend>
+            <label class="CheckboxInput">
+              <input
+                type="checkbox"
+                name="Item-No-03"
+                value="visible"
+                data-css-label="visibility"
+              />
+              Visible
+            </label>
+            <label class="CheckboxInput">
+              <input
+                type="checkbox"
+                name="Item-No-03"
+                value="hidden"
+                data-css-label="visibility"
+              />
+              Hidden
+            </label>
+          </fieldset>
+
+          <fieldset data-class="Item-No-04">
+            <legend>Item No.04</legend>
+            <label class="ColorInput">
+              Background Color
+              <input
+                type="color"
+                name="Item-No-04"
+                value="#ffffff"
+                data-css-label="background-color"
+              />
+            </label>
+            <label class="ColorInput">
+              Border Color
+              <input
+                type="color"
+                name="Item-No-04"
+                value="#000000"
+                data-css-label="border-color"
+              />
+            </label>
+          </fieldset>
+
+          <fieldset data-class="Item-No-05">
+            <legend>Item No.05</legend>
+            <label class="TextInput">
+              Font Family
+              <input
+                type="text"
+                name="Item-No-05"
+                placeholder="Enter font name"
+                data-css-label="font-family"
+              />
+            </label>
+            <label class="TextInput">
+              Custom Class
+              <input
+                type="text"
+                name="Item-No-05"
+                placeholder="Enter class name"
+                data-css-label="class"
+              />
+            </label>
+          </fieldset>
+
+          <fieldset
+            data-class="Item-No-06"
+            class="Fieldset_Unit_Changable"
+            data-unit="px"
+            data-unit-list="px vw rem"
+          >
+            <legend>
+              Item No.06
+              <div class="UnitChangeButton">
+                px
+                <li>
+                  <ul>
+                    px
+                  </ul>
+                  <ul>
+                    vw
+                  </ul>
+                  <ul>
+                    rem
+                  </ul>
+                  <ul>
+                    custom
+                  </ul>
+                </li>
+                <svg
+                  <svg
+                  class="ChangeButtonIcon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M5 17.9999H9.24C9.37161 18.0007 9.50207 17.9755 9.62391 17.9257C9.74574 17.8759 9.85656 17.8026 9.95 17.7099L16.87 10.7799L19.71 7.99994C19.8037 7.90698 19.8781 7.79637 19.9289 7.67452C19.9797 7.55266 20.0058 7.42195 20.0058 7.28994C20.0058 7.15793 19.9797 7.02722 19.9289 6.90536C19.8781 6.7835 19.8037 6.6729 19.71 6.57994L15.47 2.28994C15.377 2.19621 15.2664 2.12182 15.1446 2.07105C15.0227 2.02028 14.892 1.99414 14.76 1.99414C14.628 1.99414 14.4973 2.02028 14.3754 2.07105C14.2536 2.12182 14.143 2.19621 14.05 2.28994L11.23 5.11994L4.29 12.0499C4.19732 12.1434 4.12399 12.2542 4.07423 12.376C4.02446 12.4979 3.99924 12.6283 4 12.7599V16.9999C4 17.2652 4.10536 17.5195 4.29289 17.707C4.48043 17.8946 4.73478 17.9999 5 17.9999ZM14.76 4.40994L17.59 7.23994L16.17 8.65994L13.34 5.82994L14.76 4.40994ZM6 13.1699L11.93 7.23994L14.76 10.0699L8.83 15.9999H6V13.1699ZM21 19.9999H3C2.73478 19.9999 2.48043 20.1053 2.29289 20.2928C2.10536 20.4804 2 20.7347 2 20.9999C2 21.2652 2.10536 21.5195 2.29289 21.707C2.48043 21.8946 2.73478 21.9999 3 21.9999H21C21.2652 21.9999 21.5196 21.8946 21.7071 21.707C21.8946 21.5195 22 21.2652 22 20.9999C22 20.7347 21.8946 20.4804 21.7071 20.2928C21.5196 20.1053 21.2652 19.9999 21 19.9999Z"
+                    fill="black"
+                  />
+                </svg>
+              </div>
+            </legend>
+            <label class="RangeInput"
+              >Margin Top
+              <input type="range" data-css-label="margin-top" />
+            </label>
+          </fieldset>
+        </div>
+
+        <div class="Vx_CSS_Gen_Preview">
+          <section class="Vx_CSS_Gen_FinalResult"></section>
+          <div class="Vx_CSS_Gen_Code">
+            <pre><code class="generated-css"></code></pre>
+          </div>
+
+          <nav class="Vx_CSS_Gen_Toolbar">
+            <button data-action="copy">Copy CSS</button>
+            <button data-action="reset">Reset</button>
+            <button data-action="save">Save Template</button>
+          </nav>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

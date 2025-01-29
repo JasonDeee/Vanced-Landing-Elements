@@ -197,47 +197,62 @@ class CSSGenerator {
   }
 
   updatePreview() {
-    let styleSheet = "";
-    const parentClass = this.mainClassInput.value.trim();
     const previewStyle = document.getElementById("preview-style");
+    let cssText = "";
+    const parentClass = this.mainClassInput.value.trim();
 
-    for (const [selector, properties] of this.cssState) {
-      // Thêm parent class nếu có
+    // Generate preset CSS first
+    for (const [selector, properties] of this.presetCSS) {
       const fullSelector = parentClass
         ? `.${parentClass} .${selector}`
         : `.${selector}`;
 
-      styleSheet += `${fullSelector} {\n`;
+      cssText += `${fullSelector} {\n`;
       for (const [prop, value] of properties) {
-        styleSheet += `  ${prop}: ${value};\n`;
+        cssText += `  ${prop}: ${value};\n`;
       }
-      styleSheet += "}\n";
+      cssText += "}\n\n";
     }
 
-    // Cập nhật nội dung của thẻ style
-    previewStyle.textContent = styleSheet;
+    // Then generate dynamic CSS
+    for (const [selector, properties] of this.cssState) {
+      const fullSelector = parentClass
+        ? `.${parentClass} .${selector}`
+        : `.${selector}`;
 
-    // Thêm/xóa class cha vào gallery nếu có
-    const gallery = document.querySelector("#GALLERY1");
-    if (gallery) {
-      // Lấy class cũ (nếu có) từ data attribute
-      const oldParentClass = gallery.dataset.parentClass;
+      // Check if we need to merge with preset
+      const presetProperties = this.presetCSS.get(selector);
 
-      if (oldParentClass && oldParentClass !== parentClass) {
-        gallery.classList.remove(oldParentClass);
+      cssText += `${fullSelector} {\n`;
+
+      // Add preset properties first
+      if (presetProperties) {
+        for (const [prop, value] of presetProperties) {
+          // Skip if property is overridden by dynamic CSS
+          if (!properties.has(prop)) {
+            cssText += `  ${prop}: ${value};\n`;
+          }
+        }
       }
 
-      if (parentClass) {
-        gallery.classList.add(parentClass);
-        // Lưu class mới vào data attribute
-        gallery.dataset.parentClass = parentClass;
+      // Add dynamic properties
+      for (const [prop, value] of properties) {
+        cssText += `  ${prop}: ${value};\n`;
       }
+
+      cssText += "}\n\n";
     }
+
+    // Update preview style
+    previewStyle.textContent = cssText;
   }
 
   updateCodeDisplay() {
     let codeOutput = "";
     const parentClass = this.mainClassInput.value.trim();
+
+    // Start style tag
+    codeOutput += "<style>\n";
 
     // Generate preset CSS first
     for (const [selector, properties] of this.presetCSS) {
@@ -280,6 +295,9 @@ class CSSGenerator {
 
       codeOutput += "}\n\n";
     }
+
+    // End style tag
+    codeOutput += "</style>";
 
     this.codeDisplay.textContent = codeOutput;
   }

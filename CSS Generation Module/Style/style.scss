@@ -11,7 +11,30 @@
   --global-palette9rgb: 255, 255, 255;
 }
 
+.Vx_SampleHolder {
+  * {
+    cursor: not-allowed !important;
+  }
+}
+
 .Vx_CSS_Gen_Containter {
+  position: relative;
+  padding: 32px;
+
+  .MainClassInput {
+    border: 1px solid var(--global-palette3);
+    outline: none;
+    padding: 8px;
+    box-shadow: 4px 4px 0 var(--global-palette3);
+    width: 62%;
+
+    position: absolute;
+    top: 0;
+    // left: 0;
+    transform: translateY(-50%);
+    z-index: 100;
+  }
+
   .Vx_CSS_Gen_Controls {
     display: flex;
     align-items: stretch;
@@ -19,6 +42,26 @@
     flex-direction: column;
 
     gap: 8px;
+
+    .RadialInput {
+      text-wrap: nowrap;
+      gap: 4px;
+
+      span {
+        font-size: 0.8rem;
+        font-weight: 300;
+        gap: 2px;
+      }
+
+      input[type="radio"] {
+        width: 16px;
+        height: 16px;
+      }
+
+      input:is(:first-child) {
+        margin-left: 16px;
+      }
+    }
   }
   fieldset {
     border: none;
@@ -155,6 +198,14 @@
         // }
       }
     }
+  }
+
+  .Vx_CSS_Gen_Code {
+    padding-top: 16px;
+    padding-bottom: 16px;
+
+    max-height: 24vh;
+    overflow-y: scroll;
   }
 }
 
