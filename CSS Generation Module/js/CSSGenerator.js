@@ -5,7 +5,6 @@ class CSSGenerator {
     this.controls = document.querySelector(".Vx_CSS_Gen_Controls");
     this.preview = document.querySelector(".Vx_CSS_Gen_FinalResult");
     this.codeDisplay = document.querySelector(".generated-css");
-    this.toolbar = document.querySelector(".Vx_CSS_Gen_Toolbar");
 
     // Thêm reference đến MainClassInput
     this.mainClassInput = document.getElementById("MainClassInput_1");
@@ -49,7 +48,6 @@ class CSSGenerator {
 
   init() {
     this.bindControlEvents();
-    this.bindToolbarEvents();
     this.initializeDefaultState();
     this.initUnitControls();
   }
@@ -185,23 +183,6 @@ class CSSGenerator {
     });
   }
 
-  bindToolbarEvents() {
-    this.toolbar.addEventListener("click", (e) => {
-      const action = e.target.dataset.action;
-      switch (action) {
-        case "copy":
-          this.copyCSS();
-          break;
-        case "reset":
-          this.resetState();
-          break;
-        case "save":
-          this.saveTemplate();
-          break;
-      }
-    });
-  }
-
   // CSS Management
   updateCSS(targetClass, property, value) {
     // Lưu vào state
@@ -301,51 +282,6 @@ class CSSGenerator {
     }
 
     this.codeDisplay.textContent = codeOutput;
-  }
-
-  // Toolbar Actions
-  copyCSS() {
-    const cssText = this.codeDisplay.textContent;
-    navigator.clipboard
-      .writeText(cssText)
-      .then(() => alert("CSS copied to clipboard!"))
-      .catch((err) => console.error("Failed to copy:", err));
-  }
-
-  resetState() {
-    // Clear state
-    this.cssState.clear();
-
-    // Reset UI
-    this.updatePreview();
-    this.updateCodeDisplay();
-
-    // Reset all inputs
-    this.controls.querySelectorAll("input, select").forEach((input) => {
-      if (input.type === "range") {
-        input.value = input.defaultValue;
-      } else if (input.type === "radio") {
-        input.checked = false;
-      } else if (input.tagName === "SELECT") {
-        input.selectedIndex = 0;
-      }
-    });
-  }
-
-  saveTemplate() {
-    const template = {
-      name: prompt("Enter template name:"),
-      styles: Object.fromEntries(this.cssState),
-    };
-
-    // Lưu vào localStorage
-    const savedTemplates = JSON.parse(
-      localStorage.getItem("cssTemplates") || "[]"
-    );
-    savedTemplates.push(template);
-    localStorage.setItem("cssTemplates", JSON.stringify(savedTemplates));
-
-    alert("Template saved!");
   }
 
   // Initialization
