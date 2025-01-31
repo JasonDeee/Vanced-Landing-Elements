@@ -42,11 +42,68 @@
     justify-content: start;
     flex-direction: column;
 
+    max-height: 60vh;
+
+    overflow-x: hidden;
+    overflow-y: scroll;
+
     gap: 8px;
+
+    input {
+      background: var(--global-palette9);
+
+      transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
+      * {
+        transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
+      }
+    }
+
+    input[type="range"] {
+      appearance: none;
+      background: none;
+      border: none;
+
+      cursor: pointer;
+
+      // overflow-x: hidden;
+
+      &::-webkit-slider-thumb {
+        appearance: none;
+        cursor: e-resize;
+        background: var(--global-palette9);
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid var(--global-palette3);
+        margin-top: -6px;
+
+        display: block;
+
+        &:hover {
+          background: var(--global-palette1);
+        }
+      }
+
+      &::-webkit-slider-runnable-track {
+        background: var(--global-palette9);
+        height: 4px;
+        border-radius: 4px;
+      }
+      &::-webkit-slider-progres {
+        background: var(--global-palette1);
+        height: 4px;
+      }
+    }
 
     .RadialInput {
       text-wrap: nowrap;
       gap: 4px;
+      justify-content: end;
+
+      &::content {
+        position: absolute;
+        left: 0;
+      }
 
       span {
         font-size: 0.8rem;
@@ -55,12 +112,15 @@
       }
 
       input[type="radio"] {
-        width: 16px;
+        max-width: 16px;
         height: 16px;
+        margin-left: 8px;
+
+        cursor: pointer;
       }
 
       input:is(:first-child) {
-        margin-left: 16px;
+        margin-left: auto;
       }
     }
   }
@@ -110,9 +170,9 @@
   }
 
   .Fieldset_Unit_Changable {
-    z-index: 2;
+    // z-index: 2;
     * {
-      transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
+      transition: all 0.23s cubic-bezier(0.25, 0, 0, 1);
     }
     .UnitChangeButton {
       width: auto;
@@ -137,47 +197,47 @@
         pointer-events: none;
       }
 
-      li {
-        width: fit-content;
+      // li {
+      //   width: fit-content;
 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: start;
-        background: var(--global-palette8);
-        // padding: 8px;
-        border: 2px solid #0c1136;
+      //   display: flex;
+      //   flex-direction: column;
+      //   align-items: center;
+      //   justify-content: start;
+      //   background: var(--global-palette8);
+      //   // padding: 8px;
+      //   border: 2px solid #0c1136;
 
-        list-style: none;
+      //   list-style: none;
 
-        position: absolute;
-        height: fit-content;
-        overflow: hidden;
+      //   position: absolute;
+      //   height: fit-content;
+      //   overflow: hidden;
 
-        right: -0.5rem;
-        top: 0;
+      //   right: -0.5rem;
+      //   top: 0;
 
-        font-size: 1rem;
-        line-height: 1.2rem;
+      //   font-size: 1rem;
+      //   line-height: 1.2rem;
 
-        transform: translateX(100%);
-        opacity: 0;
+      //   transform: translateX(100%);
+      //   opacity: 0;
 
-        ul {
-          list-style: none;
-          width: 100%;
-          text-align: center;
-          padding: 0px 16px;
-          line-height: 0.1px;
+      //   ul {
+      //     list-style: none;
+      //     width: 100%;
+      //     text-align: center;
+      //     padding: 0px 16px;
+      //     line-height: 0.1px;
 
-          &:hover {
-            color: var(--global-palette9);
-            background: var(--global-palette1);
-          }
-        }
+      //     &:hover {
+      //       color: var(--global-palette9);
+      //       background: var(--global-palette1);
+      //     }
+      //   }
 
-        pointer-events: none;
-      }
+      //   pointer-events: none;
+      // }
 
       &.UnitChanging {
         background: var(--global-palette7);
@@ -202,10 +262,11 @@
   }
 
   .Vx_CSS_Gen_Code {
-    padding-top: 16px;
-    padding-bottom: 16px;
+    margin-top: 16px;
+    // margin-bottom: 16px;
 
-    max-height: 24vh;
+    max-height: 34vh;
+    overflow-x: hidden;
     overflow-y: scroll;
   }
 }
@@ -234,6 +295,7 @@
     height: fit-content;
     gap: 4px;
     padding: 4px;
+
     svg {
       overflow: visible;
       width: 1rem;
@@ -252,12 +314,14 @@
       position: absolute;
       height: fit-content;
       overflow: hidden;
-      right: -0.5rem;
+      right: 4px;
       top: 0;
       font-size: 1rem;
       line-height: 1.2rem;
-      transform: translateX(100%);
+
+      // transform: translateX(100%);
       opacity: 0;
+      z-index: 100;
       ul {
         list-style: none;
         width: 100%;

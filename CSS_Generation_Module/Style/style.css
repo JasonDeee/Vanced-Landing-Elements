@@ -23,11 +23,58 @@
   align-items: stretch;
   justify-content: start;
   flex-direction: column;
+  max-height: 60vh;
+  overflow-x: hidden;
+  overflow-y: scroll;
   gap: 8px;
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input {
+  background: var(--global-palette9);
+  transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input * {
+  transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type=range] {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+          appearance: none;
+  cursor: e-resize;
+  background: var(--global-palette9);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--global-palette3);
+  margin-top: -6px;
+  display: block;
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type=range]::-webkit-slider-thumb:hover {
+  background: var(--global-palette1);
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type=range]::-webkit-slider-runnable-track {
+  background: var(--global-palette9);
+  height: 4px;
+  border-radius: 4px;
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type=range]::-webkit-slider-progres {
+  background: var(--global-palette1);
+  height: 4px;
 }
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput {
   text-wrap: nowrap;
   gap: 4px;
+  justify-content: end;
+}
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput::content {
+  position: absolute;
+  left: 0;
 }
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput span {
   font-size: 0.8rem;
@@ -35,11 +82,13 @@
   gap: 2px;
 }
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput input[type=radio] {
-  width: 16px;
+  max-width: 16px;
   height: 16px;
+  margin-left: 8px;
+  cursor: pointer;
 }
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput input:is(:first-child) {
-  margin-left: 16px;
+  margin-left: auto;
 }
 .Vx_CSS_Gen_Containter fieldset {
   border: none;
@@ -80,11 +129,8 @@
   justify-content: start;
   align-items: start;
 }
-.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable {
-  z-index: 2;
-}
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable * {
-  transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.23s cubic-bezier(0.25, 0, 0, 1);
 }
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton {
   width: auto;
@@ -105,39 +151,6 @@
   height: 1rem;
   pointer-events: none;
 }
-.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton li {
-  width: -moz-fit-content;
-  width: fit-content;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: start;
-  background: var(--global-palette8);
-  border: 2px solid #0c1136;
-  list-style: none;
-  position: absolute;
-  height: -moz-fit-content;
-  height: fit-content;
-  overflow: hidden;
-  right: -0.5rem;
-  top: 0;
-  font-size: 1rem;
-  line-height: 1.2rem;
-  transform: translateX(100%);
-  opacity: 0;
-  pointer-events: none;
-}
-.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton li ul {
-  list-style: none;
-  width: 100%;
-  text-align: center;
-  padding: 0px 16px;
-  line-height: 0.1px;
-}
-.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton li ul:hover {
-  color: var(--global-palette9);
-  background: var(--global-palette1);
-}
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging {
   background: var(--global-palette7);
 }
@@ -150,9 +163,9 @@
   line-height: 1.2rem;
 }
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Code {
-  padding-top: 16px;
-  padding-bottom: 16px;
-  max-height: 24vh;
+  margin-top: 16px;
+  max-height: 34vh;
+  overflow-x: hidden;
   overflow-y: scroll;
 }
 
@@ -201,12 +214,12 @@
   height: -moz-fit-content;
   height: fit-content;
   overflow: hidden;
-  right: -0.5rem;
+  right: 4px;
   top: 0;
   font-size: 1rem;
   line-height: 1.2rem;
-  transform: translateX(100%);
   opacity: 0;
+  z-index: 100;
   pointer-events: none;
 }
 .RangeInput .UnitChangeButton li ul {
