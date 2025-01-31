@@ -1,7 +1,48 @@
 function doGet(e) {
+  if (e.parameter.action === "clone") {
+    return handleCloneRequest(e);
+  }
+
   return HtmlService.createHtmlOutputFromFile("CloneSheet")
     .setTitle("Clone Sheet Module")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag("viewport", "width=device-width, initial-scale=1");
+}
+
+function handleCloneRequest(e) {
+  const token = e.parameter.token;
+
+  try {
+    // Xác thực token
+    const verification = OAuth2.verifyIdToken(token, {
+      audience:
+        "153083226508-qmlv5ko26irv72rrshs6g2i3vnr4d1g4.apps.googleusercontent.com",
+    });
+
+    const userEmail = verification.getEmail();
+
+    // Thực hiện clone
+    const result = copySpreadsheetAndScripts();
+
+    return ContentService.createTextOutput(
+      JSON.stringify({
+        success: true,
+        email: userEmail,
+        ...result,
+      })
+    )
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
+  } catch (error) {
+    return ContentService.createTextOutput(
+      JSON.stringify({
+        success: false,
+        error: error.toString(),
+      })
+    )
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
+  }
 }
 
 function verifyCredential(credential) {
