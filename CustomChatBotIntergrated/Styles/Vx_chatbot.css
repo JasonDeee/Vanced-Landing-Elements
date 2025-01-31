@@ -1,1 +1,70 @@
-/*# sourceMappingURL=Vx_chatbot.css.map */
+.chat-container {
+  max-width: 800px;
+  margin: 20px auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.chat-messages {
+  height: 500px;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f5f5f5;
+}
+
+.chat-input {
+  display: flex;
+  padding: 15px;
+  background-color: #fff;
+  border-top: 1px solid #eee;
+}
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-right: 10px;
+  font-size: 14px;
+}
+.chat-input input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+.chat-input button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+.chat-input button:hover {
+  background-color: #0056b3;
+}
+.chat-input button:active {
+  background-color: #004085;
+}
+
+.message {
+  margin: 10px 0;
+  padding: 10px 15px;
+  border-radius: 10px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+.user-message {
+  background-color: #007bff;
+  color: white;
+  margin-left: auto;
+}
+
+.bot-message {
+  background-color: #e9ecef;
+  color: #212529;
+  margin-right: auto;
+}/*# sourceMappingURL=Vx_chatbot.css.map */

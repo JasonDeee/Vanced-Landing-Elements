@@ -5,44 +5,46 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Clone Sheet Module</title>
-    <?!= HtmlService.createHtmlOutput().getContent(); ?>
-    <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
-
   <body>
     <div class="container">
       <div id="buttonDiv"></div>
       <div id="message"></div>
       <p id="debug-info" class="debug-text"></p>
     </div>
-
     <script>
-      const APPS_SCRIPT_URL =
-        "https://script.google.com/macros/s/AKfycbwlvl-MskMJ-BuS4Zyyi2EOoEJ5GDdmW0tqhh37Mmv5Atgk2PWrGzpzk59pb1e_FQQJ/exec"; // URL sau khi deploy
       const CLIENT_ID =
         "153083226508-qmlv5ko26irv72rrshs6g2i3vnr4d1g4.apps.googleusercontent.com";
 
-      async function handleCredentialResponse(response) {
+      function handleCredentialResponse(response) {
         const debugInfo = document.getElementById("debug-info");
         try {
           debugInfo.innerHTML = "Đang xử lý xác thực...";
 
-          // Gọi API endpoint
-          const url = `${APPS_SCRIPT_URL}?action=clone&token=${response.credential}`;
-          const result = await fetch(url);
-          const data = await result.json();
-
-          if (data.success) {
-            debugInfo.innerHTML =
-              "Thành công!\n" +
-              `- Email: ${data.email}\n` +
-              `- Main Folder ID: ${data.mainFolderId}\n` +
-              `- Sub Folder ID: ${data.subFolderId}\n` +
-              `- Spreadsheet ID: ${data.spreadsheetId}`;
-          } else {
-            throw new Error(data.error);
-          }
+          google.script.run
+            .withSuccessHandler(function (result) {
+              if (result.success) {
+                debugInfo.innerHTML =
+                  "Thành công!\n" +
+                  `- Email: ${result.email}\n` +
+                  `- Main Folder ID: ${result.mainFolderId}\n` +
+                  `- Sub Folder ID: ${result.subFolderId}\n` +
+                  `- Spreadsheet ID: ${result.spreadsheetId}\n` +
+                  `- Message: ${result.message}`;
+              } else {
+                debugInfo.innerHTML = "Lỗi: " + result.error;
+              }
+            })
+            .withFailureHandler(function (error) {
+              debugInfo.innerHTML =
+                "Lỗi khi gọi server: " +
+                error.message +
+                "\n" +
+                "Stack: " +
+                error.stack;
+            })
+            .verifyCredential(response.credential);
         } catch (error) {
           debugInfo.innerHTML =
             "Lỗi: " + error.message + "\n" + "Stack: " + error.stack;
@@ -66,7 +68,6 @@
         debugInfo.innerHTML += "\nReady!";
       };
     </script>
-
     <style>
       .container {
         display: flex;

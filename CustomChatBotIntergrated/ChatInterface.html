@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Interface</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+
+      * {
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+
+        font-family: "Lexend", serif;
+        font-optical-sizing: auto;
+      }
+    </style>
+    <link rel="stylesheet" href="./Styles/Vx_chatbot.css" />
+  </head>
+  <body>
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <!-- Tin nhắn sẽ được hiển thị ở đây -->
+      </div>
+      <div class="chat-input">
+        <input
+          type="text"
+          id="messageInput"
+          placeholder="Nhập tin nhắn của bạn..."
+        />
+        <button id="sendButton">Gửi</button>
+      </div>
+    </div>
+
+    <!-- Thêm CryptoJS để giải mã API key -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- Thêm file encryption.js -->
+    <script src="./API Encrypt/encryption.js"></script>
+    <!-- Thêm file chat.js -->
+    <script src="./Scripts/chat.js"></script>
+  </body>
+</html>

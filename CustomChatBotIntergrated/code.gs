@@ -1,66 +1,32 @@
 function doGet(e) {
-  if (e.parameter.action === "clone") {
-    return handleCloneRequest(e);
-  }
-
   return HtmlService.createHtmlOutputFromFile("CloneSheet")
     .setTitle("Clone Sheet Module")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-    .addMetaTag("viewport", "width=device-width, initial-scale=1");
-}
-
-function handleCloneRequest(e) {
-  const token = e.parameter.token;
-
-  try {
-    // Xác thực token
-    const verification = OAuth2.verifyIdToken(token, {
-      audience:
-        "153083226508-qmlv5ko26irv72rrshs6g2i3vnr4d1g4.apps.googleusercontent.com",
-    });
-
-    const userEmail = verification.getEmail();
-
-    // Thực hiện clone
-    const result = copySpreadsheetAndScripts();
-
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        success: true,
-        email: userEmail,
-        ...result,
-      })
-    )
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeader("Access-Control-Allow-Origin", "*");
-  } catch (error) {
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        success: false,
-        error: error.toString(),
-      })
-    )
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeader("Access-Control-Allow-Origin", "*");
-  }
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function verifyCredential(credential) {
   try {
     const verification = OAuth2.verifyIdToken(credential, {
       audience:
-        "153083226508-qmlv5ko26irv72rrshs6g2i3vnr4d1g4.apps.googleusercontent.com", // Thay bằng Client ID của bạn
+        "153083226508-qmlv5ko26irv72rrshs6g2i3vnr4d1g4.apps.googleusercontent.com",
     });
 
     const userEmail = verification.getEmail();
 
-    // ... (logic sao chép spreadsheet ở đây)
-    copySpreadsheetAndScripts(); // Gọi hàm sao chép sau khi xác thực thành công.
+    // Thực hiện clone và lấy kết quả
+    const result = copySpreadsheetAndScripts();
 
-    return "Đăng nhập thành công với email: " + userEmail;
-  } catch (e) {
-    Logger.log("Invalid credential: " + e);
-    return "Lỗi xác thực. " + e;
+    return {
+      success: true,
+      email: userEmail,
+      ...result,
+    };
+  } catch (error) {
+    Logger.log("Invalid credential: " + error);
+    return {
+      success: false,
+      error: error.toString(),
+    };
   }
 }
 
@@ -107,12 +73,16 @@ function copySpreadsheetAndScripts() {
     return {
       success: true,
       message: "Đã tạo folder và spreadsheet thành công!",
+      mainFolderId: mainFolder.getId(),
+      subFolderId: subFolder.getId(),
+      spreadsheetId: newSpreadsheetId,
     };
   } catch (error) {
     Logger.log("Lỗi khi copy: " + error);
     return {
       success: false,
       message: "Đã xảy ra lỗi. Vui lòng thử lại.",
+      error: error.toString(),
     };
   }
 }
