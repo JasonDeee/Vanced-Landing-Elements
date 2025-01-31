@@ -19,6 +19,36 @@
     <script>
       let isScriptLoaded = false;
 
+      function checkEnvironment() {
+        const debugInfo = document.getElementById("debug-info");
+        const isLocalhost =
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1";
+
+        debugInfo.innerHTML =
+          "Environment Info:\n" +
+          "- Hostname: " +
+          window.location.hostname +
+          "\n" +
+          "- Protocol: " +
+          window.location.protocol +
+          "\n" +
+          "- Is Localhost: " +
+          isLocalhost +
+          "\n" +
+          "- Google Script Available: " +
+          checkScriptLoaded() +
+          "\n" +
+          "- Full URL: " +
+          window.location.href +
+          "\n" +
+          "- Origin: " +
+          window.location.origin +
+          "\n\n" +
+          "Client ID: 153083226508-qmlv5ko26irv72rrshs6g2i3vnr4d1g4.apps.googleusercontent.com\n" +
+          "Please ensure this origin is authorized in Google Cloud Console";
+      }
+
       function checkScriptLoaded() {
         return (
           typeof google !== "undefined" &&
@@ -29,7 +59,6 @@
 
       function handleCredentialResponse(response) {
         try {
-          // Hiển thị thông tin debug
           const debugInfo = document.getElementById("debug-info");
           debugInfo.innerHTML =
             "Đang xử lý xác thực...\n" +
@@ -37,11 +66,14 @@
             (response ? "yes" : "no") +
             "\n" +
             "Google Script API loaded: " +
-            checkScriptLoaded();
+            checkScriptLoaded() +
+            "\n" +
+            "Current URL: " +
+            window.location.href;
 
           if (!checkScriptLoaded()) {
-            debugInfo.innerHTML += "\nWaiting for Google Script API to load...";
-            setTimeout(() => handleCredentialResponse(response), 1000);
+            debugInfo.innerHTML +=
+              "\n\nLỗi: Ứng dụng cần được chạy từ Google Apps Script Web App URL";
             return;
           }
 
@@ -86,12 +118,33 @@
           debugInfo.innerHTML =
             "Initializing Google Sign-In...\n" +
             "Google Script API loaded: " +
-            checkScriptLoaded();
+            checkScriptLoaded() +
+            "\nOrigin: " +
+            window.location.origin;
 
           google.accounts.id.initialize({
             client_id:
               "153083226508-qmlv5ko26irv72rrshs6g2i3vnr4d1g4.apps.googleusercontent.com",
             callback: handleCredentialResponse,
+          });
+
+          // Thêm xử lý lỗi cho Google Sign-In
+          google.accounts.id.prompt((notification) => {
+            if (notification.isNotDisplayed()) {
+              debugInfo.innerHTML +=
+                "\nSign-in prompt not displayed. Reason: " +
+                notification.getNotDisplayedReason();
+            }
+            if (notification.isSkippedMoment()) {
+              debugInfo.innerHTML +=
+                "\nSign-in prompt skipped. Reason: " +
+                notification.getSkippedReason();
+            }
+            if (notification.isDismissedMoment()) {
+              debugInfo.innerHTML +=
+                "\nSign-in prompt dismissed. Reason: " +
+                notification.getDismissedReason();
+            }
           });
 
           google.accounts.id.renderButton(
@@ -126,7 +179,10 @@
         }
       }
 
-      window.onload = checkAndInitialize;
+      window.onload = function () {
+        checkEnvironment();
+        checkAndInitialize();
+      };
     </script>
 
     <style>
