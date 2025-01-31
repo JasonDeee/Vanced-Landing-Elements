@@ -98,6 +98,7 @@ async function Vx_saveChatMessage(message, role) {
 
     const response = await fetch(Vx_WEBAPP_URL, {
       method: "POST",
+      mode: "cors",
       headers: {
         "Content-Type": "application/json",
       },
@@ -130,7 +131,14 @@ async function Vx_loadChatHistory() {
       throw new Error("No user ID available");
     }
 
-    const response = await fetch(`${Vx_WEBAPP_URL}?userID=${Vx_currentUserID}`);
+    const response = await fetch(
+      `${Vx_WEBAPP_URL}?userID=${Vx_currentUserID}`,
+      {
+        method: "GET",
+        mode: "cors",
+      }
+    );
+
     const result = await response.json();
 
     if (!result.success) {

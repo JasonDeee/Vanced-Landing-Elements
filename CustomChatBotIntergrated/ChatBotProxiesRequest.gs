@@ -80,6 +80,10 @@ function updateChatLog(userID, newMessage) {
 
 // Hàm xử lý POST request từ client
 function doPost(e) {
+  var headers = {
+    "Access-Control-Allow-Origin": "*",
+  };
+
   try {
     const postData = JSON.parse(e.postData.contents);
     const { userID, message, role } = postData;
@@ -88,7 +92,6 @@ function doPost(e) {
       throw new Error("Missing required fields");
     }
 
-    // Định dạng tin nhắn theo cấu trúc yêu cầu
     const formattedMessage = {
       parts: [{ text: message }],
       role: role,
@@ -96,16 +99,18 @@ function doPost(e) {
 
     const result = updateChatLog(userID, formattedMessage);
 
-    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(
-      ContentService.MimeType.JSON
-    );
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders(headers);
   } catch (error) {
     return ContentService.createTextOutput(
       JSON.stringify({
         success: false,
         error: error.toString(),
       })
-    ).setMimeType(ContentService.MimeType.JSON);
+    )
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders(headers);
   }
 }
 
@@ -139,6 +144,10 @@ function getChatHistory(userID) {
 
 // Hàm xử lý GET request để lấy chat history
 function doGet(e) {
+  var headers = {
+    "Access-Control-Allow-Origin": "*",
+  };
+
   try {
     const userID = e.parameter.userID;
 
@@ -148,15 +157,30 @@ function doGet(e) {
 
     const result = getChatHistory(userID);
 
-    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(
-      ContentService.MimeType.JSON
-    );
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders(headers);
   } catch (error) {
     return ContentService.createTextOutput(
       JSON.stringify({
         success: false,
         error: error.toString(),
       })
-    ).setMimeType(ContentService.MimeType.JSON);
+    )
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders(headers);
   }
+}
+
+function doOptions(e) {
+  var headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400",
+  };
+
+  return ContentService.createTextOutput()
+    .setMimeType(ContentService.MimeType.TEXT)
+    .setHeaders(headers);
 }
