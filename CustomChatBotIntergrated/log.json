@@ -1,0 +1,34 @@
+[
+  { "parts": [{ "text": "Xin chào." }], "role": "user" },
+  {
+    "parts": [{ "text": "Xin chào! Chào mừng bạn. Have a nice day! " }],
+    "role": "model"
+  },
+  {
+    "parts": [
+      { "text": "Hãy cho tôi những thông tin cơ bản về Vanced Media." }
+    ],
+    "role": "user"
+  },
+  { "parts": [{ "text": "Tại sao lại có tên Vanced?" }], "role": "user" },
+  {
+    "parts": [
+      {
+        "text": "Tên \"Vanced\" là sự kết hợp của \"advance\" (tiến bộ) và \"advanced\" (tiên tiến). Chúng tôi muốn thể hiện cam kết của mình trong việc luôn cập nhật và ứng dụng những công nghệ tiên tiến nhất."
+      }
+    ],
+    "role": "model"
+  },
+  {
+    "parts": [{ "text": "Vậy dịch vụ chính của Vanced là gì?" }],
+    "role": "user"
+  },
+  {
+    "parts": [
+      {
+        "text": "Vanced cung cấp dịch vụ thiết kế và phát triển website, tập trung vào các giải pháp có tính sáng tạo cao. Chúng tôi chuyên về các dự án phức tạp, đòi hỏi kỹ thuật và tư duy thiết kế khác biệt. Find Service Inquiry Service Design, Vanced dịch vụ chính, Vanced Thân thiện"
+      }
+    ],
+    "role": "model"
+  }
+]

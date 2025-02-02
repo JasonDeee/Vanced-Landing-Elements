@@ -1,3 +1,20 @@
+// Hàm giải mã (để sẵn để sử dụng sau này)
+function decryptApiKey(encryptedText, passKey) {
+  try {
+    // Tạo salt từ passkey
+    const salt = CryptoJS.enc.Utf8.parse(passKey);
+
+    // Giải mã
+    const decrypted = CryptoJS.AES.decrypt(encryptedText, salt.toString());
+
+    // Chuyển đổi kết quả về string
+    return decrypted.toString(CryptoJS.enc.Utf8);
+  } catch (error) {
+    console.error("Decryption failed:", error);
+    return null;
+  }
+}
+
 // Hàm để giải mã API key
 async function getDecryptedApiKey() {
   try {
@@ -88,6 +105,48 @@ async function sendMessageToGemini(message) {
 const Vx_WEBAPP_URL =
   "https://script.google.com/macros/s/AKfycbxIn6xWfd0af8eMXRen8HA3sZ21G-O8z63wAQ5fRkdIejaYfrtZZXQvd15oHHYXiLMA/exec";
 
+// Hàm tạo JSONP request
+function jsonp(url, callback) {
+  return new Promise((resolve, reject) => {
+    // Tạo tên callback function ngẫu nhiên
+    const callbackName = "jsonp_callback_" + Math.round(100000 * Math.random());
+
+    // Tạo script element
+    const script = document.createElement("script");
+
+    // Cleanup function
+    const cleanup = () => {
+      document.body.removeChild(script);
+      delete window[callbackName];
+    };
+
+    // Setup callback function
+    window[callbackName] = (data) => {
+      cleanup();
+      resolve(data);
+    };
+
+    // Setup error handling
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("JSONP request failed"));
+    };
+
+    // Add callback parameter to URL
+    const separator = url.indexOf("?") === -1 ? "?" : "&";
+    script.src = `${url}${separator}callback=${callbackName}`;
+
+    // Add script to document
+    document.body.appendChild(script);
+  });
+}
+
+// Thêm enum cho các loại request
+const Vx_Sheet_RequestType = {
+  CHAT_HISTORY: "ChatHistoryRequest",
+  NEW_MESSAGE: "NewMessageUpdateForCurrentUser",
+};
+
 // Hàm gửi tin nhắn lên Google Sheets
 async function Vx_saveChatMessage(message, role) {
   try {
@@ -96,20 +155,30 @@ async function Vx_saveChatMessage(message, role) {
       throw new Error("No user ID available");
     }
 
-    const response = await fetch(Vx_WEBAPP_URL, {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userID: Vx_currentUserID,
-        message: message,
-        role: role,
-      }),
+    const params = new URLSearchParams({
+      userID: Vx_currentUserID,
+      message: message,
+      role: role,
+      requestType: Vx_Sheet_RequestType.NEW_MESSAGE,
     });
 
-    const result = await response.json();
+    // Log dữ liệu gửi lên server
+    console.group("Client Request Data:");
+    console.log("UserID:", Vx_currentUserID);
+    console.log("Message:", message);
+    console.log("Role:", role);
+    console.log("Request Type:", Vx_Sheet_RequestType.NEW_MESSAGE);
+    console.log("Full URL:", `${Vx_WEBAPP_URL}?${params.toString()}`);
+    console.groupEnd();
+
+    const result = await jsonp(`${Vx_WEBAPP_URL}?${params.toString()}`);
+
+    // Hiển thị logs từ server nếu có
+    if (result.logs) {
+      console.group("Server Logs:");
+      result.logs.forEach((log) => console.log(log));
+      console.groupEnd();
+    }
 
     if (!result.success) {
       throw new Error(result.error || "Failed to save chat message");
@@ -131,15 +200,26 @@ async function Vx_loadChatHistory() {
       throw new Error("No user ID available");
     }
 
-    const response = await fetch(
-      `${Vx_WEBAPP_URL}?userID=${Vx_currentUserID}`,
-      {
-        method: "GET",
-        mode: "cors",
-      }
-    );
+    const params = new URLSearchParams({
+      userID: Vx_currentUserID,
+      requestType: Vx_Sheet_RequestType.CHAT_HISTORY,
+    });
 
-    const result = await response.json();
+    // Log dữ liệu request
+    console.group("Client Request Data:");
+    console.log("UserID:", Vx_currentUserID);
+    console.log("Request Type:", Vx_Sheet_RequestType.CHAT_HISTORY);
+    console.log("Full URL:", `${Vx_WEBAPP_URL}?${params.toString()}`);
+    console.groupEnd();
+
+    const result = await jsonp(`${Vx_WEBAPP_URL}?${params.toString()}`);
+
+    // Hiển thị logs từ server nếu có
+    if (result.logs) {
+      console.group("Server Logs:");
+      result.logs.forEach((log) => console.log(log));
+      console.groupEnd();
+    }
 
     if (!result.success) {
       throw new Error(result.error || "Failed to load chat history");
@@ -157,7 +237,7 @@ async function Vx_loadChatHistory() {
 async function Vx_displayChatHistory() {
   try {
     const chatHistory = await Vx_loadChatHistory();
-    const chatMessages = document.getElementById("chatMessages");
+    const chatMessages = document.getElementById("Vx_chatMessages");
 
     // Xóa tin nhắn hiện tại
     chatMessages.innerHTML = "";
@@ -177,7 +257,7 @@ async function Vx_displayChatHistory() {
 
 // Hàm xử lý khi người dùng gửi tin nhắn
 async function handleUserMessage() {
-  const messageInput = document.getElementById("messageInput");
+  const messageInput = document.getElementById("Vx_messageInput");
   const message = messageInput.value.trim();
 
   if (message === "") return;
@@ -228,9 +308,9 @@ async function handleUserMessage() {
 // Hàm thêm tin nhắn vào khung chat
 function appendMessage(sender, message) {
   console.log(`Appending ${sender} message:`, message);
-  const chatMessages = document.getElementById("chatMessages");
+  const chatMessages = document.getElementById("Vx_chatMessages");
   const messageElement = document.createElement("div");
-  messageElement.className = `message ${sender}-message`;
+  messageElement.className = `Vx_message ${sender}-message`;
   messageElement.textContent = message;
   chatMessages.appendChild(messageElement);
   chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -361,8 +441,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Load chat history
   await Vx_displayChatHistory();
 
-  const sendButton = document.getElementById("sendButton");
-  const messageInput = document.getElementById("messageInput");
+  const sendButton = document.getElementById("Vx_sendButton");
+  const messageInput = document.getElementById("Vx_messageInput");
 
   sendButton.addEventListener("click", handleUserMessage);
   messageInput.addEventListener("keypress", (e) => {

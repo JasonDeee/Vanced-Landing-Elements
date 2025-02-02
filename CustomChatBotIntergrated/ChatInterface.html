@@ -19,24 +19,23 @@
     <link rel="stylesheet" href="./Styles/Vx_chatbot.css" />
   </head>
   <body>
-    <div class="chat-container">
-      <div class="chat-messages" id="chatMessages">
+    <div class="Vx_chat-container">
+      <div class="Vx_chat-messages" id="Vx_chatMessages">
         <!-- Tin nhắn sẽ được hiển thị ở đây -->
       </div>
-      <div class="chat-input">
+      <div class="Vx_chat-input">
         <input
           type="text"
-          id="messageInput"
+          id="Vx_messageInput"
           placeholder="Nhập tin nhắn của bạn..."
         />
-        <button id="sendButton">Gửi</button>
+        <button id="Vx_sendButton">Gửi</button>
       </div>
     </div>
 
     <!-- Thêm CryptoJS để giải mã API key -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <!-- Thêm file encryption.js -->
-    <script src="./API Encrypt/encryption.js"></script>
+
     <!-- Thêm file chat.js -->
     <script src="./Scripts/chat.js"></script>
   </body>
