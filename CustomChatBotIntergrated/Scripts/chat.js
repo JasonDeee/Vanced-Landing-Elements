@@ -20,7 +20,7 @@ async function getDecryptedApiKey() {
   try {
     // Thay thế các giá trị này bằng API key đã mã hóa và passkey của bạn
     const encryptedApiKey =
-      "U2FsdGVkX1/vDj/J2Aj1Bx1aJ2nym3FOv0Of5TdLh9joRWJrCoAFU95TpdTxFLQ80VA6tj3csCTkqq1x/kop0A==";
+      "U2FsdGVkX18F1B5IlTPKO9cX+f0xuJiIoJoAkSMmLQhfdyg2WjGCaSVBexS71bxDHoIKycwpBvjbVpY2CXnfFw==";
     const passKey = "123121";
     const decrypted = decryptApiKey(encryptedApiKey, passKey);
     console.log("API Key decryption successful");
@@ -147,14 +147,37 @@ const Vx_Sheet_RequestType = {
   NEW_MESSAGE: "NewMessageUpdateForCurrentUser",
 };
 
+// Thêm biến global để theo dõi trạng thái cookie
+let Vx_isCookieEnabled = false;
+
+// Thêm hàm mới để log trạng thái cookie
+function logCookieStatus() {
+  console.group("🍪 Cookie Status");
+  console.log(`Cookie Enabled: ${Vx_isCookieEnabled ? "✅ Yes" : "❌ No"}`);
+  console.log(
+    `Storage Mode: ${Vx_isCookieEnabled ? "🌐 Server" : "💻 Local Only"}`
+  );
+  console.groupEnd();
+}
+
 // Hàm gửi tin nhắn lên Google Sheets
 async function Vx_saveChatMessage(message, role) {
   try {
-    console.log("Saving chat message to sheets...");
+    console.group("💾 Saving Chat Message");
+    logCookieStatus();
+
+    if (!Vx_isCookieEnabled) {
+      console.log("📱 Saving to local storage only");
+      await saveToLocalStorage(message, role);
+      console.groupEnd();
+      return true;
+    }
+
     if (!Vx_currentUserID) {
       throw new Error("No user ID available");
     }
 
+    console.log("🌐 Saving to server...");
     const params = new URLSearchParams({
       userID: Vx_currentUserID,
       message: message,
@@ -173,7 +196,6 @@ async function Vx_saveChatMessage(message, role) {
 
     const result = await jsonp(`${Vx_WEBAPP_URL}?${params.toString()}`);
 
-    // Hiển thị logs từ server nếu có
     if (result.logs) {
       console.group("Server Logs:");
       result.logs.forEach((log) => console.log(log));
@@ -184,10 +206,34 @@ async function Vx_saveChatMessage(message, role) {
       throw new Error(result.error || "Failed to save chat message");
     }
 
-    console.log("Chat message saved successfully");
+    console.log("✅ Message saved successfully");
+    console.groupEnd();
     return true;
   } catch (error) {
-    console.error("Error saving chat message:", error);
+    console.error("❌ Error saving chat message:", error);
+    console.groupEnd();
+    return false;
+  }
+}
+
+// Thêm hàm mới để lưu tin nhắn vào localStorage
+async function saveToLocalStorage(message, role) {
+  try {
+    const localChatHistory = JSON.parse(
+      localStorage.getItem("Vx_localChatHistory") || "[]"
+    );
+    localChatHistory.push({
+      parts: [{ text: message }],
+      role: role,
+    });
+    localStorage.setItem(
+      "Vx_localChatHistory",
+      JSON.stringify(localChatHistory)
+    );
+    console.log("Message saved to local storage");
+    return true;
+  } catch (error) {
+    console.error("Error saving to local storage:", error);
     return false;
   }
 }
@@ -196,6 +242,13 @@ async function Vx_saveChatMessage(message, role) {
 async function Vx_loadChatHistory() {
   try {
     console.log("Loading chat history...");
+
+    // Kiểm tra xem cookie có được bật không
+    if (!Vx_isCookieEnabled) {
+      console.log("Cookies disabled - skipping server chat history load");
+      return [];
+    }
+
     if (!Vx_currentUserID) {
       throw new Error("No user ID available");
     }
@@ -214,7 +267,6 @@ async function Vx_loadChatHistory() {
 
     const result = await jsonp(`${Vx_WEBAPP_URL}?${params.toString()}`);
 
-    // Hiển thị logs từ server nếu có
     if (result.logs) {
       console.group("Server Logs:");
       result.logs.forEach((log) => console.log(log));
@@ -236,22 +288,35 @@ async function Vx_loadChatHistory() {
 // Hàm hiển thị lịch sử chat
 async function Vx_displayChatHistory() {
   try {
-    const chatHistory = await Vx_loadChatHistory();
-    const chatMessages = document.getElementById("Vx_chatMessages");
+    console.group("📜 Loading Chat History");
+    logCookieStatus();
 
-    // Xóa tin nhắn hiện tại
+    let chatHistory;
+    if (Vx_isCookieEnabled) {
+      console.log("📤 Loading history from server...");
+      chatHistory = await Vx_loadChatHistory();
+    } else {
+      console.log("💾 Loading history from local storage...");
+      chatHistory = JSON.parse(
+        localStorage.getItem("Vx_localChatHistory") || "[]"
+      );
+    }
+
+    const chatMessages = document.getElementById("Vx_chatMessages");
     chatMessages.innerHTML = "";
 
-    // Hiển thị từng tin nhắn trong lịch sử
+    console.log(`📝 Displaying ${chatHistory.length} messages`);
     chatHistory.forEach((message) => {
       const sender = message.role === "user" ? "user" : "bot";
       const text = message.parts[0].text;
       appendMessage(sender, text);
     });
 
-    console.log("Chat history displayed successfully");
+    console.log("✅ Chat history displayed successfully");
+    console.groupEnd();
   } catch (error) {
-    console.error("Error displaying chat history:", error);
+    console.error("❌ Error displaying chat history:", error);
+    console.groupEnd();
   }
 }
 
@@ -320,9 +385,9 @@ function appendMessage(sender, message) {
 // Hàm tạo user ID từ browser fingerprint
 async function generateVx_userID() {
   try {
-    console.log("Generating Vx_userID...");
+    console.group("🔑 Generating User ID");
+    console.log("Starting user ID generation...");
 
-    // Collect browser information
     const Vx_browserData = {
       userAgent: navigator.userAgent,
       language: navigator.language,
@@ -337,25 +402,27 @@ async function generateVx_userID() {
       deviceMemory: navigator.deviceMemory || "unknown",
     };
 
-    // Tạo chuỗi từ tất cả thông tin
-    const Vx_dataString = JSON.stringify(Vx_browserData);
+    // Cập nhật trạng thái cookie global
+    Vx_isCookieEnabled = Vx_browserData.cookiesEnabled;
+    logCookieStatus();
 
-    // Tạo hash từ chuỗi dữ liệu
+    // Tiếp tục với phần còn lại của hàm...
+    const Vx_dataString = JSON.stringify(Vx_browserData);
     const Vx_hashBuffer = await crypto.subtle.digest(
       "SHA-256",
       new TextEncoder().encode(Vx_dataString)
     );
-
-    // Chuyển hash buffer thành hex string
     const Vx_hashArray = Array.from(new Uint8Array(Vx_hashBuffer));
     const Vx_hashHex = Vx_hashArray.map((b) =>
       b.toString(16).padStart(2, "0")
     ).join("");
 
     console.log("Vx_userID generated successfully");
+    console.groupEnd();
     return Vx_hashHex.slice(0, 32);
   } catch (error) {
-    console.error("Error generating Vx_userID:", error);
+    console.error("❌ Error generating Vx_userID:", error);
+    console.groupEnd();
     return null;
   }
 }
@@ -433,12 +500,12 @@ async function initializeVx_user() {
 
 // Thêm vào event listeners hiện có
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("Chat interface initialized");
+  console.group("🚀 Chat Interface Initialization");
+  console.log("Starting initialization...");
 
-  // Khởi tạo user ID
   await initializeVx_user();
+  logCookieStatus();
 
-  // Load chat history
   await Vx_displayChatHistory();
 
   const sendButton = document.getElementById("Vx_sendButton");
@@ -450,4 +517,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       handleUserMessage();
     }
   });
+
+  console.log("✅ Chat interface initialized successfully");
+  console.groupEnd();
 });

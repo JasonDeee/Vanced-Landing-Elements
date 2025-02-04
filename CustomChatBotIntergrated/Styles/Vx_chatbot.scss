@@ -1,4 +1,4 @@
-.chat-container {
+.Vx_chat-container {
   max-width: 800px;
   margin: 20px auto;
   border: 1px solid #ccc;
@@ -7,14 +7,14 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.chat-messages {
+.Vx_chat-messages {
   height: 500px;
   padding: 20px;
   overflow-y: auto;
   background-color: #f5f5f5;
 }
 
-.chat-input {
+.Vx_chat-input {
   display: flex;
   padding: 15px;
   background-color: #fff;
@@ -54,7 +54,7 @@
   }
 }
 
-.message {
+.Vx_message {
   margin: 10px 0;
   padding: 10px 15px;
   border-radius: 10px;
@@ -62,13 +62,13 @@
   word-wrap: break-word;
 }
 
-.user-message {
+.Vx_user-message {
   background-color: #007bff;
   color: white;
   margin-left: auto;
 }
 
-.bot-message {
+.Vx_bot-message {
   background-color: #e9ecef;
   color: #212529;
   margin-right: auto;

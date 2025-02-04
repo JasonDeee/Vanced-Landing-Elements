@@ -6,36 +6,54 @@
   position: relative;
   padding: 32px;
 }
+
 .Vx_CSS_Gen_Containter .MainClassInput {
   border: 1px solid var(--global-palette3);
   outline: none;
   padding: 8px;
-  box-shadow: 4px 4px 0 var(--global-palette3);
+  -webkit-box-shadow: 4px 4px 0 var(--global-palette3);
+          box-shadow: 4px 4px 0 var(--global-palette3);
   width: 62%;
   border-radius: 0;
   position: absolute;
   top: 0;
-  transform: translateY(-50%);
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
   z-index: 100;
 }
+
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  align-items: stretch;
-  justify-content: start;
-  flex-direction: column;
+  -webkit-box-align: stretch;
+      -ms-flex-align: stretch;
+          align-items: stretch;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
   max-height: 60vh;
   overflow-x: hidden;
   overflow-y: scroll;
   gap: 8px;
 }
+
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input {
   background: var(--global-palette9);
+  -webkit-transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
   transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
 }
+
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input * {
+  -webkit-transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
   transition: all 0.66s cubic-bezier(0.25, 0, 0, 1);
 }
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type=range] {
+
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type="range"] {
   -webkit-appearance: none;
      -moz-appearance: none;
           appearance: none;
@@ -43,7 +61,8 @@
   border: none;
   cursor: pointer;
 }
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type=range]::-webkit-slider-thumb {
+
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
           appearance: none;
   cursor: e-resize;
@@ -55,113 +74,176 @@
   margin-top: -6px;
   display: block;
 }
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type=range]::-webkit-slider-thumb:hover {
+
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type="range"]::-webkit-slider-thumb:hover {
   background: var(--global-palette1);
 }
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type=range]::-webkit-slider-runnable-track {
+
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type="range"]::-webkit-slider-runnable-track {
   background: var(--global-palette9);
   height: 4px;
   border-radius: 4px;
 }
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type=range]::-webkit-slider-progres {
+
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type="range"]::-webkit-slider-progres {
   background: var(--global-palette1);
   height: 4px;
 }
+
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput {
   text-wrap: nowrap;
   gap: 4px;
-  justify-content: end;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: end;
 }
+
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput::content {
   position: absolute;
   left: 0;
 }
+
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput span {
   font-size: 0.8rem;
   font-weight: 300;
   gap: 2px;
 }
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput input[type=radio] {
+
+.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput input[type="radio"] {
   max-width: 16px;
   height: 16px;
   margin-left: 8px;
   cursor: pointer;
 }
+
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput input:is(:first-child) {
   margin-left: auto;
 }
+
 .Vx_CSS_Gen_Containter fieldset {
   border: none;
   outline: none;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: column;
-  align-items: start;
-  justify-content: start;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: start;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
   margin: 0 !important;
   padding: 16px;
   gap: 8px;
   position: relative;
   background: var(--global-palette8);
 }
+
 .Vx_CSS_Gen_Containter fieldset legend {
   float: inline-start;
   width: 100%;
   position: relative;
-  align-items: end;
-  justify-content: space-between;
+  -webkit-box-align: end;
+      -ms-flex-align: end;
+          align-items: end;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
   font-size: 0.8rem;
   font-weight: 300;
   max-height: 1rem;
 }
+
 .Vx_CSS_Gen_Containter fieldset label {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: start;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  width: -webkit-fit-content;
   width: -moz-fit-content;
   width: fit-content;
   gap: 8px;
   width: 100%;
 }
+
 .Vx_CSS_Gen_Containter fieldset label input {
-  flex: auto;
-  justify-content: start;
-  align-items: start;
+  -webkit-box-flex: 1;
+      -ms-flex: auto;
+          flex: auto;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: start;
 }
+
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable * {
+  -webkit-transition: all 0.23s cubic-bezier(0.25, 0, 0, 1);
   transition: all 0.23s cubic-bezier(0.25, 0, 0, 1);
 }
+
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton {
   width: auto;
   pointer-events: all;
   cursor: pointer;
-  flex-direction: row;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  align-items: end;
-  justify-content: end;
+  -webkit-box-align: end;
+      -ms-flex-align: end;
+          align-items: end;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: end;
+  height: -webkit-fit-content;
   height: -moz-fit-content;
   height: fit-content;
   gap: 4px;
   padding: 4px;
 }
+
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton svg {
   overflow: visible;
   width: 1rem;
   height: 1rem;
   pointer-events: none;
 }
+
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging {
   background: var(--global-palette7);
 }
+
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging li {
   pointer-events: all;
   opacity: 1;
 }
+
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging li ul {
   padding: 6px 24px;
   line-height: 1.2rem;
 }
+
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Code {
   margin-top: 16px;
   max-height: 34vh;
@@ -170,47 +252,83 @@
 }
 
 .RangeInput {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: start;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
   width: 100%;
   gap: 8px;
 }
-.RangeInput input[type=range] {
-  flex: auto;
+
+.RangeInput input[type="range"] {
+  -webkit-box-flex: 1;
+      -ms-flex: auto;
+          flex: auto;
 }
+
 .RangeInput .UnitChangeButton {
   width: auto;
   min-width: 40px;
   pointer-events: all;
   cursor: pointer;
-  flex-direction: row;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  align-items: end;
-  justify-content: end;
+  -webkit-box-align: end;
+      -ms-flex-align: end;
+          align-items: end;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: end;
+  height: -webkit-fit-content;
   height: -moz-fit-content;
   height: fit-content;
   gap: 4px;
   padding: 4px;
 }
+
 .RangeInput .UnitChangeButton svg {
   overflow: visible;
   width: 1rem;
   height: 1rem;
   pointer-events: none;
 }
+
 .RangeInput .UnitChangeButton li {
+  width: -webkit-fit-content;
   width: -moz-fit-content;
   width: fit-content;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: start;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
   background: var(--global-palette8);
   border: 2px solid #0c1136;
   list-style: none;
   position: absolute;
+  height: -webkit-fit-content;
   height: -moz-fit-content;
   height: fit-content;
   overflow: hidden;
@@ -222,6 +340,7 @@
   z-index: 100;
   pointer-events: none;
 }
+
 .RangeInput .UnitChangeButton li ul {
   list-style: none;
   width: 100%;
@@ -229,18 +348,23 @@
   padding: 0px 16px;
   line-height: 0.1px;
 }
+
 .RangeInput .UnitChangeButton li ul:hover {
   color: var(--global-palette9);
   background: var(--global-palette1);
 }
+
 .RangeInput .UnitChangeButton.UnitChanging {
   background: var(--global-palette7);
 }
+
 .RangeInput .UnitChangeButton.UnitChanging li {
   pointer-events: all;
   opacity: 1;
 }
+
 .RangeInput .UnitChangeButton.UnitChanging li ul {
   padding: 6px 24px;
   line-height: 1.2rem;
-}/*# sourceMappingURL=style.css.map */
+}
+/*# sourceMappingURL=style.css.map */
