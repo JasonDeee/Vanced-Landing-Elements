@@ -382,7 +382,52 @@ function appendMessage(sender, message) {
   return messageElement;
 }
 
-// Hàm tạo user ID từ browser fingerprint
+// Thêm hàm mới để kiểm tra trạng thái cookie
+function checkCookieStatus() {
+  Vx_isCookieEnabled = navigator.cookieEnabled;
+  
+  // Thử set và get một test cookie để đảm bảo cookies thực sự hoạt động
+  try {
+    document.cookie = "Vx_testCookie=1";
+    const hasCookie = document.cookie.indexOf("Vx_testCookie=") !== -1;
+    document.cookie = "Vx_testCookie=1; expires=Thu, 01 Jan 1970 00:00:00 GMT"; // xóa test cookie
+    Vx_isCookieEnabled = hasCookie;
+  } catch (error) {
+    console.warn("Cookie test failed:", error);
+    Vx_isCookieEnabled = false;
+  }
+  
+  return Vx_isCookieEnabled;
+}
+
+// Cập nhật hàm initializeVx_user
+async function initializeVx_user() {
+  try {
+    // Kiểm tra trạng thái cookie trước
+    checkCookieStatus();
+    logCookieStatus();
+
+    // Kiểm tra xem đã có ID trong localStorage chưa
+    let Vx_storedID = localStorage.getItem("Vx_userID");
+
+    if (!Vx_storedID) {
+      // Nếu chưa có, tạo ID mới
+      Vx_storedID = await generateVx_userID();
+      if (Vx_storedID) {
+        localStorage.setItem("Vx_userID", Vx_storedID);
+      }
+    }
+
+    Vx_currentUserID = Vx_storedID;
+    console.log("User initialized with Vx_userID:", Vx_currentUserID);
+    return Vx_currentUserID;
+  } catch (error) {
+    console.error("Error initializing Vx_user:", error);
+    return null;
+  }
+}
+
+// Cập nhật hàm generateVx_userID
 async function generateVx_userID() {
   try {
     console.group("🔑 Generating User ID");
@@ -395,15 +440,14 @@ async function generateVx_userID() {
       colorDepth: window.screen.colorDepth,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       touchSupport: "ontouchstart" in window,
-      cookiesEnabled: navigator.cookieEnabled,
+      cookiesEnabled: Vx_isCookieEnabled, // Sử dụng giá trị đã được kiểm tra
       canvas: await getVx_canvasFingerprint(),
       webgl: await getVx_webGLFingerprint(),
       hardware: await getVx_hardwareConcurrency(),
       deviceMemory: navigator.deviceMemory || "unknown",
     };
 
-    // Cập nhật trạng thái cookie global
-    Vx_isCookieEnabled = Vx_browserData.cookiesEnabled;
+    // Không cập nhật Vx_isCookieEnabled ở đây nữa
     logCookieStatus();
 
     // Tiếp tục với phần còn lại của hàm...
@@ -475,28 +519,6 @@ async function getVx_hardwareConcurrency() {
 
 // Khởi tạo và lưu trữ user ID
 let Vx_currentUserID = null;
-
-async function initializeVx_user() {
-  try {
-    // Kiểm tra xem đã có ID trong localStorage chưa
-    let Vx_storedID = localStorage.getItem("Vx_userID");
-
-    if (!Vx_storedID) {
-      // Nếu chưa có, tạo ID mới
-      Vx_storedID = await generateVx_userID();
-      if (Vx_storedID) {
-        localStorage.setItem("Vx_userID", Vx_storedID);
-      }
-    }
-
-    Vx_currentUserID = Vx_storedID;
-    console.log("User initialized with Vx_userID:", Vx_currentUserID);
-    return Vx_currentUserID;
-  } catch (error) {
-    console.error("Error initializing Vx_user:", error);
-    return null;
-  }
-}
 
 // Thêm vào event listeners hiện có
 document.addEventListener("DOMContentLoaded", async () => {
