@@ -64,66 +64,52 @@ function getOrCreateCurrentMonthSheet() {
   return sheet;
 }
 
-// Hàm cập nhật hoặc tạo mới chat log cho user
-function updateChatLog(userID, newMessage) {
-  executionLogs = []; // Reset logs cho mỗi request
+// Thêm hàm kiểm tra section mới
+function checkNewSection(lastMessageTime, currentTime) {
+  const SIX_HOURS = 6 * 60 * 60 * 1000; // 6 giờ tính bằng milliseconds
+  return currentTime - lastMessageTime >= SIX_HOURS;
+}
 
+// Cập nhật hàm updateChatLog
+function updateChatLog(userID, messageData) {
+  executionLogs = [];
   logMessage("Starting updateChatLog...");
-  logMessage(`UserID: ${userID}`);
-  logMessage(`New message: ${JSON.stringify(newMessage)}`);
 
   const sheet = getOrCreateCurrentMonthSheet();
-  logMessage(`Current sheet name: ${sheet.getName()}`);
-
   try {
-    // Tìm row của user trong sheet hiện tại
-    const userIDColumn = sheet.getRange("A:A").getValues();
-    let userRow = -1;
+    const userRow = findOrCreateUser(sheet, userID);
+    if (!userRow) throw new Error("Failed to find or create user");
 
-    for (let i = 1; i < userIDColumn.length; i++) {
-      if (userIDColumn[i][0] === userID) {
-        userRow = i + 1;
-        logMessage(`Found existing user at row: ${userRow}`);
-        break;
+    const chatLogCell = sheet.getRange(userRow, 2);
+    const sectionRecordsCell = sheet.getRange(userRow, 3);
+
+    let chatLog = chatLogCell.getValue() || "";
+    let sectionRecords = sectionRecordsCell.getValue() || "";
+
+    // Format tin nhắn mới
+    const formattedMessage = `[${
+      messageData.role === "user" ? "User" : "Bot"
+    }] ${messageData.parts[0].text} // ${messageData.time}`;
+
+    // Kiểm tra section mới
+    const lastMessageMatch = chatLog.match(/\/\/ ([^-]*?)(?:\n---|$)/);
+    if (lastMessageMatch) {
+      const lastMessageTime = new Date(lastMessageMatch[1]).getTime();
+      const currentMessageTime = new Date(messageData.time).getTime();
+
+      if (checkNewSection(lastMessageTime, currentMessageTime)) {
+        chatLog += `\n---${lastMessageMatch[1]}---\n`;
+        if (sectionRecords) sectionRecords += "\n";
+        sectionRecords += `[${lastMessageMatch[1]}]`;
+        sectionRecordsCell.setValue(sectionRecords);
       }
     }
 
-    // Nếu user chưa có trong sheet, thêm mới
-    if (userRow === -1) {
-      userRow = sheet.getLastRow() + 1;
-      logMessage(`Creating new user at row: ${userRow}`);
+    // Thêm tin nhắn mới
+    if (chatLog) chatLog += "\n";
+    chatLog += formattedMessage;
 
-      // Thêm userID vào cột A
-      sheet.getRange(userRow, 1).setValue(userID);
-
-      // Khởi tạo chat log mới với tin nhắn đầu tiên
-      const initialChatLog = [newMessage];
-      const chatLogJson = JSON.stringify(initialChatLog);
-      sheet.getRange(userRow, 2).setValue(chatLogJson);
-
-      logMessage(`Initialized new chat log: ${chatLogJson}`);
-    } else {
-      // Nếu user đã tồn tại, cập nhật chat log
-      const currentChatLogCell = sheet.getRange(userRow, 2);
-      const currentChatLogValue = currentChatLogCell.getValue();
-      logMessage(`Current chat log value: ${currentChatLogValue}`);
-
-      let chatLog = [];
-      try {
-        chatLog = JSON.parse(currentChatLogValue || "[]");
-      } catch (parseError) {
-        logMessage(`Error parsing existing chat log: ${parseError}`);
-        chatLog = [];
-      }
-
-      // Thêm tin nhắn mới vào chat log
-      chatLog.push(newMessage);
-      const newChatLogValue = JSON.stringify(chatLog);
-      logMessage(`Updated chat log: ${newChatLogValue}`);
-
-      // Lưu chat log mới
-      currentChatLogCell.setValue(newChatLogValue);
-    }
+    chatLogCell.setValue(chatLog);
 
     logMessage("Chat log updated successfully");
     return {
@@ -132,7 +118,6 @@ function updateChatLog(userID, newMessage) {
     };
   } catch (error) {
     logMessage(`Error in updateChatLog: ${error.toString()}`);
-    logMessage(`Error stack: ${error.stack}`);
     return {
       success: false,
       error: error.toString(),
@@ -144,43 +129,57 @@ function updateChatLog(userID, newMessage) {
 // Cập nhật hàm getCorsHeaders
 function getCorsHeaders() {
   return {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": "https://beta.vanced.media",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Origin, X-Requested-With",
+    "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "3600",
   };
 }
 
-// Hàm xử lý yêu cầu lấy lịch sử chat và tạo user mới nếu cần
+// Cập nhật hàm handleChatHistoryRequest
 function handleChatHistoryRequest(userID) {
   logMessage("Handling chat history request...");
 
   try {
     const sheet = getOrCreateCurrentMonthSheet();
-    logMessage(`Working with sheet: ${sheet.getName()}`);
-
-    // Tìm hoặc tạo user
     const userRow = findOrCreateUser(sheet, userID);
 
     if (!userRow) {
-      logMessage("Failed to find or create user");
+      throw new Error("Failed to find or create user");
+    }
+
+    const chatLog = sheet.getRange(userRow, 2).getValue();
+
+    if (!chatLog) {
       return {
-        success: false,
-        error: "Failed to process user data",
+        success: true,
+        data: [],
         logs: executionLogs,
       };
     }
 
-    // Lấy chat history
-    const chatLogCell = sheet.getRange(userRow, 2);
-    const chatLogValue = chatLogCell.getValue();
-    logMessage(`Retrieved chat log: ${chatLogValue}`);
-
-    const chatLog = JSON.parse(chatLogValue || "[]");
+    // Chuyển đổi chat log thành mảng các object
+    const messages = chatLog
+      .split("\n")
+      .filter((msg) => msg && !msg.startsWith("---"))
+      .map((msg) => {
+        const match = msg.match(/\[(.*?)\](.*?)\/\/(.*)/);
+        if (match) {
+          const [_, role, content, timestamp] = match;
+          return {
+            role: role.toLowerCase() === "user" ? "user" : "model",
+            time: timestamp.trim(),
+            parts: [{ text: content.trim() }],
+          };
+        }
+        return null;
+      })
+      .filter((msg) => msg !== null);
 
     return {
       success: true,
-      data: chatLog,
+      data: messages,
       logs: executionLogs,
     };
   } catch (error) {
@@ -193,7 +192,7 @@ function handleChatHistoryRequest(userID) {
   }
 }
 
-// Hàm tìm hoặc tạo user mới
+// Cập nhật hàm findOrCreateUser
 function findOrCreateUser(sheet, userID) {
   logMessage("Finding or creating user...");
 
@@ -216,8 +215,8 @@ function findOrCreateUser(sheet, userID) {
 
     // Thêm userID
     sheet.getRange(userRow, 1).setValue(userID);
-    // Khởi tạo chat log trống
-    sheet.getRange(userRow, 2).setValue("[]");
+    // Khởi tạo chat log trống - không dùng "[]" nữa
+    sheet.getRange(userRow, 2).setValue("");
 
     logMessage("New user created successfully");
     return userRow;
@@ -289,36 +288,45 @@ function createResponse(result, callback) {
 // Cập nhật hàm doPost
 function doPost(e) {
   executionLogs = [];
+  logMessage("Received POST request");
 
   try {
-    const postData = JSON.parse(e.postData.contents);
-    const result = updateChatLog(postData.userID, {
-      parts: [{ text: postData.message }],
-      role: postData.role,
-    });
+    logMessage(`Content type: ${e.postData.type}`);
+    logMessage(`Raw content: ${e.postData.contents}`);
 
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        success: true,
-      })
-    )
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(getCorsHeaders());
+    const postData = JSON.parse(e.postData.contents);
+    logMessage(`Parsed post data: ${JSON.stringify(postData)}`);
+
+    let result;
+    switch (postData.requestType) {
+      case Vx_Sheet_RequestType.NEW_MESSAGE:
+        // Sử dụng trực tiếp messageData từ payload
+        result = updateChatLog(postData.userID, postData.message);
+        break;
+      case Vx_Sheet_RequestType.CHAT_HISTORY:
+        result = handleChatHistoryRequest(postData.userID);
+        break;
+      default:
+        result = {
+          success: false,
+          error: "Invalid request type",
+          logs: executionLogs,
+        };
+    }
+
+    // Không cần trả về response chi tiết với no-cors
+    return ContentService.createTextOutput("OK");
   } catch (error) {
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        success: false,
-        error: error.toString(),
-      })
-    )
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(getCorsHeaders());
+    logMessage(`Error in doPost: ${error.toString()}`);
+    logMessage(`Error stack: ${error.stack}`);
+    return ContentService.createTextOutput("Error");
   }
 }
 
 // Cập nhật hàm doOptions
 function doOptions(e) {
-  return ContentService.createTextOutput()
+  const headers = getCorsHeaders();
+  return ContentService.createTextOutput("")
     .setMimeType(ContentService.MimeType.TEXT)
-    .setHeaders(getCorsHeaders());
+    .setHeaders(headers);
 }

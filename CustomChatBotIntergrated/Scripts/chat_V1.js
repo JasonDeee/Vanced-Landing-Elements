@@ -41,34 +41,10 @@ async function sendMessageToGemini(message) {
       return null;
     }
 
-    let SchemaPrefix =
-      "Bạn hãy trả lời tôi dưới dạng JSON bên trong 3 dấu *** theo schema dưới dây:\n";
-
-    let responseSchema = {
-      Answer: {
-        type: "string",
-        description: "Trả lời cho câu hỏi của người dùng",
-      },
-      Summerize: {
-        type: "string",
-        description: "Tóm tắt lịch sử cuộc hội thoại",
-      },
-      Request_for_RealAssistance: {
-        type: "boolean",
-        description: "Nếu bạn không thể trả lời được câu hỏi, trả về true",
-      },
-      Topic: {
-        type: "string",
-        description: "Chủ đề của cuộc hội thoại",
-      },
-    };
-
-    // Gộp schema và prefix thành một string
-    const schemaMessage =
-      SchemaPrefix + JSON.stringify(responseSchema, null, 2);
-
     console.log("Preparing API request...");
 
+    // Thay đổi URL để sử dụng tuned model
+    // Thay YOUR_TUNED_MODEL_NAME bằng tên model của bạn
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/tunedModels/vanced-test-tunning-to-chat-bot-v1-emwmn:generateContent?key=${API_KEY}`,
       {
@@ -79,17 +55,15 @@ async function sendMessageToGemini(message) {
         body: JSON.stringify({
           contents: [
             {
-              parts: [{ text: schemaMessage }],
-            },
-            {
               parts: [{ text: message }],
             },
           ],
+          // Thêm các tham số cho tuned model
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
-            topP: 0.8,
-            topK: 40,
+            temperature: 0.7, // Điều chỉnh độ sáng tạo (0.0 - 1.0)
+            maxOutputTokens: 2048, // Giới hạn độ dài output
+            topP: 0.8, // Điều chỉnh đa dạng của output
+            topK: 40, // Số lượng tokens được xem xét
           },
           safetySettings: [
             {
@@ -112,8 +86,6 @@ async function sendMessageToGemini(message) {
         }),
       }
     );
-
-    console.log(message);
 
     console.log("API Response status:", response.status);
     if (!response.ok) {
