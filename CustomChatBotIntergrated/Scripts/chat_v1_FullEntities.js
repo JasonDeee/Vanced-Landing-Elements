@@ -70,11 +70,6 @@ async function sendMessageToGemini(message) {
         type: "string",
         description: "Chủ đề của cuộc hội thoại",
       },
-      PriceConcern: {
-        type: "string",
-        description:
-          "Nếu người dùng trao đổi về giá, hãy trả về dưới dạng tiền tệ, ví dụ: 500.000₫. Nếu người dùng không nói đến giá, hãy trả về null",
-      },
     };
 
     // Gộp schema và prefix thành một string
@@ -209,11 +204,10 @@ async function Vx_saveChatMessage(message, role, chatInfo = null) {
 
     const requestData = {
       userID: Vx_currentUserID,
-      parts: [{ text: message }],
-      role: role,
+      parts: [{ text: message }], // Chỉ gửi text
+      role: role, // Gửi role riêng
       topic: Vx_Current_Chat_Info.topic,
       summerize: Vx_Current_Chat_Info.summerize,
-      priceConcern: chatInfo?.priceConcern || null,
       requestType: Vx_Sheet_RequestType.NEW_MESSAGE,
     };
 
@@ -421,7 +415,6 @@ async function handleUserMessage() {
       await Vx_saveChatMessage(botResponse.Answer, "model", {
         topic: botResponse.Topic,
         summerize: botResponse.Summerize,
-        priceConcern: botResponse.PriceConcern,
       });
 
       // Nếu bot yêu cầu hỗ trợ thật

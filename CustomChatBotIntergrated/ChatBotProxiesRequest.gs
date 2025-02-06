@@ -35,7 +35,7 @@ function getOrCreateCurrentMonthSheet() {
     sheet = ss.insertSheet(sheetName);
     // Tạo headers
     sheet
-      .getRange("A1:F1")
+      .getRange("A1:G1")
       .setValues([
         [
           "User_ID",
@@ -44,18 +44,19 @@ function getOrCreateCurrentMonthSheet() {
           "Topic_per_Section",
           "Summerize",
           "Request_for_RealAssistance_Count",
+          "priceConcern",
         ],
       ]);
 
     // Định dạng header
     sheet
-      .getRange("A1:F1")
+      .getRange("A1:G1")
       .setBackground("#4a86e8")
       .setFontColor("white")
       .setFontWeight("bold");
 
     // Tự động điều chỉnh độ rộng cột
-    sheet.autoResizeColumns(1, 6);
+    sheet.autoResizeColumns(1, 7);
     logMessage("New sheet created and formatted successfully");
   } else {
     logMessage(`Found existing sheet: ${sheetName}`);
@@ -64,10 +65,9 @@ function getOrCreateCurrentMonthSheet() {
   return sheet;
 }
 
-// Hàm cập nhật hoặc tạo mới chat log cho user
+// Cập nhật hàm updateChatLog
 function updateChatLog(userID, newMessage) {
-  executionLogs = []; // Reset logs cho mỗi request
-
+  executionLogs = [];
   logMessage("Starting updateChatLog...");
   logMessage(`UserID: ${userID}`);
   logMessage(`New message: ${JSON.stringify(newMessage)}`);
@@ -88,26 +88,43 @@ function updateChatLog(userID, newMessage) {
       }
     }
 
+    // Lấy timestamp hiện tại
+    const currentTimestamp = new Date().toISOString();
+
+    // Format tin nhắn đúng cấu trúc
+    const messageToSave = {
+      parts: [{ text: newMessage.parts[0].text }],
+      role: newMessage.role,
+    };
+
     // Nếu user chưa có trong sheet, thêm mới
     if (userRow === -1) {
       userRow = sheet.getLastRow() + 1;
       logMessage(`Creating new user at row: ${userRow}`);
 
-      // Thêm userID vào cột A
-      sheet.getRange(userRow, 1).setValue(userID);
+      const newRow = [
+        userID, // User_ID
+        JSON.stringify([messageToSave]), // Chat_Log với format đúng
+        currentTimestamp, // Section_Records - lưu timestamp
+        newMessage.topic || "", // Topic_per_Section
+        newMessage.summerize || "", // Summerize
+        "0", // Request_for_RealAssistance_Count
+        newMessage.priceConcern || "", // priceConcern - đảm bảo tên trường khớp
+      ];
 
-      // Khởi tạo chat log mới với tin nhắn đầu tiên
-      const initialChatLog = [newMessage];
-      const chatLogJson = JSON.stringify(initialChatLog);
-      sheet.getRange(userRow, 2).setValue(chatLogJson);
+      sheet.getRange(userRow, 1, 1, 7).setValues([newRow]);
+      logMessage("New user row created with initial data");
 
-      logMessage(`Initialized new chat log: ${chatLogJson}`);
+      // Thêm xử lý PriceConcern trong phần cập nhật user hiện có
+      if (newMessage.priceConcern) {
+        const priceConcernCell = sheet.getRange(userRow, 7);
+        priceConcernCell.setValue(newMessage.priceConcern);
+        logMessage(`Updated priceConcern: ${newMessage.priceConcern}`);
+      }
     } else {
-      // Nếu user đã tồn tại, cập nhật chat log
+      // Nếu user đã tồn tại, cập nhật thông tin
       const currentChatLogCell = sheet.getRange(userRow, 2);
       const currentChatLogValue = currentChatLogCell.getValue();
-      logMessage(`Current chat log value: ${currentChatLogValue}`);
-
       let chatLog = [];
       try {
         chatLog = JSON.parse(currentChatLogValue || "[]");
@@ -116,16 +133,36 @@ function updateChatLog(userID, newMessage) {
         chatLog = [];
       }
 
-      // Thêm tin nhắn mới vào chat log
-      chatLog.push(newMessage);
-      const newChatLogValue = JSON.stringify(chatLog);
-      logMessage(`Updated chat log: ${newChatLogValue}`);
+      // Thêm tin nhắn mới với format đúng
+      chatLog.push(messageToSave);
+      currentChatLogCell.setValue(JSON.stringify(chatLog));
 
-      // Lưu chat log mới
-      currentChatLogCell.setValue(newChatLogValue);
+      // Cập nhật Topic nếu có
+      if (newMessage.topic) {
+        const topicCell = sheet.getRange(userRow, 4);
+        topicCell.setValue(newMessage.topic);
+      }
+
+      // Cập nhật Summerize nếu có
+      if (newMessage.summerize) {
+        const summerizeCell = sheet.getRange(userRow, 5);
+        summerizeCell.setValue(newMessage.summerize);
+      }
+
+      // Cập nhật Section_Records với timestamp mới nhất
+      const sectionCell = sheet.getRange(userRow, 3);
+      sectionCell.setValue(currentTimestamp);
+
+      // Cập nhật priceConcern nếu có
+      if (newMessage.priceConcern) {
+        const priceConcernCell = sheet.getRange(userRow, 7);
+        priceConcernCell.setValue(newMessage.priceConcern);
+        logMessage(`Updated priceConcern: ${newMessage.priceConcern}`);
+      }
+
+      logMessage("Existing user data updated successfully");
     }
 
-    logMessage("Chat log updated successfully");
     return {
       success: true,
       logs: executionLogs,
@@ -258,6 +295,9 @@ function doGet(e) {
       result = updateChatLog(userID, {
         parts: [{ text: e.parameter.message }],
         role: e.parameter.role,
+        topic: e.parameter.topic,
+        summerize: e.parameter.summerize,
+        priceConcern: e.parameter.priceConcern,
       });
       break;
     default:
@@ -293,8 +333,11 @@ function doPost(e) {
   try {
     const postData = JSON.parse(e.postData.contents);
     const result = updateChatLog(postData.userID, {
-      parts: [{ text: postData.message }],
+      parts: [{ text: postData.parts[0].text }],
       role: postData.role,
+      topic: postData.topic,
+      summerize: postData.summerize,
+      priceConcern: postData.priceConcern,
     });
 
     return ContentService.createTextOutput(
