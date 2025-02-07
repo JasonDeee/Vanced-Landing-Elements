@@ -157,6 +157,7 @@ const Vx_WEBAPP_URL =
 const Vx_Sheet_RequestType = {
   CHAT_HISTORY: "ChatHistoryRequest",
   NEW_MESSAGE: "NewMessageUpdateForCurrentUser",
+  Vx_SyncID: "Vx_SyncID", // Thêm type mới
 };
 
 // Thêm biến global để theo dõi trạng thái cookie
@@ -617,3 +618,48 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log("✅ Chat interface initialized successfully");
   console.groupEnd();
 });
+
+// Thêm hàm mới để sync user ID với worker
+async function syncVx_UserID() {
+  try {
+    console.group("🔄 Syncing User ID with Worker");
+
+    const Vx_browserData = {
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      colorDepth: window.screen.colorDepth,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      touchSupport: "ontouchstart" in window,
+      cookiesEnabled: Vx_isCookieEnabled,
+      canvas: await getVx_canvasFingerprint(),
+      webgl: await getVx_webGLFingerprint(),
+      hardware: await getVx_hardwareConcurrency(),
+      deviceMemory: navigator.deviceMemory || "unknown",
+    };
+
+    const response = await fetch("YOUR_WORKER_URL", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        requestType: Vx_Sheet_RequestType.Vx_SyncID,
+        browserData: Vx_browserData,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("✅ User ID synced successfully");
+    console.groupEnd();
+    return data.userID;
+  } catch (error) {
+    console.error("❌ Error syncing user ID:", error);
+    console.groupEnd();
+    return null;
+  }
+}

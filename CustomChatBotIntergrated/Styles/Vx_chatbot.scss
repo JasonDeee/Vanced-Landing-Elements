@@ -73,3 +73,30 @@
   color: #212529;
   margin-right: auto;
 }
+
+.Vx_error-message {
+  background-color: #fff3f3 !important;
+  border: 1px solid #ffcdd2;
+  padding: 15px !important;
+}
+
+.Vx_error-title {
+  color: #d32f2f;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.Vx_error-body {
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.Vx_error-details {
+  background: #f8f8f8;
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  overflow-x: auto;
+  margin: 0;
+}
