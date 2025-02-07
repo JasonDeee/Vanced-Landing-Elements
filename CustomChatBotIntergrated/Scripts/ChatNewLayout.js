@@ -304,6 +304,18 @@ async function Vx_SendMessageToBot(message) {
     console.log("Message:", message);
     console.log("Current UserID:", Vx_currentUserID); // Log để debug
 
+    // Kiểm tra userID trước khi gửi
+    if (!Vx_currentUserID) {
+      console.log("No UserID found, attempting to sync...");
+      await syncWithWorker();
+
+      if (!Vx_currentUserID) {
+        throw new Error("Failed to get UserID");
+      }
+    }
+
+    console.log("Sending message with UserID:", Vx_currentUserID);
+
     // Hiển thị tin nhắn của user ngay lập tức
     Vx_UpdateChatDisplay([
       ...Vx_Chat_Log_ClientSide,
@@ -333,7 +345,7 @@ async function Vx_SendMessageToBot(message) {
         requestType: Vx_Sheet_RequestType.NEW_MESSAGE,
         chatHistory: Vx_Chat_Log_ClientSide,
         message: message,
-        userID: Vx_currentUserID, // Thêm userID vào request
+        userID: Vx_currentUserID, // Gửi userID lên worker
       }),
     });
 

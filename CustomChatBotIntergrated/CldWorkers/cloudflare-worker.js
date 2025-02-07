@@ -13,9 +13,6 @@ let Vx_Current_Chat_Info = {
   summerize: "",
 };
 
-// Thêm biến global để lưu current userID
-let Vx_currentUserID = null;
-
 const Vx_Response_Schema = {
   Answer: {
     type: "string",
@@ -61,19 +58,35 @@ async function handleRequest(request) {
 
   if (request.method === "POST") {
     const data = await request.json();
+    console.log("Received request data:", data); // Log data nhận được
 
     switch (data.requestType) {
       case "Vx_SyncID":
         return await handleSyncID(data.browserData, corsHeaders);
       case "NewMessageUpdateForCurrentUser":
-        // Cập nhật Vx_currentUserID từ request
-        Vx_currentUserID = data.userID;
-        // console.log("Received userID:", Vx_currentUserID); // Log để debug
+        if (!data.userID) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Missing userID in request",
+            }),
+            {
+              status: 400,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        }
+
+        console.log("Processing message for userID:", data.userID);
 
         return await handleNewMessage(
           data.chatHistory,
           data.message,
-          corsHeaders
+          corsHeaders,
+          data.userID // Truyền userID trực tiếp
         );
       default:
         return new Response("Invalid request type", {
@@ -195,16 +208,15 @@ async function saveMessageToWebApp(userID, message, role, botResponse = null) {
   }
 }
 
-// Cập nhật hàm handleNewMessage
-async function handleNewMessage(chatHistory, message, corsHeaders) {
+// Cập nhật hàm handleNewMessage để nhận userID trực tiếp
+async function handleNewMessage(chatHistory, message, corsHeaders, userID) {
   try {
-    // Sử dụng Vx_currentUserID thay vì trích xuất từ chatHistory
-    if (!Vx_currentUserID) {
+    if (!userID) {
       throw new Error("No userID provided");
     }
 
-    // Lưu tin nhắn của user ngay lập tức với userID chính xác
-    saveMessageToWebApp(Vx_currentUserID, message, "user");
+    // Lưu tin nhắn của user ngay lập tức
+    saveMessageToWebApp(userID, message, "user");
 
     let SchemaPrefix =
       "Bạn hãy trả lời tôi dưới dạng JSON bên trong 3 dấu *** theo schema dưới dây:\n";
@@ -235,10 +247,10 @@ async function handleNewMessage(chatHistory, message, corsHeaders) {
         body: JSON.stringify({
           contents: contents,
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
-            topP: 0.8,
+            temperature: 1,
             topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 8192,
           },
           safetySettings: [
             {
@@ -304,12 +316,7 @@ async function handleNewMessage(chatHistory, message, corsHeaders) {
     }
 
     // Lưu tin nhắn của bot với userID chính xác
-    saveMessageToWebApp(
-      Vx_currentUserID,
-      botResponse.Answer,
-      "model",
-      botResponse
-    );
+    saveMessageToWebApp(userID, botResponse.Answer, "model", botResponse);
 
     // Cập nhật chat history với tin nhắn mới
     chatHistory.push(
