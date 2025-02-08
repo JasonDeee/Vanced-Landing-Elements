@@ -353,34 +353,6 @@ async function Vx_SendMessageToBot(message) {
     // Xóa loading message
     loadingMessage.remove();
 
-    // Xử lý rate limit response
-    if (response.status === 429) {
-      const data = await response.json();
-      const retryAfter = response.headers.get("Retry-After");
-
-      // Hiển thị thông báo cho user với thông tin cụ thể hơn
-      const errorMessage = document.createElement("div");
-      errorMessage.className =
-        "Vx_message Vx_system-message Vx_rate-limit-message";
-
-      // Thêm icon cảnh báo
-      errorMessage.innerHTML = `
-        <div class="Vx_rate-limit-icon">⚠️</div>
-        <div class="Vx_rate-limit-text">
-          ${data.message}
-          <div class="Vx_rate-limit-info">
-            Còn lại: ${
-              response.headers.get("X-RateLimit-User-Remaining") || 0
-            } lần/user, 
-            ${response.headers.get("X-RateLimit-IP-Remaining") || 0} lần/IP
-          </div>
-        </div>
-      `;
-
-      chatContainer.appendChild(errorMessage);
-      return;
-    }
-
     if (!response.ok) {
       throw new Error(`Worker response error: ${response.status}`);
     }
