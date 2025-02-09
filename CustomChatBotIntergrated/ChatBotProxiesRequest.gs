@@ -13,51 +13,110 @@ function logMessage(message) {
   executionLogs.push(message); // Thêm vào mảng logs
 }
 
-// Hàm lấy hoặc tạo sheet cho tháng hiện tại
+// Thêm hàm để lấy schema từ request
+function getSchemaColumns(schema) {
+  logMessage("Getting schema columns...");
+  logMessage(`Input schema: ${JSON.stringify(schema)}`);
+
+  if (!schema) {
+    logMessage("❌ Warning: Schema is null or undefined");
+    return [];
+  }
+
+  try {
+    // Bỏ qua object Answer và lấy các key còn lại từ schema
+    const { Answer, ...restSchema } = schema;
+    const columns = Object.keys(restSchema);
+    logMessage(`Extracted columns: ${columns.join(", ")}`);
+    return columns;
+  } catch (error) {
+    logMessage(`❌ Error extracting schema columns: ${error.message}`);
+    return [];
+  }
+}
+
+// Hàm kiểm tra và cập nhật cấu trúc sheet
+function validateAndUpdateSheetStructure(sheet, schema) {
+  logMessage("Validating and updating sheet structure...");
+  logMessage(`Sheet name: ${sheet.getName()}`);
+  logMessage(`Input schema: ${JSON.stringify(schema)}`);
+
+  // Các cột cố định
+  const fixedColumns = ["User_ID", "Chat_Log", "Section_Records"];
+  logMessage(`Fixed columns: ${fixedColumns.join(", ")}`);
+
+  // Lấy các cột từ schema
+  const schemaColumns = getSchemaColumns(schema);
+  logMessage(`Schema columns: ${schemaColumns.join(", ")}`);
+
+  // Tổng hợp tất cả các cột cần có
+  const allRequiredColumns = [...fixedColumns, ...schemaColumns];
+  logMessage(`All required columns: ${allRequiredColumns.join(", ")}`);
+
+  try {
+    // Lấy header hiện tại - Thêm kiểm tra sheet trống
+    let currentHeaders = [];
+    const lastColumn = sheet.getLastColumn();
+
+    if (lastColumn > 0) {
+      currentHeaders = sheet.getRange(1, 1, 1, lastColumn).getValues()[0];
+      logMessage(`Current headers: ${currentHeaders.join(", ")}`);
+    } else {
+      logMessage("Sheet is empty, initializing with new headers");
+    }
+
+    // Nếu sheet trống hoặc cần thêm cột
+    if (lastColumn === 0 || currentHeaders.length < allRequiredColumns.length) {
+      // Nếu sheet trống, set up tất cả các cột
+      if (lastColumn === 0) {
+        logMessage("Setting up initial columns");
+        const headerRange = sheet.getRange(1, 1, 1, allRequiredColumns.length);
+        headerRange.setValues([allRequiredColumns]);
+      } else {
+        // Nếu cần thêm cột mới
+        const columnsToAdd = allRequiredColumns.length - currentHeaders.length;
+        logMessage(`Adding ${columnsToAdd} new columns`);
+        sheet.insertColumnsAfter(lastColumn, columnsToAdd);
+
+        // Cập nhật headers cho các cột mới
+        const headerRange = sheet.getRange(1, 1, 1, allRequiredColumns.length);
+        headerRange.setValues([allRequiredColumns]);
+      }
+    }
+
+    // Định dạng header
+    const headerRange = sheet.getRange(1, 1, 1, allRequiredColumns.length);
+    headerRange
+      .setBackground("#20124d")
+      .setFontColor("white")
+      .setFontWeight("bold");
+    logMessage("Header formatting applied");
+
+    // Tự động điều chỉnh độ rộng cột
+    sheet.autoResizeColumns(1, allRequiredColumns.length);
+    logMessage("Column widths adjusted");
+
+    return allRequiredColumns;
+  } catch (error) {
+    logMessage(`❌ Error updating sheet structure: ${error.message}`);
+    throw error;
+  }
+}
+
+// Cập nhật hàm getOrCreateCurrentMonthSheet
 function getOrCreateCurrentMonthSheet() {
   logMessage("Getting or creating current month sheet...");
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const currentDate = new Date();
-
-  // Log thông tin về thời gian
-  logMessage(`Current date: ${currentDate}`);
-  logMessage(`Current timezone: ${Session.getScriptTimeZone()}`);
-
   const sheetName = Utilities.formatDate(currentDate, "GMT+7", "MMM yyyy");
-  logMessage(`Generated sheet name: ${sheetName}`);
+  logMessage(`Target sheet name: ${sheetName}`);
 
   let sheet = ss.getSheetByName(sheetName);
 
-  // Nếu sheet chưa tồn tại, tạo mới
   if (!sheet) {
     logMessage(`Sheet ${sheetName} not found, creating new sheet...`);
     sheet = ss.insertSheet(sheetName);
-    // Tạo headers
-    sheet
-      .getRange("A1:G1")
-      .setValues([
-        [
-          "User_ID",
-          "Chat_Log",
-          "Section_Records",
-          "Topic_per_Section",
-          "Summerize",
-          "Request_for_RealAssistance_Count",
-          "priceConcern",
-        ],
-      ]);
-
-    // Định dạng header
-    sheet
-      .getRange("A1:G1")
-      .setBackground("#4a86e8")
-      .setFontColor("white")
-      .setFontWeight("bold");
-
-    // Tự động điều chỉnh độ rộng cột
-    sheet.autoResizeColumns(1, 7);
-    logMessage("New sheet created and formatted successfully");
   } else {
     logMessage(`Found existing sheet: ${sheetName}`);
   }
@@ -67,100 +126,45 @@ function getOrCreateCurrentMonthSheet() {
 
 // Cập nhật hàm updateChatLog
 function updateChatLog(userID, newMessage) {
-  executionLogs = [];
   logMessage("Starting updateChatLog...");
-  logMessage(`UserID: ${userID}`);
-  logMessage(`New message: ${JSON.stringify(newMessage)}`);
+  logMessage(`Processing message for user: ${userID}`);
+  logMessage(`Message data: ${JSON.stringify(newMessage, null, 2)}`);
 
   const sheet = getOrCreateCurrentMonthSheet();
-  logMessage(`Current sheet name: ${sheet.getName()}`);
+  logMessage(`Working with sheet: ${sheet.getName()}`);
 
   try {
-    // Tìm row của user trong sheet hiện tại
-    const userIDColumn = sheet.getRange("A:A").getValues();
-    let userRow = -1;
+    // Tìm hoặc tạo row cho user
+    const userRow = findOrCreateUserRow(sheet, userID);
 
-    for (let i = 1; i < userIDColumn.length; i++) {
-      if (userIDColumn[i][0] === userID) {
-        userRow = i + 1;
-        logMessage(`Found existing user at row: ${userRow}`);
-        break;
-      }
-    }
-
-    // Lấy timestamp hiện tại
-    const currentTimestamp = new Date().toISOString();
-
-    // Format tin nhắn đúng cấu trúc
+    // Cập nhật thông tin cơ bản
     const messageToSave = {
       parts: [{ text: newMessage.parts[0].text }],
       role: newMessage.role,
     };
 
-    // Nếu user chưa có trong sheet, thêm mới
-    if (userRow === -1) {
-      userRow = sheet.getLastRow() + 1;
-      logMessage(`Creating new user at row: ${userRow}`);
+    // Cập nhật chat log
+    updateChatLogColumn(sheet, userRow, messageToSave);
+    logMessage("Chat log updated");
 
-      const newRow = [
-        userID, // User_ID
-        JSON.stringify([messageToSave]), // Chat_Log với format đúng
-        currentTimestamp, // Section_Records - lưu timestamp
-        newMessage.topic || "", // Topic_per_Section
-        newMessage.summerize || "", // Summerize
-        "0", // Request_for_RealAssistance_Count
-        newMessage.priceConcern || "", // priceConcern - đảm bảo tên trường khớp
-      ];
+    // Cập nhật timestamp
+    sheet.getRange(userRow, 3).setValue(new Date().toISOString());
+    logMessage("Timestamp updated");
 
-      sheet.getRange(userRow, 1, 1, 7).setValues([newRow]);
-      logMessage("New user row created with initial data");
-
-      // Thêm xử lý PriceConcern trong phần cập nhật user hiện có
-      if (newMessage.priceConcern) {
-        const priceConcernCell = sheet.getRange(userRow, 7);
-        priceConcernCell.setValue(newMessage.priceConcern);
-        logMessage(`Updated priceConcern: ${newMessage.priceConcern}`);
-      }
-    } else {
-      // Nếu user đã tồn tại, cập nhật thông tin
-      const currentChatLogCell = sheet.getRange(userRow, 2);
-      const currentChatLogValue = currentChatLogCell.getValue();
-      let chatLog = [];
-      try {
-        chatLog = JSON.parse(currentChatLogValue || "[]");
-      } catch (parseError) {
-        logMessage(`Error parsing existing chat log: ${parseError}`);
-        chatLog = [];
-      }
-
-      // Thêm tin nhắn mới với format đúng
-      chatLog.push(messageToSave);
-      currentChatLogCell.setValue(JSON.stringify(chatLog));
-
-      // Cập nhật Topic nếu có
-      if (newMessage.topic) {
-        const topicCell = sheet.getRange(userRow, 4);
-        topicCell.setValue(newMessage.topic);
-      }
-
-      // Cập nhật Summerize nếu có
-      if (newMessage.summerize) {
-        const summerizeCell = sheet.getRange(userRow, 5);
-        summerizeCell.setValue(newMessage.summerize);
-      }
-
-      // Cập nhật Section_Records với timestamp mới nhất
-      const sectionCell = sheet.getRange(userRow, 3);
-      sectionCell.setValue(currentTimestamp);
-
-      // Cập nhật priceConcern nếu có
-      if (newMessage.priceConcern) {
-        const priceConcernCell = sheet.getRange(userRow, 7);
-        priceConcernCell.setValue(newMessage.priceConcern);
-        logMessage(`Updated priceConcern: ${newMessage.priceConcern}`);
-      }
-
-      logMessage("Existing user data updated successfully");
+    // Nếu có contentForSchema, cập nhật các cột từ cột 4 trở đi
+    if (newMessage.contentForSchema) {
+      logMessage(
+        `Updating schema columns with: ${JSON.stringify(
+          newMessage.contentForSchema
+        )}`
+      );
+      const startColumn = 4; // Bắt đầu từ cột thứ 4
+      newMessage.contentForSchema.forEach((value, index) => {
+        const column = startColumn + index;
+        logMessage(`Setting column ${column} to value: ${value}`);
+        sheet.getRange(userRow, column).setValue(value);
+      });
+      logMessage("Schema columns updated");
     }
 
     return {
@@ -168,7 +172,7 @@ function updateChatLog(userID, newMessage) {
       logs: executionLogs,
     };
   } catch (error) {
-    logMessage(`Error in updateChatLog: ${error.toString()}`);
+    logMessage(`❌ Error in updateChatLog: ${error.toString()}`);
     logMessage(`Error stack: ${error.stack}`);
     return {
       success: false,
@@ -178,8 +182,38 @@ function updateChatLog(userID, newMessage) {
   }
 }
 
+// Helper function để tìm hoặc tạo row cho user
+function findOrCreateUserRow(sheet, userID) {
+  const userIDColumn = sheet.getRange("A:A").getValues();
+  let userRow = -1;
+
+  for (let i = 1; i < userIDColumn.length; i++) {
+    if (userIDColumn[i][0] === userID) {
+      userRow = i + 1;
+      break;
+    }
+  }
+
+  if (userRow === -1) {
+    userRow = sheet.getLastRow() + 1;
+    sheet.getRange(userRow, 1).setValue(userID);
+    sheet.getRange(userRow, 2).setValue("[]");
+  }
+
+  return userRow;
+}
+
+// Helper function để cập nhật cột chat log
+function updateChatLogColumn(sheet, userRow, messageToSave) {
+  const chatLogCell = sheet.getRange(userRow, 2);
+  const currentChatLog = JSON.parse(chatLogCell.getValue() || "[]");
+  currentChatLog.push(messageToSave);
+  chatLogCell.setValue(JSON.stringify(currentChatLog));
+}
+
 // Cập nhật hàm getCorsHeaders
 function getCorsHeaders() {
+  logMessage("Getting CORS headers");
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -267,15 +301,28 @@ function findOrCreateUser(sheet, userID) {
 // Cập nhật hàm doGet
 function doGet(e) {
   executionLogs = [];
-  logMessage("Received GET request");
-  logMessage(`Request parameters: ${JSON.stringify(e.parameter)}`);
+  logMessage("=== START doGet ===");
+  logMessage(`Full request parameters: ${JSON.stringify(e.parameter)}`);
 
   const callback = e.parameter.callback;
   const requestType = e.parameter.requestType;
   const userID = e.parameter.userID;
 
+  logMessage(`Callback: ${callback}`);
+  logMessage(`Request Type: ${requestType}`);
+  logMessage(`User ID: ${userID}`);
+
+  // Log schema riêng vì có thể là JSON string
+  try {
+    const schema = e.parameter.schema ? JSON.parse(e.parameter.schema) : null;
+    logMessage(`Parsed Schema: ${JSON.stringify(schema, null, 2)}`);
+  } catch (error) {
+    logMessage(`Error parsing schema: ${error.message}`);
+    logMessage(`Raw schema value: ${e.parameter.schema}`);
+  }
+
   if (!userID) {
-    logMessage("Missing userID parameter");
+    logMessage("❌ Error: Missing userID");
     return createResponse(
       {
         success: false,
@@ -287,40 +334,113 @@ function doGet(e) {
   }
 
   let result;
-  switch (requestType) {
-    case Vx_Sheet_RequestType.CHAT_HISTORY:
-      result = handleChatHistoryRequest(userID);
-      break;
-    case Vx_Sheet_RequestType.NEW_MESSAGE:
-      result = updateChatLog(userID, {
-        parts: [{ text: e.parameter.message }],
-        role: e.parameter.role,
-        topic: e.parameter.topic,
-        summerize: e.parameter.summerize,
-        priceConcern: e.parameter.priceConcern,
-      });
-      break;
-    default:
-      result = {
-        success: false,
-        error: "Invalid request type",
-        logs: executionLogs,
-      };
-  }
+  try {
+    switch (requestType) {
+      case Vx_Sheet_RequestType.CHAT_HISTORY:
+        logMessage("📜 Processing CHAT_HISTORY request");
 
-  return createResponse(result, callback);
+        try {
+          // Parse schema
+          const schema = e.parameter.schema
+            ? JSON.parse(e.parameter.schema)
+            : null;
+          logMessage(`Parsed schema: ${JSON.stringify(schema)}`);
+
+          if (!schema) {
+            logMessage("❌ Error: Missing schema for CHAT_HISTORY request");
+            return createResponse(
+              {
+                success: false,
+                error: "Missing schema for CHAT_HISTORY request",
+                logs: executionLogs,
+              },
+              callback
+            );
+          }
+
+          logMessage("Getting sheet...");
+          const sheet = getOrCreateCurrentMonthSheet();
+          logMessage(`Working with sheet: ${sheet.getName()}`);
+
+          logMessage("Validating sheet structure...");
+          validateAndUpdateSheetStructure(sheet, schema);
+
+          logMessage("Getting chat history...");
+          result = handleChatHistoryRequest(userID);
+          logMessage(`Chat history result: ${JSON.stringify(result)}`);
+        } catch (error) {
+          logMessage(`❌ Error in CHAT_HISTORY processing: ${error.message}`);
+          return createResponse(
+            {
+              success: false,
+              error: error.message,
+              logs: executionLogs,
+            },
+            callback
+          );
+        }
+        break;
+
+      case Vx_Sheet_RequestType.NEW_MESSAGE:
+        logMessage("💬 Processing NEW_MESSAGE request");
+        logMessage(`Message: ${e.parameter.message}`);
+        logMessage(`Role: ${e.parameter.role}`);
+
+        result = updateChatLog(userID, {
+          parts: [{ text: e.parameter.message }],
+          role: e.parameter.role,
+          contentForSchema: e.parameter.contentForSchema
+            ? JSON.parse(e.parameter.contentForSchema)
+            : null,
+        });
+
+        logMessage(`Update result: ${JSON.stringify(result)}`);
+        break;
+
+      default:
+        logMessage(`❌ Error: Invalid request type: ${requestType}`);
+        result = {
+          success: false,
+          error: "Invalid request type",
+          logs: executionLogs,
+        };
+    }
+
+    logMessage("=== END doGet - Success ===");
+    return createResponse(result, callback);
+  } catch (error) {
+    logMessage(`❌ ERROR in doGet: ${error.message}`);
+    logMessage(`Error stack: ${error.stack}`);
+    logMessage("=== END doGet - Error ===");
+
+    return createResponse(
+      {
+        success: false,
+        error: error.message,
+        stack: error.stack,
+        logs: executionLogs,
+      },
+      callback
+    );
+  }
 }
 
-// Helper function để tạo response
+// Cập nhật helper function createResponse để thêm logs
 function createResponse(result, callback) {
+  logMessage("Creating response...");
+  logMessage(`Result: ${JSON.stringify(result)}`);
+  logMessage(`Using callback: ${callback ? "yes" : "no"}`);
+
   const output = JSON.stringify(result);
 
   if (callback) {
+    logMessage("Returning JSONP response");
     return ContentService.createTextOutput(
       callback + "(" + output + ")"
     ).setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
 
+  logMessage("Returning JSON response");
   return ContentService.createTextOutput(output).setMimeType(
     ContentService.MimeType.JSON
   );
@@ -329,33 +449,73 @@ function createResponse(result, callback) {
 // Cập nhật hàm doPost
 function doPost(e) {
   executionLogs = [];
+  logMessage("=== START doPost ===");
 
   try {
+    logMessage(`Raw post data: ${e.postData.contents}`);
     const postData = JSON.parse(e.postData.contents);
+    logMessage(`Parsed post data: ${JSON.stringify(postData, null, 2)}`);
+
+    // Log các trường quan trọng
+    logMessage(`UserID: ${postData.userID}`);
+    logMessage(`Role: ${postData.role}`);
+    logMessage(`Message: ${postData.parts[0].text}`);
+
+    // Log contentForSchema nếu có
+    if (postData.contentForSchema) {
+      logMessage(
+        `ContentForSchema: ${JSON.stringify(postData.contentForSchema)}`
+      );
+    }
+
     const result = updateChatLog(postData.userID, {
       parts: [{ text: postData.parts[0].text }],
       role: postData.role,
-      topic: postData.topic,
-      summerize: postData.summerize,
-      priceConcern: postData.priceConcern,
+      contentForSchema: postData.contentForSchema,
     });
 
-    return ContentService.createTextOutput(
+    logMessage(`Update result: ${JSON.stringify(result)}`);
+    logMessage("=== END doPost - Success ===");
+
+    // Sửa lỗi setHeaders bằng cách tách thành nhiều bước
+    const response = ContentService.createTextOutput(
       JSON.stringify({
         success: true,
+        logs: executionLogs,
       })
-    )
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(getCorsHeaders());
+    );
+
+    response.setMimeType(ContentService.MimeType.JSON);
+
+    // Thêm headers riêng lẻ
+    const headers = getCorsHeaders();
+    Object.keys(headers).forEach((key) => {
+      response.addHeader(key, headers[key]);
+    });
+
+    return response;
   } catch (error) {
-    return ContentService.createTextOutput(
+    logMessage(`❌ ERROR in doPost: ${error.message}`);
+    logMessage(`Error stack: ${error.stack}`);
+    logMessage("=== END doPost - Error ===");
+
+    // Xử lý lỗi tương tự
+    const errorResponse = ContentService.createTextOutput(
       JSON.stringify({
         success: false,
         error: error.toString(),
+        logs: executionLogs,
       })
-    )
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(getCorsHeaders());
+    );
+
+    errorResponse.setMimeType(ContentService.MimeType.JSON);
+
+    const headers = getCorsHeaders();
+    Object.keys(headers).forEach((key) => {
+      errorResponse.addHeader(key, headers[key]);
+    });
+
+    return errorResponse;
   }
 }
 

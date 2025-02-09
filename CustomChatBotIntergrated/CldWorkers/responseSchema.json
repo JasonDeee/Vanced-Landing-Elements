@@ -1,0 +1,26 @@
+{
+  "Answer": {
+    "type": "string",
+    "description": "Trả lời cho câu hỏi của người dùng"
+  },
+  "Summerize": {
+    "type": "string",
+    "description": "Tóm tắt lịch sử cuộc hội thoại"
+  },
+  "Request_for_RealAssistance": {
+    "type": "boolean",
+    "description": "Nếu bạn không thể trả lời được câu hỏi, trả về true"
+  },
+  "Topic": {
+    "type": "string",
+    "description": "Chủ đề của cuộc hội thoại"
+  },
+  "PriceConcern": {
+    "type": "string",
+    "description": "Nếu người dùng trao đổi về giá, hãy trả về dưới dạng tiền tệ, ví dụ: 500.000₫. Nếu người dùng không nói đến giá, hãy trả về null"
+  },
+  "UserRate": {
+    "type": "number",
+    "description": "Đánh giá của người dùng về sản phẩm, từ 1 đến 10. Nếu người dùng không nói đến đánh giá, hãy trả về null"
+  }
+}

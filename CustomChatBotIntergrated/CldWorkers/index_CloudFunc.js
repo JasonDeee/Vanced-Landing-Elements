@@ -1,4 +1,5 @@
 const functions = require("@google-cloud/functions-framework");
+const Vx_Response_Schema = require("./responseSchema.json");
 
 // Lấy environment variables
 const Vx_WEBAPP_URL = process.env.Vx_WEBAPP_URL;
@@ -15,31 +16,6 @@ const Vx_Sheet_RequestType = {
   CHAT_HISTORY: "ChatHistoryRequest",
   NEW_MESSAGE: "NewMessageUpdateForCurrentUser",
   Vx_SyncID: "Vx_SyncID",
-};
-
-// Response Schema
-const Vx_Response_Schema = {
-  Answer: {
-    type: "string",
-    description: "Trả lời cho câu hỏi của người dùng",
-  },
-  Summerize: {
-    type: "string",
-    description: "Tóm tắt lịch sử cuộc hội thoại",
-  },
-  Request_for_RealAssistance: {
-    type: "boolean",
-    description: "Nếu bạn không thể trả lời được câu hỏi, trả về true",
-  },
-  Topic: {
-    type: "string",
-    description: "Chủ đề của cuộc hội thoại",
-  },
-  PriceConcern: {
-    type: "string",
-    description:
-      "Nếu người dùng trao đổi về giá, hãy trả về dưới dạng tiền tệ, ví dụ: 500.000₫. Nếu người dùng không nói đến giá, hãy trả về null",
-  },
 };
 
 // CORS headers
@@ -267,9 +243,13 @@ async function handleSyncID(browserData) {
 
 async function loadChatHistory(userID) {
   try {
+    // Tạo schema object mới, bỏ qua Answer
+    const { Answer, ...schemaWithoutAnswer } = Vx_Response_Schema;
+
     const params = new URLSearchParams({
       userID: userID,
       requestType: Vx_Sheet_RequestType.CHAT_HISTORY,
+      schema: JSON.stringify(schemaWithoutAnswer),
     });
 
     const response = await fetch(`${Vx_WEBAPP_URL}?${params.toString()}`);
@@ -320,10 +300,10 @@ async function handleNewMessage(chatHistory, message, userID) {
         body: JSON.stringify({
           contents: contents,
           generationConfig: {
-            temperature: 1,
+            temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 8192,
+            maxOutputTokens: 4096,
           },
           safetySettings: [
             {
@@ -372,7 +352,7 @@ async function handleNewMessage(chatHistory, message, userID) {
     const botResponse = JSON.parse(jsonMatch[1]);
 
     // Save bot message
-    await saveMessageToWebApp(userID, botResponse.Answer, "model", botResponse);
+    saveMessageToWebApp(userID, botResponse.Answer, "model", botResponse);
 
     // Update chat history
     chatHistory.push(
@@ -393,15 +373,25 @@ async function handleNewMessage(chatHistory, message, userID) {
 
 async function saveMessageToWebApp(userID, message, role, botResponse = null) {
   try {
+    // Khởi tạo requestData với các trường cơ bản
     const requestData = {
       userID: userID,
       parts: [{ text: message }],
       role: role,
-      topic: botResponse?.Topic || "",
-      summerize: botResponse?.Summerize || "",
-      priceConcern: botResponse?.PriceConcern || null,
       requestType: Vx_Sheet_RequestType.NEW_MESSAGE,
     };
+
+    // Nếu là bot response, tạo mảng giá trị theo thứ tự schema
+    if (botResponse) {
+      const { Answer, ...schemaWithoutAnswer } = Vx_Response_Schema;
+      const schemaKeys = Object.keys(schemaWithoutAnswer);
+
+      // Tạo mảng giá trị theo thứ tự của schema
+      const contentForSchema = schemaKeys.map((key) => botResponse[key]);
+
+      // Thêm vào requestData
+      requestData.contentForSchema = contentForSchema;
+    }
 
     const response = await fetch(Vx_WEBAPP_URL, {
       method: "POST",
