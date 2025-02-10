@@ -15,16 +15,32 @@
         font-family: "Lexend", serif;
         font-optical-sizing: auto;
       }
+      body {
+        background-color: #e9e7e7;
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+      }
     </style>
     <link rel="stylesheet" href="./Styles/Vx_chatbot.css" />
   </head>
+
   <body>
-    <div class="Vx_chat-container FloatingChat Pending" id="Vx_chatContainer">
+    <div
+      class="Vx_chat-container FloatingChat Pending"
+      id="Vx_chatContainer"
+      style="bottom: 64px; right: 64px"
+    >
       <style></style>
       <!-- <button id="Vx_ChatInitButton">Khởi tạo cuộc hội thoại</button> -->
+      <header class="Vx_ChatBotHeader">
+        <div class="Vx_ChatBotLogo"></div>
+        <title class="Vx_ChatBotTitle">Fellas Bot</title>
+      </header>
       <div class="Vx_chat-messages" id="Vx_chatMessages">
         <!-- Tin nhắn sẽ được hiển thị ở đây -->
       </div>
+
       <div class="Vx_chat-input">
         <input
           type="text"
@@ -32,6 +48,7 @@
           placeholder="Nhập tin nhắn của bạn..."
         />
         <button id="Vx_sendButton">Gửi</button>
+        <nav class="Vx_ChatBotNav"></nav>
       </div>
     </div>
     <!-- Thêm file chat.js -->
