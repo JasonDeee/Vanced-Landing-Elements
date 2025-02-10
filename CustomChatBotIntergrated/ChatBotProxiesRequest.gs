@@ -93,8 +93,8 @@ function validateAndUpdateSheetStructure(sheet, schema) {
     logMessage("Header formatting applied");
 
     // Tự động điều chỉnh độ rộng cột
-    sheet.autoResizeColumns(1, allRequiredColumns.length);
-    logMessage("Column widths adjusted");
+    // sheet.autoResizeColumns(1, allRequiredColumns.length);
+    // logMessage("Column widths adjusted");
 
     return allRequiredColumns;
   } catch (error) {

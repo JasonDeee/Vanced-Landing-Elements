@@ -19,7 +19,9 @@
     <link rel="stylesheet" href="./Styles/Vx_chatbot.css" />
   </head>
   <body>
-    <div class="Vx_chat-container">
+    <div class="Vx_chat-container FloatingChat Pending" id="Vx_chatContainer">
+      <style></style>
+      <!-- <button id="Vx_ChatInitButton">Khởi tạo cuộc hội thoại</button> -->
       <div class="Vx_chat-messages" id="Vx_chatMessages">
         <!-- Tin nhắn sẽ được hiển thị ở đây -->
       </div>
@@ -35,7 +37,10 @@
     <!-- Thêm file chat.js -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script> -->
 
-    <script src="./Scripts/ChatNewLayout.js"></script>
+    <script
+      src="./Scripts/Vx_ChatBot_Intergrated_Public.js"
+      Vx_WORKERS_ENDPOINT="https://asia-southeast2-fellas-tester.cloudfunctions.net/VxChatBot"
+    ></script>
     <!-- <script src="./Scripts/chat.js"></script> -->
   </body>
 </html>

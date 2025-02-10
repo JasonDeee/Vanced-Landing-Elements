@@ -1,66 +1,57 @@
 .Vx_chat-container {
-  --MainColor: var(--main-color, #0c1136);
-  --SecondaryColor: var(--secondary-color, #e72166);
-  background-color: var(--MainColor);
   max-width: 800px;
   margin: 20px auto;
   border: 1px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
-  -webkit-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .Vx_chat-messages {
   height: 500px;
   padding: 20px;
   overflow-y: auto;
-  background-color: var(--MainColor);
+  background-color: #f5f5f5;
 }
 
 .Vx_chat-input {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
   padding: 15px;
   background-color: #fff;
   border-top: 1px solid #eee;
-}
 
-.Vx_chat-input input {
-  -webkit-box-flex: 1;
-      -ms-flex: 1;
-          flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-right: 10px;
-  font-size: 14px;
-}
+  input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-right: 10px;
+    font-size: 14px;
 
-.Vx_chat-input input:focus {
-  outline: none;
-  border-color: #007bff;
-}
+    &:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+  }
 
-.Vx_chat-input button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  -webkit-transition: background-color 0.2s;
-  transition: background-color 0.2s;
-}
+  button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
 
-.Vx_chat-input button:hover {
-  background-color: #0056b3;
-}
+    &:hover {
+      background-color: #0056b3;
+    }
 
-.Vx_chat-input button:active {
-  background-color: #004085;
+    &:active {
+      background-color: #004085;
+    }
+  }
 }
 
 .Vx_message {
@@ -109,4 +100,3 @@
   overflow-x: auto;
   margin: 0;
 }
-/*# sourceMappingURL=Vx_chatbot.css.map */

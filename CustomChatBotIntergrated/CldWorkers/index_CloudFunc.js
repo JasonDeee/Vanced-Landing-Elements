@@ -2,8 +2,10 @@ const functions = require("@google-cloud/functions-framework");
 const Vx_Response_Schema = require("./responseSchema.json");
 
 // Lấy environment variables
-const Vx_WEBAPP_URL = process.env.Vx_WEBAPP_URL;
-const Vx_Gemini_API_KEY = process.env.Vx_Gemini_API_KEY;
+const Vx_WEBAPP_URL = process.env.Web_URL;
+const Vx_Gemini_API_KEY = process.env.Gemini_API_KEY;
+const Vx_Gemini_API_URL = process.env.Gemini_API_URL;
+const Vx_Allow_CORS = process.env.Allow_URL;
 
 // Kiểm tra xem có environment variables hay không
 if (!Vx_WEBAPP_URL || !Vx_Gemini_API_KEY) {
@@ -118,7 +120,7 @@ const rateLimiter = new UnifiedRateLimiter(30);
 // Main function handler
 functions.http("vxChatbot", async (req, res) => {
   // Minimal CORS setup - chỉ cho phép domain của chúng ta
-  res.set("Access-Control-Allow-Origin", "https://beta.vanced.media");
+  res.set("Access-Control-Allow-Origin", Vx_Allow_CORS);
 
   // Preflight request
   if (req.method === "OPTIONS") {
@@ -267,14 +269,25 @@ async function loadChatHistory(userID) {
 }
 
 async function handleNewMessage(chatHistory, message, userID) {
-  try {
-    // Save user message
-    saveMessageToWebApp(userID, message, "user");
+  console.group("🚀 handleNewMessage");
+  console.log("Input parameters:", {
+    userID,
+    message,
+    chatHistoryLength: chatHistory?.length || 0,
+  });
 
+  try {
+    // Log save user message attempt
+    console.log("💾 Saving user message to WebApp...");
+    await saveMessageToWebApp(userID, message, "user");
+    console.log("✅ User message saved successfully");
+
+    // Log schema preparation
+    console.log("📝 Preparing schema and contents for Gemini API...");
     let SchemaPrefix =
       "Bạn hãy trả lời tôi dưới dạng JSON bên trong 3 dấu *** theo schema dưới dây:\n";
 
-    // Prepare contents for Gemini API
+    // Log contents preparation
     let contents = [
       {
         parts: [
@@ -288,10 +301,20 @@ async function handleNewMessage(chatHistory, message, userID) {
         role: "user",
       },
     ];
+    console.log("Contents prepared:", {
+      totalMessages: contents.length,
+      schemaIncluded: !!contents[0].parts[0].text.includes("***"),
+    });
+
+    // Log Gemini API call
+    console.log("🤖 Calling Gemini API...", {
+      url: Vx_Gemini_API_URL,
+      messageLength: message.length,
+    });
 
     // Call Gemini API
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/tunedModels/vanced-test-tunning-to-chat-bot-v1-emwmn:generateContent?key=${Vx_Gemini_API_KEY}`,
+      `${Vx_Gemini_API_URL}?key=${Vx_Gemini_API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -327,8 +350,15 @@ async function handleNewMessage(chatHistory, message, userID) {
       }
     );
 
+    // Log API response status
+    console.log("📡 Gemini API Response:", {
+      status: response.status,
+      ok: response.ok,
+    });
+
     if (!response.ok) {
       const errorData = await response.json();
+      console.error("❌ Gemini API Error:", errorData);
       throw new Error(
         JSON.stringify({
           type: "GEMINI_API_ERROR",
@@ -339,34 +369,56 @@ async function handleNewMessage(chatHistory, message, userID) {
     }
 
     const geminiResponse = await response.json();
-    console.log("Gemini response:", geminiResponse);
+    console.log("✅ Gemini response received:", {
+      hasContent: !!geminiResponse.candidates?.[0]?.content,
+      responseLength:
+        geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text?.length,
+    });
 
     // Parse bot response
     const botResponseText = geminiResponse.candidates[0].content.parts[0].text;
+    console.log("🔍 Looking for JSON in response between *** markers");
     const jsonMatch = botResponseText.match(/\*\*\*([\s\S]*?)\*\*\*/);
 
     if (!jsonMatch || !jsonMatch[1]) {
+      console.error("❌ No JSON found between *** markers");
+      console.log("Raw response:", botResponseText);
       throw new Error("Could not find JSON response between *** markers");
     }
 
+    console.log("✅ JSON found, parsing response...");
     const botResponse = JSON.parse(jsonMatch[1]);
+    console.log("Parsed bot response:", {
+      hasAnswer: !!botResponse.Answer,
+      answerLength: botResponse.Answer?.length,
+    });
 
     // Save bot message
-    saveMessageToWebApp(userID, botResponse.Answer, "model", botResponse);
+    console.log("💾 Saving bot message to WebApp...");
+    await saveMessageToWebApp(userID, botResponse.Answer, "model", botResponse);
+    console.log("✅ Bot message saved successfully");
 
     // Update chat history
+    console.log("📝 Updating chat history...");
     chatHistory.push(
       { parts: [{ text: message }], role: "user" },
       { parts: [{ text: botResponse.Answer }], role: "model" }
     );
+    console.log("✅ Chat history updated");
 
+    console.log("🎉 handleNewMessage completed successfully");
+    console.groupEnd();
     return {
       success: true,
       chatHistory: chatHistory,
       botResponse: botResponse,
     };
   } catch (error) {
-    console.error("Error in handleNewMessage:", error);
+    console.error("❌ Error in handleNewMessage:", {
+      message: error.message,
+      stack: error.stack,
+    });
+    console.groupEnd();
     throw error;
   }
 }
