@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat -Wide Interface</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+
+      * {
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+
+        font-family: "Lexend", serif;
+        font-optical-sizing: auto;
+      }
+      body {
+        background-color: #e9e7e7;
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .Temp_Container {
+        width: 62vw;
+        height: 70vh;
+        position: relative;
+      }
+    </style>
+    <link rel="stylesheet" href="./Styles/Chatbot-WideSreen.css" />
+  </head>
+
+  <body>
+    <div class="Temp_Container">
+      <div class="Vx_chat-container WideChat Pending" id="Vx_chatContainer">
+        <style></style>
+        <!-- <button id="Vx_ChatInitButton">Khởi tạo cuộc hội thoại</button> -->
+        <header class="Vx_ChatBotHeader">
+          <div class="Vx_ChatBotLogo"></div>
+          <h1 class="Vx_ChatBotTitle">
+            Vanced Bot <span>| Có thể không thông minh lắm.</span>
+          </h1>
+        </header>
+        <div class="Vx_chat-messages" id="Vx_chatMessages">
+          <!-- Tin nhắn sẽ được hiển thị ở đây -->
+        </div>
+
+        <div class="Vx_chat-input">
+          <input
+            type="text"
+            id="Vx_messageInput"
+            placeholder="Nhập tin nhắn của bạn..."
+          />
+          <button id="Vx_sendButton">Gửi</button>
+          <nav class="Vx_ChatBotNav"></nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thêm file chat.js -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script> -->
+
+    <script
+      src="./Scripts/ChatNewLayout.js"
+      Vx_WORKERS_ENDPOINT="https://asia-southeast2-fellas-tester.cloudfunctions.net/VxChatBot"
+    ></script>
+    <!-- <script src="./Scripts/chat.js"></script> -->
+  </body>
+</html>

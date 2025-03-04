@@ -1,0 +1,170 @@
+.Vx_chat-container {
+  //   // giữ lại palette mới
+  //   --global-palette1: #e72166;
+  //   --global-palette2: #2a38a1;
+  //   --global-palette3: #0c1136;
+  //   --global-palette4: #0c1136;
+  //   --global-palette5: #0c1136;
+  //   --global-palette6: #7081ff;
+  //   --global-palette7: #c9c7c7;
+  //   --global-palette8: #e9e7e7;
+  //   --global-palette9: #ffffff;
+
+  * {
+    appearance: unset;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    transition: all 0.8s cubic-bezier(0.25, 0, 0, 1);
+  }
+
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: stretch;
+  position: relative;
+
+  .Vx_ChatBotHeader {
+    background-color: var(--global-palette3);
+    display: flex;
+
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+
+    padding: 16px;
+    gap: 16px;
+
+    width: 100%;
+    height: fit-content;
+
+    color: var(--global-palette9);
+
+    .Vx_ChatBotLogo {
+      width: 48px;
+      height: 48px;
+      background-color: var(--global-palette1);
+      border-radius: 50%;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+
+      color: var(--global-palette9);
+      margin: 0;
+
+      span {
+        font-size: 0.8rem;
+        font-weight: 400;
+      }
+    }
+  }
+
+  &.FloatingChat {
+    position: fixed;
+    min-width: 368px;
+    width: 22vw;
+    height: 62vh;
+  }
+}
+
+.Vx_chat-messages {
+  height: 500px;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: var(--global-palette9);
+}
+
+.Vx_chat-input {
+  display: flex;
+  padding: 15px;
+  background-color: var(--global-palette9);
+  border-top: 1px solid var(--global-palette7);
+
+  input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--global-palette8);
+    border-radius: 4px;
+    margin-right: 10px;
+    font-size: 14px;
+
+    ::placeholder {
+      color: var(--global-palette3);
+      opacity: 0.6;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--global-palette1);
+    }
+  }
+
+  button {
+    padding: 10px 20px;
+    background-color: var(--global-palette1);
+    color: var(--global-palette9);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--global-palette3);
+    }
+
+    &:active {
+      background-color: var(--global-palette3);
+    }
+  }
+}
+
+.Vx_message {
+  margin: 10px 0;
+  padding: 10px 15px;
+  border-radius: 10px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+.Vx_user-message {
+  background-color: var(--global-palette2);
+  color: var(--global-palette9);
+  margin-left: auto;
+}
+
+.Vx_bot-message {
+  background-color: var(--global-palette1);
+  color: var(--global-palette9);
+  margin-right: auto;
+}
+
+.Vx_error-message {
+  background-color: var(--global-palette6) !important;
+  padding: 15px !important;
+}
+
+.Vx_error-title {
+  color: var(--global-palette9);
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.Vx_error-body {
+  color: var(--global-palette7);
+  margin-bottom: 8px;
+}
+
+.Vx_error-details {
+  background: var(--global-palette8);
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  overflow-x: auto;
+  margin: 0;
+}

@@ -237,7 +237,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (newUserID) {
       localStorage.setItem("Vx_userID", newUserID);
       console.log("UserID stored successfully");
-      document.getElementById("Vx_chatContainer").classList.remove("Pending");
     } else {
       console.error("Failed to get UserID from worker");
     }
