@@ -1,0 +1,61 @@
+API_KEY="YOUR_API_KEY"
+
+# TODO: Make the following files available on the local file system.
+FILES=("Vx_ChatBot-Tuner_Sample")
+MIME_TYPES=("application/vnd.google-apps.spreadsheet")
+for i in "${!FILES[@]}"; do
+  NUM_BYTES=$(wc -c < "${FILES[$i]}")
+  curl "https://generativelanguage.googleapis.com/upload/v1beta/files?key=${API_KEY}" \
+    -H "X-Goog-Upload-Command: start, upload, finalize" \
+    -H "X-Goog-Upload-Header-Content-Length: ${NUM_BYTES}" \
+    -H "X-Goog-Upload-Header-Content-Type: ${MIME_TYPES[$i]}" \
+    -H "Content-Type: application/json" \
+    -d "{'file': {'display_name': '${FILES[$i]}'}}" \
+    --data-binary "@${FILES[$i]}"
+  # TODO: Read the file.uri from the response, store it as FILE_URI_${i}
+done
+
+curl \
+  -X POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro-exp-02-05:generateContent?key=${API_KEY} \
+  -H 'Content-Type: application/json' \
+  -d @<(echo '{
+  "contents": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "fileData": {
+            "fileUri": "${FILE_URI_0}",
+            "mimeType": "application/vnd.google-apps.spreadsheet"
+          }
+        },
+        {
+          "text": "Xin chào."
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Chào bạn, tôi là Lara - tư vấn viên của Vanced Media. Tôi có thể giúp gì cho bạn?,* Bạn có thể tư vấn cho tôi về dịch vụ thiết kế landing page không? * Vanced Media là gì? * Tôi có thể tìm các mẫu landing page ở đâu?,Brand Inquiry,General,xin chào,Thân thiện\n"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "INSERT_INPUT_HERE"
+        }
+      ]
+    }
+  ],
+  "generationConfig": {
+    "temperature": 1,
+    "topK": 64,
+    "topP": 0.95,
+    "maxOutputTokens": 8192,
+    "responseMimeType": "text/plain"
+  }
+}')

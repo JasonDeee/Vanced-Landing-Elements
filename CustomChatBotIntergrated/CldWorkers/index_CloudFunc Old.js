@@ -1,22 +1,11 @@
 const functions = require("@google-cloud/functions-framework");
 const Vx_Response_Schema = require("./responseSchema.json");
-const {
-  GoogleGenerativeAI,
-  HarmCategory,
-  HarmBlockThreshold,
-} = require("@google/generative-ai");
-const { GoogleAIFileManager } = require("@google/generative-ai/server");
 
 // Lấy environment variables
 const Vx_WEBAPP_URL = process.env.Web_URL;
 const Vx_Gemini_API_KEY = process.env.Gemini_API_KEY;
+const Vx_Gemini_API_URL = process.env.Gemini_API_URL;
 const Vx_Allow_CORS = process.env.Allow_URL;
-
-// Gemini API Endpoints
-const UPLOAD_ENDPOINT =
-  "https://generativelanguage.googleapis.com/upload/v1beta/files";
-const GENERATE_ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro-exp-02-05:generateContent";
 
 // Kiểm tra xem có environment variables hay không
 if (!Vx_WEBAPP_URL || !Vx_Gemini_API_KEY) {
@@ -296,101 +285,98 @@ async function handleNewMessage(chatHistory, message, userID) {
     // Log schema preparation
     console.log("📝 Preparing schema and contents for Gemini API...");
     let SchemaPrefix =
-      "Bạn hiện đang chat với khách hàng của Vanced Media, hãy trả lời dưới dạng JSON bên trong 3 dấu *** theo schema dưới dây:\n";
+      "Bạn hãy trả lời tôi dưới dạng JSON bên trong 3 dấu *** theo schema dưới dây:\n";
 
-    // Upload training file to Gemini
-    console.log("📁 Uploading training file to Gemini...");
-    const fileContent = await require("fs").promises.readFile(
-      "Vx_ChatBot-Tuner_Sample"
-    );
-    const numBytes = fileContent.length;
+    // Log contents preparation
+    let contents = [
+      {
+        parts: [
+          { text: SchemaPrefix + JSON.stringify(Vx_Response_Schema, null, 2) },
+        ],
+        role: "user",
+      },
+      ...chatHistory,
+      {
+        parts: [{ text: message }],
+        role: "user",
+      },
+    ];
+    console.log("Contents prepared:", {
+      totalMessages: contents.length,
+      schemaIncluded: !!contents[0].parts[0].text.includes("***"),
+    });
 
-    const uploadResponse = await fetch(
-      `${UPLOAD_ENDPOINT}?key=${Vx_Gemini_API_KEY}`,
+    // Log Gemini API call
+    console.log("🤖 Calling Gemini API...", {
+      url: Vx_Gemini_API_URL,
+      messageLength: message.length,
+    });
+
+    // Call Gemini API
+    const response = await fetch(
+      `${Vx_Gemini_API_URL}?key=${Vx_Gemini_API_KEY}`,
       {
         method: "POST",
         headers: {
-          "X-Goog-Upload-Command": "start, upload, finalize",
-          "X-Goog-Upload-Header-Content-Length": numBytes.toString(),
-          "X-Goog-Upload-Header-Content-Type":
-            "application/vnd.google-apps.spreadsheet",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          file: {
-            display_name: "Vx_ChatBot-Tuner_Sample",
+          contents: contents,
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 4096,
           },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            },
+          ],
         }),
       }
     );
 
-    if (!uploadResponse.ok) {
-      throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+    // Log API response status
+    console.log("📡 Gemini API Response:", {
+      status: response.status,
+      ok: response.ok,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Gemini API Error:", errorData);
+      throw new Error(
+        JSON.stringify({
+          type: "GEMINI_API_ERROR",
+          status: response.status,
+          details: errorData,
+        })
+      );
     }
 
-    const uploadResult = await uploadResponse.json();
-    const fileUri = uploadResult.file.uri;
-    console.log("✅ Training file uploaded successfully, URI:", fileUri);
-
-    // Prepare request body for Gemini API
-    const requestBody = {
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              fileData: {
-                fileUri: fileUri,
-                mimeType: "application/vnd.google-apps.spreadsheet",
-              },
-            },
-            {
-              text: SchemaPrefix + JSON.stringify(Vx_Response_Schema, null, 2),
-            },
-          ],
-        },
-        ...chatHistory,
-        {
-          role: "user",
-          parts: [
-            {
-              text: message,
-            },
-          ],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 4096,
-        responseMimeType: "text/plain",
-      },
-    };
-
-    // Call Gemini API
-    console.log("🤖 Calling Gemini API...");
-    const generateResponse = await fetch(
-      `${GENERATE_ENDPOINT}?key=${Vx_Gemini_API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      }
-    );
-
-    if (!generateResponse.ok) {
-      const errorData = await generateResponse.json();
-      throw new Error(`Generation failed: ${JSON.stringify(errorData)}`);
-    }
-
-    const result = await generateResponse.json();
-    const botResponseText = result.candidates[0].content.parts[0].text;
-    console.log("✅ Received response from Gemini");
+    const geminiResponse = await response.json();
+    console.log("✅ Gemini response received:", {
+      hasContent: !!geminiResponse.candidates?.[0]?.content,
+      responseLength:
+        geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text?.length,
+    });
 
     // Parse bot response
+    const botResponseText = geminiResponse.candidates[0].content.parts[0].text;
     console.log("🔍 Looking for JSON in response between *** markers");
     const jsonMatch = botResponseText.match(/\*\*\*([\s\S]*?)\*\*\*/);
 

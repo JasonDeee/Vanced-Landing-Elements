@@ -1,15 +1,16 @@
-.Vx_chat-container {
-  //   // giữ lại palette mới
-  //   --global-palette1: #e72166;
-  //   --global-palette2: #2a38a1;
-  //   --global-palette3: #0c1136;
-  //   --global-palette4: #0c1136;
-  //   --global-palette5: #0c1136;
-  //   --global-palette6: #7081ff;
-  //   --global-palette7: #c9c7c7;
-  //   --global-palette8: #e9e7e7;
-  //   --global-palette9: #ffffff;
+// html {
+//   --global-palette1: #e72166;
+//   --global-palette2: #2a38a1;
+//   --global-palette3: #0c1136;
+//   --global-palette4: #0c1136;
+//   --global-palette5: #0c1136;
+//   --global-palette6: #7081ff;
+//   --global-palette7: #c9c7c7;
+//   --global-palette8: #e9e7e7;
+//   --global-palette9: #ffffff;
+// }
 
+.Vx_chat-container {
   * {
     appearance: unset;
     padding: 0;
@@ -18,8 +19,8 @@
     transition: all 0.8s cubic-bezier(0.25, 0, 0, 1);
   }
 
-  border-radius: 8px;
-  overflow: hidden;
+  // border-radius: 8px;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   justify-content: start;
@@ -45,8 +46,62 @@
     .Vx_ChatBotLogo {
       width: 48px;
       height: 48px;
-      background-color: var(--global-palette1);
       border-radius: 50%;
+      position: relative;
+
+      overflow: hidden;
+      img {
+        width: 100%;
+        height: 100%;
+        background-color: var(--global-palette1);
+
+        object-fit: cover;
+      }
+    }
+
+    #AdditionInfo {
+      width: 32px;
+      height: 32px;
+      position: relative;
+
+      cursor: pointer;
+
+      svg {
+        fill: var(--global-palette9);
+      }
+
+      &::before {
+        content: "Chat bot có thể mắc lỗi | Đoạn chat này sẽ được lưu lại. Hãy sử dụng thận trọng, không sử dụng ngôn ngữ không phù hợp.";
+        position: absolute;
+        bottom: 24px;
+        left: 0;
+        transform: translateX(-50%);
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        background-color: var(--global-palette9);
+        border-radius: 4px;
+        padding: 8px;
+        width: 256px;
+
+        font-size: 0.8rem;
+        font-weight: 400;
+        color: var(--global-palette3);
+        opacity: 0;
+        z-index: 100;
+        transition: all 0.8s cubic-bezier(0.25, 0, 0, 1);
+      }
+
+      &:hover {
+        svg {
+          opacity: 0.6;
+        }
+        &::before {
+          opacity: 1;
+        }
+      }
     }
 
     h1 {
@@ -55,6 +110,7 @@
 
       color: var(--global-palette9);
       margin: 0;
+      flex: auto;
 
       span {
         font-size: 0.8rem;
@@ -93,8 +149,8 @@
     font-size: 14px;
 
     ::placeholder {
-      color: var(--global-palette3);
-      opacity: 0.6;
+      color: var(--global-palette3) !important;
+      opacity: 0.6 !important;
     }
 
     &:focus {
@@ -132,7 +188,7 @@
 }
 
 .Vx_user-message {
-  background-color: var(--global-palette2);
+  background-color: var(--global-palette8);
   color: var(--global-palette9);
   margin-left: auto;
 }
