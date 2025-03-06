@@ -51,14 +51,14 @@ async function waitForFilesActive(files) {
 }
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-pro-exp-02-05",
+  model: "gemini-2.0-flash-thinking-exp-01-21",
 });
 
 const generationConfig = {
-  temperature: 1,
+  temperature: 0.7,
   topP: 0.95,
   topK: 64,
-  maxOutputTokens: 8192,
+  maxOutputTokens: 65536,
   responseMimeType: "text/plain",
 };
 
@@ -87,14 +87,13 @@ async function run() {
               fileUri: files[0].uri,
             },
           },
-          { text: "Xin chào." },
         ],
       },
       {
         role: "model",
         parts: [
           {
-            text: 'Chào bạn, tôi là Lara - tư vấn viên của Vanced Media. Tôi có thể giúp gì cho bạn?,Bạn có thể cung cấp những thông tin gì?; Vanced Media có những dịch vụ gì?; Liên hệ với đội ngũ Vanced bằng cách nào?,Greeting,General,"xin chào, tư vấn",Thân thiện\n',
+            text: "--- END OF FILE Vx_ChatBot-Tuner_Sample ---\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\nTemplate này được thiết kế bởi Vanced Media. Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.\n",
           },
         ],
       },

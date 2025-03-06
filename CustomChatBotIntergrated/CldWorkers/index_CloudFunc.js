@@ -1,11 +1,7 @@
 const functions = require("@google-cloud/functions-framework");
 const Vx_Response_Schema = require("./responseSchema.json");
-const {
-  GoogleGenerativeAI,
-  HarmCategory,
-  HarmBlockThreshold,
-} = require("@google/generative-ai");
-const { GoogleAIFileManager } = require("@google/generative-ai/server");
+const fs = require("fs").promises;
+const path = require("path");
 
 // Lấy environment variables
 const Vx_WEBAPP_URL = process.env.Web_URL;
@@ -16,7 +12,7 @@ const Vx_Allow_CORS = process.env.Allow_URL;
 const UPLOAD_ENDPOINT =
   "https://generativelanguage.googleapis.com/upload/v1beta/files";
 const GENERATE_ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro-exp-02-05:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
 
 // Kiểm tra xem có environment variables hay không
 if (!Vx_WEBAPP_URL || !Vx_Gemini_API_KEY) {
@@ -127,6 +123,24 @@ class UnifiedRateLimiter {
 
 // Khởi tạo Rate Limiter với IP limit mặc định là 30
 const rateLimiter = new UnifiedRateLimiter(30);
+
+// Đọc file CSV khi khởi tạo
+let TunedData;
+async function loadTunedData() {
+  try {
+    TunedData = await fs.readFile(
+      path.join(__dirname, "Vx_ChatBot-Tuner_Sample - Tune1.csv"),
+      "utf8"
+    );
+    console.log("✅ Tuned data loaded successfully");
+  } catch (error) {
+    console.error("❌ Error loading tuned data:", error);
+    throw error;
+  }
+}
+
+// Gọi function load data khi khởi tạo
+loadTunedData();
 
 // Main function handler
 functions.http("vxChatbot", async (req, res) => {
@@ -296,14 +310,14 @@ async function handleNewMessage(chatHistory, message, userID) {
     // Log schema preparation
     console.log("📝 Preparing schema and contents for Gemini API...");
     let SchemaPrefix =
-      "Bạn hiện đang chat với khách hàng của Vanced Media, hãy trả lời dưới dạng JSON bên trong 3 dấu *** theo schema dưới dây:\n";
+      "Bạn là Chatbot tạo bởi Vanced Media và hiện đang chat với khách hàng như một tư vấn viên, hãy trả lời dưới dạng JSON bên trong 3 dấu *** theo schema dưới dây:\n";
 
     // Upload training file to Gemini
     console.log("📁 Uploading training file to Gemini...");
-    const fileContent = await require("fs").promises.readFile(
-      "Vx_ChatBot-Tuner_Sample"
-    );
-    const numBytes = fileContent.length;
+
+    // Sử dụng TunedData đã import thay vì đọc file
+    const csvContent = TunedData;
+    const numBytes = Buffer.from(csvContent).length;
 
     const uploadResponse = await fetch(
       `${UPLOAD_ENDPOINT}?key=${Vx_Gemini_API_KEY}`,
@@ -312,27 +326,51 @@ async function handleNewMessage(chatHistory, message, userID) {
         headers: {
           "X-Goog-Upload-Command": "start, upload, finalize",
           "X-Goog-Upload-Header-Content-Length": numBytes.toString(),
-          "X-Goog-Upload-Header-Content-Type":
-            "application/vnd.google-apps.spreadsheet",
+          "X-Goog-Upload-Header-Content-Type": "text/csv",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           file: {
-            display_name: "Vx_ChatBot-Tuner_Sample",
+            display_name: "Vx_ChatBot-Tuner_Sample - Tune1.csv",
+            mimeType: "text/csv",
+            data: Buffer.from(csvContent).toString("base64"),
           },
         }),
       }
     );
 
     if (!uploadResponse.ok) {
-      throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+      const errorData = await uploadResponse.text();
+      throw new Error(`Upload failed: ${uploadResponse.status} - ${errorData}`);
     }
 
     const uploadResult = await uploadResponse.json();
     const fileUri = uploadResult.file.uri;
-    console.log("✅ Training file uploaded successfully, URI:", fileUri);
+    console.log(
+      `[${new Date().toISOString()}] ✅ Training file uploaded successfully, URI:`,
+      uploadResult,
+      fileUri
+    );
+
+    // Add delay 5000ms
+    const startDelay = new Date();
+    console.log(
+      `[${startDelay.toISOString()}] ⏳ Starting delay of 5000ms before calling Gemini API...`
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    const endDelay = new Date();
+    const actualDelay = endDelay - startDelay;
+    console.log(
+      `[${endDelay.toISOString()}] ✅ Delay completed. Actual delay: ${actualDelay}ms`
+    );
 
     // Prepare request body for Gemini API
+    console.log(
+      `[${new Date().toISOString()}] 📝 Preparing request body for Gemini API...`
+    );
+
     const requestBody = {
       contents: [
         {
@@ -341,7 +379,7 @@ async function handleNewMessage(chatHistory, message, userID) {
             {
               fileData: {
                 fileUri: fileUri,
-                mimeType: "application/vnd.google-apps.spreadsheet",
+                mimeType: "text/csv",
               },
             },
             {
