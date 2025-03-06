@@ -125,7 +125,7 @@ async function testGeminiWithJson(message) {
           parts: [
             {
               fileData: {
-                fileUri: fileUri,
+                fileUri: fileUri + `?key=${Vx_Gemini_API_KEY}`,
                 mimeType: "text/plain",
               },
             },

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Image to Gemini</title>
+    <style>
+      .container {
+        margin: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        width: fit-content;
+      }
+      #response {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-height: 100px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="input-group">
+        <label for="fileInput">Chọn ảnh:</label>
+        <input type="file" id="fileInput" accept="image/*" />
+      </div>
+
+      <button id="uploadBtn">Upload và lấy URI</button>
+
+      <div id="response">Kết quả sẽ hiển thị ở đây...</div>
+    </div>
+
+    <script>
+      const API_KEY = "AIzaSyDbbfqZ5VC6v4AdmugerAtMfNOg2YdD5Pg";
+      const BASE_URL = "https://generativelanguage.googleapis.com";
+
+      document
+        .getElementById("uploadBtn")
+        .addEventListener("click", async () => {
+          const fileInput = document.getElementById("fileInput");
+          const responseDiv = document.getElementById("response");
+
+          if (!fileInput.files || !fileInput.files[0]) {
+            responseDiv.textContent = "Vui lòng chọn một file ảnh";
+            return;
+          }
+
+          const file = fileInput.files[0];
+          console.log("File details:", {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+          });
+
+          try {
+            // Step 1: Get upload URL
+            console.log("Requesting upload URL...");
+            const initResponse = await fetch(
+              `${BASE_URL}/upload/v1beta/files?key=${API_KEY}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Goog-Upload-Protocol": "resumable",
+                  "X-Goog-Upload-Command": "start",
+                  "X-Goog-Upload-Header-Content-Length": file.size,
+                  "X-Goog-Upload-Header-Content-Type": file.type,
+                },
+                body: JSON.stringify({
+                  file: {
+                    display_name: file.name,
+                  },
+                }),
+              }
+            );
+
+            if (!initResponse.ok) {
+              throw new Error(`Initial request failed: ${initResponse.status}`);
+            }
+
+            console.log(
+              "Initial response headers:",
+              Object.fromEntries(initResponse.headers)
+            );
+            const uploadUrl = initResponse.headers.get("x-goog-upload-url");
+            if (!uploadUrl) {
+              throw new Error("No upload URL received");
+            }
+
+            // Step 2: Upload file
+            console.log("Uploading file...");
+            const uploadResponse = await fetch(uploadUrl, {
+              method: "POST",
+              headers: {
+                "Content-Length": file.size,
+                "X-Goog-Upload-Offset": "0",
+                "X-Goog-Upload-Command": "upload, finalize",
+              },
+              body: file,
+            });
+
+            if (!uploadResponse.ok) {
+              throw new Error(`Upload failed: ${uploadResponse.status}`);
+            }
+
+            const fileInfo = await uploadResponse.json();
+            console.log("Upload response:", fileInfo);
+
+            if (fileInfo.file && fileInfo.file.uri) {
+              responseDiv.innerHTML = `
+                        <strong>Upload thành công!</strong><br>
+                        URI: ${fileInfo.file.uri}<br>
+                        Name: ${fileInfo.file.name || "N/A"}<br>
+                        Size: ${fileInfo.file.size || "N/A"} bytes
+                    `;
+            } else {
+              throw new Error("No file URI in response");
+            }
+          } catch (error) {
+            console.error("Error details:", {
+              message: error.message,
+              stack: error.stack,
+              error,
+            });
+            responseDiv.textContent = `Lỗi: ${error.message}`;
+          }
+        });
+    </script>
+  </body>
+</html>

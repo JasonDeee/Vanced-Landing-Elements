@@ -380,7 +380,7 @@ async function handleNewMessage(chatHistory, message, userID) {
           parts: [
             {
               fileData: {
-                fileUri: fileUri,
+                fileUri: fileUri + `?key=${Vx_Gemini_API_KEY}`,
                 mimeType: "text/csv",
               },
             },

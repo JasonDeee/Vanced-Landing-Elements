@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Gemini API</title>
+    <style>
+      .container {
+        margin: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      input {
+        padding: 8px;
+        width: 300px;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        width: fit-content;
+      }
+      #response {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-height: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="input-group">
+        <label for="fileUri">File URI:</label>
+        <input type="text" id="fileUri" placeholder="Nhập file URI" />
+      </div>
+
+      <div class="input-group">
+        <label for="message">Tin nhắn:</label>
+        <input type="text" id="message" placeholder="Nhập tin nhắn của bạn" />
+      </div>
+
+      <button id="generateBtn">Tạo nội dung</button>
+
+      <div id="response">Kết quả sẽ hiển thị ở đây...</div>
+    </div>
+
+    <script>
+      const API_KEY = "AIzaSyDbbfqZ5VC6v4AdmugerAtMfNOg2YdD5Pg";
+
+      document
+        .getElementById("generateBtn")
+        .addEventListener("click", async () => {
+          const fileUri = document.getElementById("fileUri").value;
+          const message = document.getElementById("message").value;
+          const responseDiv = document.getElementById("response");
+
+          // Log input values
+          console.log("Input values:", {
+            fileUri,
+            message,
+          });
+
+          if (!fileUri || !message) {
+            responseDiv.innerHTML = "Vui lòng nhập đầy đủ File URI và tin nhắn";
+            return;
+          }
+
+          try {
+            // Log request payload
+            const payload = {
+              contents: [
+                {
+                  parts: [
+                    { text: message },
+                    {
+                      file_data: {
+                        mime_type: "image/jpeg",
+                        file_uri: fileUri,
+                      },
+                    },
+                  ],
+                },
+              ],
+            };
+            console.log("Request payload:", JSON.stringify(payload, null, 2));
+
+            const response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${API_KEY}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+              }
+            );
+
+            // Log raw response
+            console.log("Response status:", response.status);
+            console.log(
+              "Response headers:",
+              Object.fromEntries(response.headers)
+            );
+
+            const data = await response.json();
+            console.log("Response data:", JSON.stringify(data, null, 2));
+
+            if (data.candidates && data.candidates.length > 0) {
+              const text = data.candidates[0].content.parts[0].text;
+              console.log("Extracted text:", text);
+              responseDiv.innerHTML = `<strong>Phản hồi:</strong><br>${text}`;
+            } else {
+              console.warn("No candidates found in response");
+              responseDiv.innerHTML = "Không nhận được phản hồi từ API";
+            }
+          } catch (error) {
+            // Log detailed error information
+            console.error("Error details:", {
+              message: error.message,
+              stack: error.stack,
+              error,
+            });
+
+            responseDiv.innerHTML = `Đã xảy ra lỗi khi gọi API: ${error.message}`;
+          }
+        });
+    </script>
+  </body>
+</html>
