@@ -1,0 +1,1 @@
+Hello There. Đây là một test func.

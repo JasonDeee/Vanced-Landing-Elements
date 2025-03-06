@@ -1,0 +1,14 @@
+{
+  "file": {
+    "name": "files/e28y5vxnjhi6",
+    "mimeType": "application/json",
+    "sizeBytes": "33119",
+    "createTime": "2025-03-06T02:42:28.720825Z",
+    "updateTime": "2025-03-06T02:42:28.720825Z",
+    "expirationTime": "2025-03-08T02:42:28.709388929Z",
+    "sha256Hash": "ZGRkNDUyZTRiMmM0MmU3YjM0OGQwNDhiNTAxMDkxNWI3ZmIzODMxMDM0NzBmYmQ1N2YzOGJmMTI3NWU2MmE2MA==",
+    "uri": "https://generativelanguage.googleapis.com/v1beta/files/e28y5vxnjhi6",
+    "state": "ACTIVE",
+    "source": "UPLOADED"
+  }
+}
