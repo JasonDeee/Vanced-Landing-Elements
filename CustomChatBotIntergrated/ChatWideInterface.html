@@ -26,7 +26,7 @@
       }
       .Temp_Container {
         width: 62vw;
-        height: 70vh;
+        /* height: 70vh; */
         position: relative;
 
         border: 2px solid var(--global-palette3);
@@ -74,13 +74,23 @@
         </div>
 
         <div class="Vx_chat-input">
-          <input
-            type="text"
-            id="Vx_messageInput"
-            placeholder="Nhập tin nhắn của bạn..."
-          />
-          <button id="Vx_sendButton">Gửi</button>
-          <nav class="Vx_ChatBotNav"></nav>
+          <div class="Vx_Recommendation_Question">
+            <p>Tôi muốn tìm tài nguyên về chat bot.</p>
+            <p>Vanced Media miễn phí thật không?</p>
+            <p>
+              Web của tôi có 100% bảo mật khi tích hợp tài nguyên từ Vanced
+              Media không?
+            </p>
+          </div>
+          <div class="Vx_Input_Area">
+            <input
+              type="text"
+              id="Vx_messageInput"
+              placeholder="Nhập tin nhắn của bạn..."
+            />
+            <button id="Vx_sendButton">Gửi</button>
+            <nav class="Vx_ChatBotNav"></nav>
+          </div>
         </div>
       </div>
     </div>

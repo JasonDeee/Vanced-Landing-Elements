@@ -5,42 +5,67 @@
   max-width: 800px;
   border-radius: 8px;
   overflow: hidden;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: column;
-  justify-content: start;
-  align-items: stretch;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  -webkit-box-align: stretch;
+      -ms-flex-align: stretch;
+          align-items: stretch;
   position: relative;
 }
+
 .Vx_chat-container * {
   -webkit-appearance: unset;
      -moz-appearance: unset;
           appearance: unset;
   padding: 0;
   margin: 0;
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
 }
+
 .Vx_chat-container .Vx_ChatBotHeader {
   background-color: var(--main-color);
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: row;
-  justify-content: start;
-  align-items: center;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
   padding: 8px;
   width: 100%;
+  height: -webkit-fit-content;
   height: -moz-fit-content;
   height: fit-content;
   color: var(--NegativeColor);
 }
+
 .Vx_chat-container .Vx_ChatBotHeader .Vx_ChatBotLogo {
   width: 48px;
   height: 48px;
   background-color: var(--SecondaryColor);
   border-radius: 50%;
 }
+
 .Vx_chat-container .Vx_ChatBotHeader title {
   font-size: 1.2rem;
   font-weight: 600;
 }
+
 .Vx_chat-container.FloatingChat {
   position: fixed;
   min-width: 368px;
@@ -56,23 +81,30 @@
 }
 
 .Vx_chat-input {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
   padding: 15px;
   background-color: #fff;
   border-top: 1px solid #eee;
 }
+
 .Vx_chat-input input {
-  flex: 1;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   margin-right: 10px;
   font-size: 14px;
 }
+
 .Vx_chat-input input:focus {
   outline: none;
   border-color: #007bff;
 }
+
 .Vx_chat-input button {
   padding: 10px 20px;
   background-color: #007bff;
@@ -81,11 +113,14 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
+  -webkit-transition: background-color 0.2s;
   transition: background-color 0.2s;
 }
+
 .Vx_chat-input button:hover {
   background-color: #0056b3;
 }
+
 .Vx_chat-input button:active {
   background-color: #004085;
 }
@@ -135,4 +170,5 @@
   font-size: 12px;
   overflow-x: auto;
   margin: 0;
-}/*# sourceMappingURL=Vx_chatbot.css.map */
+}
+/*# sourceMappingURL=Vx_chatbot.css.map */

@@ -7,6 +7,10 @@
     "type": "string",
     "description": "Tóm tắt lịch sử cuộc hội thoại"
   },
+  "RecommendationQuestion": {
+    "type": "string",
+    "description": "Gợi ý 3 câu hỏi tiếp theo cho người dùng, các câu hỏi phân tách nhau bằng dấu &nbsp*&nbsp"
+  },
   "Request_for_RealAssistance": {
     "type": "boolean",
     "description": "Nếu bạn không thể trả lời được câu hỏi, trả về true"

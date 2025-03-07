@@ -1,7 +1,9 @@
 /**
  * Global Variables & Constants
  */
-
+let recommendationQuestions = document.querySelectorAll(
+  ".Vx_Recommendation_Question p"
+);
 // Chat History & Current Chat Info
 let Vx_Chat_Log_ClientSide = []; // Lưu lịch sử chat
 let Vx_Current_Chat_Info = {
@@ -391,9 +393,6 @@ async function Vx_SendMessageToBot(message) {
 
     const data = await response.json();
     if (!data.success) {
-      // Hiển thị error message dựa vào loại lỗi
-      let errorMessage = "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.";
-
       if (data.errorDetails?.type === "GEMINI_API_ERROR") {
         console.group("🔴 Gemini API Error");
         console.log("Status:", data.errorDetails.status);
@@ -444,6 +443,20 @@ async function Vx_SendMessageToBot(message) {
       Vx_LaraTunedURI = tunedData.uri;
     }
 
+    // Cập nhật câu hỏi gợi ý nếu có
+    if (data.botResponse && data.botResponse.RecommendationQuestion) {
+      console.log("Updating recommendation questions");
+      const questions =
+        data.botResponse.RecommendationQuestion.split("&nbsp*&nbsp");
+
+      // Cập nhật nội dung cho mỗi thẻ p
+      questions.forEach((question, index) => {
+        if (recommendationQuestions[index]) {
+          recommendationQuestions[index].textContent = question.trim();
+        }
+      });
+    }
+
     console.log("✅ Message processed successfully");
     console.groupEnd();
   } catch (error) {
@@ -480,5 +493,19 @@ document.addEventListener("DOMContentLoaded", () => {
         messageInput.value = "";
       }
     }
+  });
+
+  // Thêm event listeners cho các câu hỏi gợi ý
+  recommendationQuestions.forEach((question) => {
+    question.addEventListener("click", () => {
+      const questionText = question.textContent.trim();
+      if (questionText) {
+        Vx_SendMessageToBot(questionText);
+        messageInput.value = ""; // Clear input field
+      }
+    });
+
+    // Thêm style cursor pointer để người dùng biết có thể click
+    question.style.cursor = "pointer";
   });
 });
