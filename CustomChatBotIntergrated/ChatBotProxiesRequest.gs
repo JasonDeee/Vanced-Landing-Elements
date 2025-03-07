@@ -222,6 +222,56 @@ function getCorsHeaders() {
   };
 }
 
+// Thêm function mới
+function ConstHandle(HandleMethod, ConstLabel, ContentData) {
+  logMessage(
+    `ConstHandle called with: Method=${HandleMethod}, Label=${ConstLabel}, Content=${ContentData}`
+  );
+
+  try {
+    // Tìm sheet Constance
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const constSheet = ss.getSheetByName("Constance");
+
+    if (!constSheet) {
+      throw new Error("Sheet 'Constance' not found");
+    }
+
+    // Tìm label trong cột A
+    const dataRange = constSheet.getRange("A:A").getValues();
+    let rowIndex = -1;
+
+    for (let i = 0; i < dataRange.length; i++) {
+      if (dataRange[i][0] === ConstLabel) {
+        rowIndex = i + 1; // Convert to 1-based index
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      throw new Error(`Label '${ConstLabel}' not found in Constance sheet`);
+    }
+
+    // Xử lý theo HandleMethod
+    if (HandleMethod === "Pull") {
+      // Lấy dữ liệu từ cột B
+      const value = constSheet.getRange(rowIndex, 2).getValue();
+      logMessage(`Pulled value: ${value}`);
+      return value;
+    } else if (HandleMethod === "Push") {
+      // Cập nhật dữ liệu vào cột B
+      constSheet.getRange(rowIndex, 2).setValue(ContentData);
+      logMessage(`Pushed new value successfully`);
+      return true;
+    } else {
+      throw new Error(`Invalid HandleMethod: ${HandleMethod}`);
+    }
+  } catch (error) {
+    logMessage(`Error in ConstHandle: ${error.message}`);
+    return null;
+  }
+}
+
 // Hàm xử lý yêu cầu lấy lịch sử chat và tạo user mới nếu cần
 function handleChatHistoryRequest(userID) {
   logMessage("Handling chat history request...");
@@ -249,9 +299,54 @@ function handleChatHistoryRequest(userID) {
 
     const chatLog = JSON.parse(chatLogValue || "[]");
 
+    // Lấy và kiểm tra TunedURI
+    const tunedData = ConstHandle("Pull", "LaraTunedURI", null);
+    let TunedURI = false;
+
+    if (tunedData) {
+      try {
+        const data = JSON.parse(tunedData);
+        // Chuyển đổi thời gian hết hạn sang GMT+7
+        const expirationTime = new Date(data.expirationTime);
+        // Lấy thời gian hiện tại ở GMT+7
+        const now = new Date();
+
+        // Đảm bảo cả 2 đều ở GMT+7
+        const bangkokTZ = "Asia/Bangkok"; // GMT+7
+        const expTimeInBangkok = Utilities.formatDate(
+          expirationTime,
+          bangkokTZ,
+          "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        );
+        const nowInBangkok = Utilities.formatDate(
+          now,
+          bangkokTZ,
+          "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        );
+
+        const expTimeDate = new Date(expTimeInBangkok);
+        const nowDate = new Date(nowInBangkok);
+
+        if (expTimeDate > nowDate) {
+          TunedURI = data.uri;
+          logMessage(`Valid TunedURI found: ${TunedURI}`);
+          logMessage(`Expiration time (GMT+7): ${expTimeInBangkok}`);
+          logMessage(`Current time (GMT+7): ${nowInBangkok}`);
+        } else {
+          logMessage("TunedURI has expired");
+          logMessage(`Expiration time (GMT+7): ${expTimeInBangkok}`);
+          logMessage(`Current time (GMT+7): ${nowInBangkok}`);
+        }
+      } catch (error) {
+        logMessage(`Error parsing or comparing dates: ${error.message}`);
+        TunedURI = false;
+      }
+    }
+
     return {
       success: true,
       data: chatLog,
+      TunedURI: TunedURI,
       logs: executionLogs,
     };
   } catch (error) {
@@ -385,6 +480,33 @@ function doGet(e) {
         logMessage("💬 Processing NEW_MESSAGE request");
         logMessage(`Message: ${e.parameter.message}`);
         logMessage(`Role: ${e.parameter.role}`);
+
+        // Kiểm tra và xử lý NewTunedURI nếu có
+        if (e.parameter.NewTunedURI) {
+          logMessage("Found NewTunedURI, updating in Constance sheet...");
+
+          // Parse current NewTunedURI
+          const currentData = JSON.parse(e.parameter.NewTunedURI);
+
+          // Create new data with 48h expiration
+          const now = new Date();
+          const expirationTime = new Date(now.getTime() + 48 * 60 * 60 * 1000); // Thêm 48 giờ
+
+          const updatedData = JSON.stringify({
+            uri: currentData.uri,
+            expirationTime: expirationTime.toISOString(),
+            state: currentData.state,
+          });
+
+          const updateResult = ConstHandle("Push", "LaraTunedURI", updatedData);
+          if (updateResult) {
+            logMessage(
+              "✅ TunedURI updated successfully with new expiration time"
+            );
+          } else {
+            logMessage("❌ Failed to update TunedURI");
+          }
+        }
 
         result = updateChatLog(userID, {
           parts: [{ text: e.parameter.message }],

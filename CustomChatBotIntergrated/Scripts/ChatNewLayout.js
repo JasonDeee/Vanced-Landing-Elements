@@ -8,6 +8,7 @@ let Vx_Current_Chat_Info = {
   topic: "",
   summerize: "",
 };
+let Vx_LaraTunedURI = "";
 
 // User & Cookie Management
 let Vx_currentUserID = null; // ID của user hiện tại
@@ -170,9 +171,11 @@ async function syncWithWorker() {
       throw new Error("Invalid worker response format");
     }
 
-    // Cập nhật UserID
+    // Cập nhật UserID và URI
     Vx_currentUserID = data.userID;
+    Vx_LaraTunedURI = data.Vx_LaraTunedURI;
     console.log("✅ UserID updated:", Vx_currentUserID);
+    console.log("✅ TunedURI updated:", Vx_LaraTunedURI);
 
     // Cập nhật chat history
     if (data.chatHistory) {
@@ -304,7 +307,8 @@ async function Vx_SendMessageToBot(message) {
   try {
     console.group("🤖 Sending Message to Bot");
     console.log("Message:", message);
-    console.log("Current UserID:", Vx_currentUserID); // Log để debug
+    console.log("Current UserID:", Vx_currentUserID);
+    console.log("Current TunedURI:", Vx_LaraTunedURI);
 
     // Kiểm tra userID trước khi gửi
     if (!Vx_currentUserID) {
@@ -315,8 +319,6 @@ async function Vx_SendMessageToBot(message) {
         throw new Error("Failed to get UserID");
       }
     }
-
-    console.log("Sending message with UserID:", Vx_currentUserID);
 
     // Hiển thị tin nhắn của user ngay lập tức
     Vx_UpdateChatDisplay([
@@ -334,7 +336,7 @@ async function Vx_SendMessageToBot(message) {
     loadingMessage.textContent = "Đang nhập...";
     chatContainer.appendChild(loadingMessage);
 
-    // Gửi request tới worker với userID
+    // Gửi request tới worker với userID và TunedURI
     const response = await fetch(Vx_WORKERS_ENDPOINT, {
       method: "POST",
       mode: "cors",
@@ -347,7 +349,8 @@ async function Vx_SendMessageToBot(message) {
         requestType: Vx_Sheet_RequestType.NEW_MESSAGE,
         chatHistory: Vx_Chat_Log_ClientSide,
         message: message,
-        userID: Vx_currentUserID, // Gửi userID lên worker
+        userID: Vx_currentUserID,
+        TunedURI: Vx_LaraTunedURI || false,
       }),
     });
 
@@ -433,6 +436,13 @@ async function Vx_SendMessageToBot(message) {
     // Cập nhật chat history và hiển thị
     Vx_Chat_Log_ClientSide = data.chatHistory;
     Vx_UpdateChatDisplay(Vx_Chat_Log_ClientSide);
+
+    // Cập nhật TunedURI nếu có
+    if (data.NewTunedURI) {
+      console.log("Updating TunedURI with new value");
+      const tunedData = JSON.parse(data.NewTunedURI);
+      Vx_LaraTunedURI = tunedData.uri;
+    }
 
     console.log("✅ Message processed successfully");
     console.groupEnd();

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Upload Image to Gemini</title>
+    <title>Upload Text File to Gemini</title>
     <style>
       .container {
         margin: 20px;
@@ -39,8 +39,8 @@
   <body>
     <div class="container">
       <div class="input-group">
-        <label for="fileInput">Chọn ảnh:</label>
-        <input type="file" id="fileInput" accept="image/*" />
+        <label for="fileInput">Chọn file text:</label>
+        <input type="file" id="fileInput" accept=".txt" />
       </div>
 
       <button id="uploadBtn">Upload và lấy URI</button>
@@ -59,7 +59,7 @@
           const responseDiv = document.getElementById("response");
 
           if (!fileInput.files || !fileInput.files[0]) {
-            responseDiv.textContent = "Vui lòng chọn một file ảnh";
+            responseDiv.textContent = "Vui lòng chọn một file text";
             return;
           }
 
@@ -82,7 +82,7 @@
                   "X-Goog-Upload-Protocol": "resumable",
                   "X-Goog-Upload-Command": "start",
                   "X-Goog-Upload-Header-Content-Length": file.size,
-                  "X-Goog-Upload-Header-Content-Type": file.type,
+                  "X-Goog-Upload-Header-Content-Type": "text/plain",
                 },
                 body: JSON.stringify({
                   file: {

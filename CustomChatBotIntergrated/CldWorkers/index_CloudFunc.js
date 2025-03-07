@@ -1,6 +1,5 @@
 const functions = require("@google-cloud/functions-framework");
 const Vx_Response_Schema = require("./responseSchema.json");
-const Entities = require("./Entities.json");
 
 const fs = require("fs").promises;
 const path = require("path");
@@ -13,8 +12,7 @@ const Vx_Allow_CORS = process.env.Allow_URL;
 // Gemini API Endpoints
 const UPLOAD_ENDPOINT =
   "https://generativelanguage.googleapis.com/upload/v1beta/files";
-const GENERATE_ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
+const GENERATE_ENDPOINT = process.env.Gemini_API_URL;
 
 // Kiểm tra xem có environment variables hay không
 if (!Vx_WEBAPP_URL || !Vx_Gemini_API_KEY) {
@@ -126,24 +124,6 @@ class UnifiedRateLimiter {
 // Khởi tạo Rate Limiter với IP limit mặc định là 30
 const rateLimiter = new UnifiedRateLimiter(30);
 
-// Đọc file CSV khi khởi tạo
-let TunedData;
-async function loadTunedData() {
-  try {
-    TunedData = await fs.readFile(
-      path.join(__dirname, "Vx_ChatBot-Tuner_Sample - Tune1.csv"),
-      "utf8"
-    );
-    console.log("✅ Tuned data loaded successfully");
-  } catch (error) {
-    console.error("❌ Error loading tuned data:", error);
-    throw error;
-  }
-}
-
-// Gọi function load data khi khởi tạo
-loadTunedData();
-
 // Main function handler
 functions.http("vxChatbot", async (req, res) => {
   // Minimal CORS setup - chỉ cho phép domain của chúng ta
@@ -216,7 +196,8 @@ functions.http("vxChatbot", async (req, res) => {
           const messageResult = await handleNewMessage(
             data.chatHistory,
             data.message,
-            data.userID
+            data.userID,
+            data.TunedURI
           );
           res.json(messageResult);
           break;
@@ -245,6 +226,9 @@ functions.http("vxChatbot", async (req, res) => {
 // Helper Functions
 async function handleSyncID(browserData) {
   try {
+    console.group("🔄 Syncing with Worker");
+    console.log("Processing browser data...");
+
     // Create UserID from browser data
     const dataString = JSON.stringify(browserData);
     const encoder = new TextEncoder();
@@ -262,7 +246,8 @@ async function handleSyncID(browserData) {
     return {
       success: true,
       userID: userID,
-      chatHistory: chatHistory,
+      chatHistory: chatHistory.data,
+      Vx_LaraTunedURI: chatHistory.TunedURI,
     };
   } catch (error) {
     console.error("Error in handleSyncID:", error);
@@ -272,13 +257,10 @@ async function handleSyncID(browserData) {
 
 async function loadChatHistory(userID) {
   try {
-    // Tạo schema object mới, bỏ qua Answer
-    const { Answer, ...schemaWithoutAnswer } = Vx_Response_Schema;
-
     const params = new URLSearchParams({
       userID: userID,
       requestType: Vx_Sheet_RequestType.CHAT_HISTORY,
-      schema: JSON.stringify(schemaWithoutAnswer),
+      schema: JSON.stringify(Vx_Response_Schema),
     });
 
     const response = await fetch(`${Vx_WEBAPP_URL}?${params.toString()}`);
@@ -288,90 +270,117 @@ async function loadChatHistory(userID) {
       throw new Error(result.error || "Failed to load chat history");
     }
 
-    return result.data || [];
+    return {
+      data: result.data || [],
+      TunedURI: result.TunedURI || "",
+    };
   } catch (error) {
     console.error("Error loading chat history:", error);
-    return [];
+    return {
+      data: [],
+      TunedURI: "",
+    };
   }
 }
 
-async function handleNewMessage(chatHistory, message, userID) {
+async function handleNewMessage(
+  chatHistory,
+  message,
+  userID,
+  TunedURI = false
+) {
   console.group("🚀 handleNewMessage");
   console.log("Input parameters:", {
     userID,
     message,
     chatHistoryLength: chatHistory?.length || 0,
+    TunedURI,
   });
 
   try {
-    // Log save user message attempt
-    console.log("💾 Saving user message to WebApp...");
-    await saveMessageToWebApp(userID, message, "user");
-    console.log("✅ User message saved successfully");
+    let fileUri;
+    let NewTunedURI = null;
+
+    if (TunedURI === false) {
+      // Upload training file to Gemini
+      console.log("📁 Uploading training file to Gemini...");
+
+      // Đọc nội dung file TXT
+      const txtContent = await fs.readFile(
+        path.join(__dirname, "[Lara]Tuned_DataV1.txt"),
+        "utf8"
+      );
+      const numBytes = Buffer.from(txtContent).length;
+
+      // Step 1: Get upload URL
+      console.log("Requesting upload URL...");
+      const initResponse = await fetch(
+        `${UPLOAD_ENDPOINT}?key=${Vx_Gemini_API_KEY}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Upload-Protocol": "resumable",
+            "X-Goog-Upload-Command": "start",
+            "X-Goog-Upload-Header-Content-Length": numBytes,
+            "X-Goog-Upload-Header-Content-Type": "text/plain",
+          },
+          body: JSON.stringify({
+            file: {
+              display_name: "[Lara]Tuned_DataV1",
+            },
+          }),
+        }
+      );
+
+      if (!initResponse.ok) {
+        throw new Error(`Initial request failed: ${initResponse.status}`);
+      }
+
+      const uploadUrl = initResponse.headers.get("x-goog-upload-url");
+      if (!uploadUrl) {
+        throw new Error("No upload URL received");
+      }
+
+      // Step 2: Upload file content
+      console.log("Uploading file content...");
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "POST",
+        headers: {
+          "Content-Length": numBytes,
+          "X-Goog-Upload-Offset": "0",
+          "X-Goog-Upload-Command": "upload, finalize",
+        },
+        body: txtContent,
+      });
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.text();
+        throw new Error(
+          `Upload failed: ${uploadResponse.status} - ${errorData}`
+        );
+      }
+
+      const uploadResult = await uploadResponse.json();
+      fileUri = uploadResult.file.uri;
+      NewTunedURI = JSON.stringify({
+        uri: uploadResult.file.uri,
+        state: "ACTIVE",
+      });
+
+      // Save user message without waiting
+      saveMessageToWebApp(userID, message, "user", null, NewTunedURI);
+    } else {
+      // Use existing URI and save message with await
+      fileUri = TunedURI;
+      console.log("Using existing URI:", fileUri);
+      await saveMessageToWebApp(userID, message, "user");
+    }
 
     // Log schema preparation
     console.log("📝 Preparing schema and contents for Gemini API...");
     let SchemaPrefix =
       "Bạn là Chatbot tạo bởi Vanced Media và hiện đang chat với khách hàng như một tư vấn viên, hãy trả lời dưới dạng JSON bên trong 3 dấu *** theo schema dưới dây:\n";
-
-    // Upload training file to Gemini
-    console.log("📁 Uploading training file to Gemini...");
-
-    // Sử dụng TunedData đã import thay vì đọc file
-    const csvContent = TunedData;
-    const numBytes = Buffer.from(csvContent).length;
-
-    const uploadResponse = await fetch(
-      `${UPLOAD_ENDPOINT}?key=${Vx_Gemini_API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "X-Goog-Upload-Command": "start, upload, finalize",
-          "X-Goog-Upload-Header-Content-Length": numBytes.toString(),
-          "X-Goog-Upload-Header-Content-Type": "text/csv",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          file: {
-            display_name: "Vx_ChatBot-Tuner_Sample",
-            mimeType: "text/csv",
-            data: Buffer.from(csvContent).toString("base64"),
-          },
-        }),
-      }
-    );
-
-    if (!uploadResponse.ok) {
-      const errorData = await uploadResponse.text();
-      throw new Error(`Upload failed: ${uploadResponse.status} - ${errorData}`);
-    }
-
-    const uploadResult = await uploadResponse.json();
-    const fileUri = uploadResult.file.uri;
-    console.log(
-      `[${new Date().toISOString()}] ✅ Training file uploaded successfully, URI:`,
-      uploadResult,
-      fileUri
-    );
-
-    // Add delay 5000ms
-    const startDelay = new Date();
-    console.log(
-      `[${startDelay.toISOString()}] ⏳ Starting delay of 5000ms before calling Gemini API...`
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    const endDelay = new Date();
-    const actualDelay = endDelay - startDelay;
-    console.log(
-      `[${endDelay.toISOString()}] ✅ Delay completed. Actual delay: ${actualDelay}ms`
-    );
-
-    // Prepare request body for Gemini API
-    console.log(
-      `[${new Date().toISOString()}] 📝 Preparing request body for Gemini API...`
-    );
 
     const requestBody = {
       contents: [
@@ -380,8 +389,8 @@ async function handleNewMessage(chatHistory, message, userID) {
           parts: [
             {
               fileData: {
-                fileUri: fileUri + `?key=${Vx_Gemini_API_KEY}`,
-                mimeType: "text/csv",
+                fileUri: fileUri,
+                mimeType: "text/plain",
               },
             },
             {
@@ -409,7 +418,7 @@ async function handleNewMessage(chatHistory, message, userID) {
     };
 
     // Call Gemini API
-    console.log("🤖 Calling Gemini API...");
+    console.log("🤖 Calling Gemini API... With Content: ", requestBody);
     const generateResponse = await fetch(
       `${GENERATE_ENDPOINT}?key=${Vx_Gemini_API_KEY}`,
       {
@@ -428,56 +437,112 @@ async function handleNewMessage(chatHistory, message, userID) {
 
     const result = await generateResponse.json();
     const botResponseText = result.candidates[0].content.parts[0].text;
-    console.log("✅ Received response from Gemini");
+    console.log(
+      "✅ Received response from Gemini: ",
+      result.candidates[0].content
+    );
 
-    // Parse bot response
-    console.log("🔍 Looking for JSON in response between *** markers");
+    // Parse bot response - Try both formats
+    console.log("🔍 Attempting to parse response");
+    let jsonContent = null;
+
+    // First try: Look for JSON between *** markers
     const jsonMatch = botResponseText.match(/\*\*\*([\s\S]*?)\*\*\*/);
-
-    if (!jsonMatch || !jsonMatch[1]) {
-      console.error("❌ No JSON found between *** markers");
-      console.log("Raw response:", botResponseText);
-      throw new Error("Could not find JSON response between *** markers");
+    if (jsonMatch && jsonMatch[1]) {
+      console.log("Found JSON between *** markers");
+      jsonContent = jsonMatch[1];
+    } else {
+      // Second try: Look for JSON in markdown code block
+      const codeBlockMatch = botResponseText.match(
+        /```json\s*([\s\S]*?)\s*```/
+      );
+      if (codeBlockMatch && codeBlockMatch[1]) {
+        console.log("Found JSON in markdown code block");
+        jsonContent = codeBlockMatch[1];
+      } else {
+        // Last try: Check if the entire response is a JSON
+        if (
+          botResponseText.trim().startsWith("{") &&
+          botResponseText.trim().endsWith("}")
+        ) {
+          console.log("Response appears to be direct JSON");
+          jsonContent = botResponseText;
+        }
+      }
     }
 
-    console.log("✅ JSON found, parsing response...");
-    const botResponse = JSON.parse(jsonMatch[1]);
-    console.log("Parsed bot response:", {
-      hasAnswer: !!botResponse.Answer,
-      answerLength: botResponse.Answer?.length,
-    });
+    if (!jsonContent) {
+      console.error("❌ No valid JSON found in response");
+      console.log("Raw response:", botResponseText);
+      throw new Error("Could not find valid JSON in response");
+    }
 
-    // Save bot message
-    console.log("💾 Saving bot message to WebApp...");
-    await saveMessageToWebApp(userID, botResponse.Answer, "model", botResponse);
-    console.log("✅ Bot message saved successfully");
+    // Clean up the matched content
+    jsonContent = jsonContent
+      .trim()
+      .replace(/^```json\s*/, "")
+      .replace(/```\s*$/, "");
 
-    // Update chat history
-    console.log("📝 Updating chat history...");
-    chatHistory.push(
-      { parts: [{ text: message }], role: "user" },
-      { parts: [{ text: botResponse.Answer }], role: "model" }
-    );
-    console.log("✅ Chat history updated");
+    console.log("Cleaned JSON content:", jsonContent);
 
-    console.log("🎉 handleNewMessage completed successfully");
-    console.groupEnd();
-    return {
-      success: true,
-      chatHistory: chatHistory,
-      botResponse: botResponse,
-    };
+    try {
+      const botResponse = JSON.parse(jsonContent);
+      console.log("Parsed bot response:", {
+        hasAnswer: !!botResponse.Answer,
+        answerLength: botResponse.Answer?.length,
+      });
+
+      // Validate required fields
+      if (!botResponse.Answer) {
+        throw new Error("Missing required 'Answer' field in response");
+      }
+
+      // Save bot message
+      console.log("💾 Saving bot message to WebApp...");
+      await saveMessageToWebApp(
+        userID,
+        botResponse.Answer,
+        "model",
+        botResponse,
+        NewTunedURI
+      );
+      console.log("✅ Bot message saved successfully");
+
+      // Update chat history
+      console.log("📝 Updating chat history...");
+      chatHistory.push(
+        { parts: [{ text: message }], role: "user" },
+        { parts: [{ text: botResponse.Answer }], role: "model" }
+      );
+      console.log("✅ Chat history updated");
+
+      console.log("🎉 handleNewMessage completed successfully");
+      console.groupEnd();
+      return {
+        success: true,
+        chatHistory: chatHistory,
+        botResponse: botResponse,
+        NewTunedURI: NewTunedURI,
+      };
+    } catch (error) {
+      console.error("❌ Error parsing JSON response:", error);
+      console.groupEnd();
+      throw error;
+    }
   } catch (error) {
-    console.error("❌ Error in handleNewMessage:", {
-      message: error.message,
-      stack: error.stack,
-    });
+    console.error("❌ Error in handleNewMessage:", error);
     console.groupEnd();
     throw error;
   }
 }
 
-async function saveMessageToWebApp(userID, message, role, botResponse = null) {
+async function saveMessageToWebApp(
+  userID,
+  message,
+  role,
+  botResponse = null,
+  NewTunedURI = null
+) {
   try {
     // Khởi tạo requestData với các trường cơ bản
     const requestData = {
@@ -491,12 +556,13 @@ async function saveMessageToWebApp(userID, message, role, botResponse = null) {
     if (botResponse) {
       const { Answer, ...schemaWithoutAnswer } = Vx_Response_Schema;
       const schemaKeys = Object.keys(schemaWithoutAnswer);
-
-      // Tạo mảng giá trị theo thứ tự của schema
       const contentForSchema = schemaKeys.map((key) => botResponse[key]);
-
-      // Thêm vào requestData
       requestData.contentForSchema = contentForSchema;
+    }
+
+    // Thêm NewTunedURI nếu có
+    if (NewTunedURI) {
+      requestData.NewTunedURI = NewTunedURI;
     }
 
     const response = await fetch(Vx_WEBAPP_URL, {
