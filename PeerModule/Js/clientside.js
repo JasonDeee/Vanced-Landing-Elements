@@ -36,9 +36,12 @@ function createMyBox() {
   });
 }
 
-// Update box position
+// Update box position and color
 function updateBoxPosition(box, position) {
   box.style.transform = `translate(${position.x}px, ${position.y}px)`;
+  if (position.color) {
+    box.style.backgroundColor = position.color;
+  }
 }
 
 // Initialize PeerJS connection
@@ -59,9 +62,10 @@ function handlePeerConnection(conn) {
     return;
   }
 
+  const peerBox = createPeerBox();
   connections.set(conn.peer, {
     connection: conn,
-    box: createPeerBox(),
+    box: peerBox,
   });
 
   conn.on("data", (data) => {
@@ -82,7 +86,7 @@ function handlePeerConnection(conn) {
     }
   });
 
-  // Send initial color
+  // Send initial position and color
   conn.send({
     x: -100, // Off screen initially
     y: -100,
@@ -94,7 +98,12 @@ function handlePeerConnection(conn) {
 function createPeerBox() {
   const box = document.createElement("div");
   box.className = "cursor-box";
+  box.style.opacity = "0"; // Start invisible
   cursorsContainer.appendChild(box);
+  // Fade in after a short delay
+  setTimeout(() => {
+    box.style.opacity = "1";
+  }, 100);
   return box;
 }
 
