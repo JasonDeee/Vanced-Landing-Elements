@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Peer 2 client with Mouse</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+
+      * {
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+        font-family: "Lexend", sans-serif;
+        font-optical-sizing: auto;
+      }
+    </style>
+    <link rel="stylesheet" href="./Styles/style.css" />
+  </head>
+  <body>
+    <main id="container">
+      <input type="color" id="colorPicker" autofocus />
+      <div id="cursors-container"></div>
+    </main>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="./Js/clientside.js"></script>
+  </body>
+</html>
