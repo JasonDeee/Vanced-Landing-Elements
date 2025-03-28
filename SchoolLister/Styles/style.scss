@@ -55,9 +55,26 @@ body {
 
 .search-card {
   background: $color-white;
+
   margin-left: 12vw;
   width: 26vw;
   min-height: 72vh;
+
+  @media screen and (max-width: 1440px) {
+    width: 32vw;
+    margin-left: 6vw;
+    min-height: 82vh;
+  }
+
+  @media screen and (max-width: 1200px) {
+    width: 34vw;
+    margin-left: 4vw;
+  }
+
+  @media screen and (max-width: 960px) {
+    width: 62vw;
+    margin-left: 19vw;
+  }
 
   padding: 64px;
   padding-bottom: 16px;
@@ -77,6 +94,12 @@ body {
     .logo {
       width: 32px;
       height: 32px;
+
+      @media screen and (max-width: 1200px) {
+        width: 24px;
+        height: 24px;
+      }
+
       @include flex-center;
       font-weight: bold;
       font-size: 20px;
@@ -95,6 +118,10 @@ body {
       h1 {
         font-size: 1.4rem;
         line-height: 1rem;
+
+        @media screen and (max-width: 1200px) {
+          font-size: 1.2rem;
+        }
       }
     }
   }
@@ -191,6 +218,10 @@ body {
 
 .search-button {
   margin-top: 32px;
+  @media screen and (max-width: 1440px) {
+    margin-top: 16px;
+  }
+
   width: 100%;
   padding: 15px;
   background: $color-pink;
@@ -228,6 +259,9 @@ body {
 
 // Quote section
 .quote {
+  @media screen and (max-width: 960px) {
+    display: none;
+  }
   color: $color-white;
   text-align: right;
   margin-left: 50px;
@@ -255,4 +289,40 @@ body {
     text-align: right;
   }
 }
+.mobile {
+  .quote {
+    display: none;
+  }
+  .container {
+    align-items: center;
+    justify-content: center;
+  }
+  .search-card {
+    margin-left: 0;
+    width: 90vw;
+    min-height: 90vh;
+    padding: 32px;
+
+    .header {
+      .title {
+        h1 {
+          font-size: 1.2rem;
+        }
+      }
+    }
+    .form-group {
+      label {
+        font-size: 0.6rem;
+      }
+    }
+
+    .info-text {
+      p {
+        font-size: 0.8rem;
+        line-height: 1rem;
+      }
+    }
+  }
+}
+
 /*# sourceMappingURL=style.css.map */

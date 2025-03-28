@@ -65,6 +65,28 @@ body {
           justify-content: start;
 }
 
+@media screen and (max-width: 1440px) {
+  .search-card {
+    width: 32vw;
+    margin-left: 6vw;
+    min-height: 82vh;
+  }
+}
+
+@media screen and (max-width: 1200px) {
+  .search-card {
+    width: 34vw;
+    margin-left: 4vw;
+  }
+}
+
+@media screen and (max-width: 960px) {
+  .search-card {
+    width: 62vw;
+    margin-left: 19vw;
+  }
+}
+
 .search-card .header {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -95,6 +117,13 @@ body {
   background-position: center;
 }
 
+@media screen and (max-width: 1200px) {
+  .search-card .header .logo {
+    width: 24px;
+    height: 24px;
+  }
+}
+
 .search-card .header .line {
   height: 16px;
   background-color: #0c1136;
@@ -108,6 +137,12 @@ body {
 .search-card .header .title h1 {
   font-size: 1.4rem;
   line-height: 1rem;
+}
+
+@media screen and (max-width: 1200px) {
+  .search-card .header .title h1 {
+    font-size: 1.2rem;
+  }
 }
 
 .search-card p {
@@ -251,6 +286,12 @@ body {
           box-shadow: 0px 0px 0 #0c1136;
 }
 
+@media screen and (max-width: 1440px) {
+  .search-button {
+    margin-top: 16px;
+  }
+}
+
 .search-button:hover {
   -webkit-box-shadow: 4px 4px 0 #0c1136;
           box-shadow: 4px 4px 0 #0c1136;
@@ -307,6 +348,12 @@ body {
           justify-content: center;
 }
 
+@media screen and (max-width: 960px) {
+  .quote {
+    display: none;
+  }
+}
+
 .quote * {
   width: 30rem;
 }
@@ -323,5 +370,38 @@ body {
   font-size: 16px;
   opacity: 1;
   text-align: right;
+}
+
+.mobile .quote {
+  display: none;
+}
+
+.mobile .container {
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+}
+
+.mobile .search-card {
+  margin-left: 0;
+  width: 90vw;
+  min-height: 90vh;
+  padding: 32px;
+}
+
+.mobile .search-card .header .title h1 {
+  font-size: 1.2rem;
+}
+
+.mobile .search-card .form-group label {
+  font-size: 0.6rem;
+}
+
+.mobile .search-card .info-text p {
+  font-size: 0.8rem;
+  line-height: 1rem;
 }
 /*# sourceMappingURL=style.css.map */

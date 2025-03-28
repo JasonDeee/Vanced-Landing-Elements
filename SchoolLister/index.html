@@ -31,7 +31,7 @@
             <h1>MỚI THI XONG</h1>
           </div>
         </div>
-        <p>Bới vào đây tra cứu nào!</p>
+        <p>Bơi vào đây tra cứu nào!</p>
 
         <div class="search-form">
           <div class="column">
@@ -92,5 +92,11 @@
       </div>
     </div>
   </body>
+  <script>
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      document.body.classList.add("mobile");
+    }
+  </script>
   <script src="JavaScripts/main.js"></script>
 </html>
