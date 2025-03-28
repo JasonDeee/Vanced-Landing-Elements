@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tra cứu điểm thi</title>
+    <link rel="shortcut icon" href="./Assets/Favicon.svg" type="image/x-icon" />
+
+    <link rel="stylesheet" href="Styles/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="search-card">
+        <div class="header">
+          <div class="logo"></div>
+          <div class="line"></div>
+          <div class="title">
+            <h1>MỚI THI XONG</h1>
+          </div>
+        </div>
+        <p>Bới vào đây tra cứu nào!</p>
+
+        <div class="search-form">
+          <div class="column">
+            <div class="form-group" id="score-group">
+              <label for="score">Tổng điểm</label>
+              <input
+                type="number"
+                step="0.25"
+                placeholder="11,00"
+                class="form-control"
+                id="score"
+              />
+            </div>
+            <div class="form-group" id="subject-group">
+              <label for="subject-input">Khối</label>
+              <div class="search-input">
+                <input
+                  type="text"
+                  placeholder="A00 (Toán, Vật lý, ...)"
+                  class="form-control"
+                  id="subject-input"
+                />
+                <span class="search-icon">🔍</span>
+              </div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="form-group" id="year-group">
+              <label for="year">Năm</label>
+              <select class="form-control" id="year">
+                <option value="2010">2010</option>
+                <option value="2011">2011</option>
+                <option value="2012">2012</option>
+                <!-- Thêm các năm khác nếu cần -->
+              </select>
+            </div>
+            <div class="line" id="InfoLine"></div>
+
+            <div class="info-text">
+              <p>
+                Bạn đỗ hay không là việc của bạn, chúng tôi chỉ check var xíu
+                thôi.
+              </p>
+            </div>
+          </div>
+
+          <button class="search-button">KIỂM TRA</button>
+        </div>
+
+        <div class="footer">
+          <p>© 2025 - Ý tưởng từ Mr. Trần Đô</p>
+        </div>
+      </div>
+
+      <div class="quote">
+        <h2>KHÔNG HỌC,<br />CHỈ CÓ BỐC CỨT</h2>
+        <p>- Câu này quen mà</p>
+      </div>
+    </div>
+  </body>
+  <script src="JavaScripts/main.js"></script>
+</html>

@@ -39,7 +39,7 @@ async function handleRequest(request) {
     // Clean up disconnected peers (simple timeout-based cleanup)
     setTimeout(() => {
       connectedPeers.delete(peerId);
-    }, 600); // Remove peer after 1 minute of inactivity
+    }, 60000); // Remove peer after 1 minute of inactivity
 
     return new Response(JSON.stringify(peerList), {
       headers: {
