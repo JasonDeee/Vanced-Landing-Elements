@@ -77,6 +77,8 @@ body {
   .search-card {
     width: 34vw;
     margin-left: 4vw;
+    padding: 32px;
+    padding-bottom: 8px;
   }
 }
 
@@ -84,6 +86,8 @@ body {
   .search-card {
     width: 62vw;
     margin-left: 19vw;
+    padding: 64px;
+    padding-bottom: 16px;
   }
 }
 

@@ -59,6 +59,8 @@ body {
   margin-left: 12vw;
   width: 26vw;
   min-height: 72vh;
+  padding: 64px;
+  padding-bottom: 16px;
 
   @media screen and (max-width: 1440px) {
     width: 32vw;
@@ -69,15 +71,17 @@ body {
   @media screen and (max-width: 1200px) {
     width: 34vw;
     margin-left: 4vw;
+    padding: 32px;
+    padding-bottom: 8px;
   }
 
   @media screen and (max-width: 960px) {
     width: 62vw;
     margin-left: 19vw;
+    padding: 64px;
+    padding-bottom: 16px;
   }
 
-  padding: 64px;
-  padding-bottom: 16px;
   @include shadow;
   border: 2px solid $color-dark-blue;
 
