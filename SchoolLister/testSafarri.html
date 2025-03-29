@@ -12,13 +12,21 @@
       style="width: 50vw; height: 30vh; background: brown; display: none"
       class="fileInput"
     />
+    <input type="button" value="Oke" class="button" />
 
     <p class="Text"></p>
   </body>
   <script>
     const input = document.querySelector(".fileInput");
     const Text = document.querySelector(".Text");
+    const button = document.querySelector(".button");
 
-    Text.textContent = input;
+    button.addEventListener("click", () => {
+      input.click();
+    });
+
+    input.addEventListener("change", () => {
+      Text.textContent = input.files[0].name;
+    });
   </script>
 </html>
