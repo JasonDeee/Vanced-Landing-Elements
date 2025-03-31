@@ -1,3 +1,16 @@
+:root {
+  --global-palette1: #e72166;
+  --global-palette2: #2a38a1;
+  --global-palette3: #0c1136;
+  --global-palette4: #0c1136;
+  --global-palette5: #0c1136;
+  --global-palette6: #7081ff;
+  --global-palette7: #c9c7c7;
+  --global-palette8: #e9e7e7;
+  --global-palette9: #ffffff;
+  --global-palette9rgb: 255, 255, 255;
+}
+
 .Vx_SampleHolder * {
   cursor: not-allowed !important;
 }

@@ -9,8 +9,14 @@
   <body
     class="post-template post-template-elementor_header_footer single single-post postid-2571 single-format-standard logged-in wp-custom-logo wp-embed-responsive footer-on-bottom hide-focus-outline link-style-standard has-sidebar content-title-style-above content-width-normal content-style-unboxed content-vertical-padding-hide non-transparent-header mobile-non-transparent-header kadence-elementor-colors el-is-editing elementor-default elementor-template-full-width elementor-kit-5 elementor-page elementor-page-2571 e-preview--show-hidden-elements e--ua-blink e--ua-edge e--ua-webkit elementor-editor-active header-is-fixed"
   >
-    <!-- Hãy bỏ qua cấu trúc html và chỉ quan tấm tới Javascripts -->
+    <header id="masthead"></header>
+    <div id="Vx_FullPageWrap"></div>
   </body>
+  <style>
+    .Vx_ScrollNav:hover {
+      opacity: 0.6;
+    }
+  </style>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       // Kiểm tra xem body có class el-is-editing hay không
@@ -18,67 +24,114 @@
       const hasEditingClass = bodyElement.classList.contains("el-is-editing");
 
       if (!hasEditingClass) {
-        const Vx_FullPageWrap = document.getElementById("inner-wrap");
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+
+        const Vx_FullPageWrap = document.getElementById("Vx_Scroll_Wrapper");
+        const Vx_StaticCloneWrap = document.getElementById("Vx_StaticWrap");
         const header = document.getElementById("masthead");
         const siteFooter = document.querySelector(".site-footer");
         const Vx_FullScreenScroll = document.querySelectorAll(
           ".Vx_FullScreenScroll"
         );
 
-        // Di chuyển Vx_FullPageQuickNav ra ngoài
-        const quickNav = document.getElementById("Vx_FullPageQuickNav");
-        if (quickNav) {
-          // Sao chép tất cả computed styles
-          const computedStyle = window.getComputedStyle(quickNav);
-          let inlineStyles = "";
-          for (let i = 0; i < computedStyle.length; i++) {
-            const prop = computedStyle[i];
-            const value = computedStyle.getPropertyValue(prop);
-            inlineStyles += `${prop}:${value};`;
+        let Vx_navItems = [];
+
+        // Xử lý ScrollNav
+        const Vx_FullPageQuickNav = document.getElementById(
+          "Vx_FullPageQuickNav"
+        );
+
+        if (Vx_FullPageQuickNav) {
+          let ScrollNav_Focus =
+            Vx_FullPageQuickNav.querySelector(".ScrollNav_Focus");
+          let Vx_ScrollNav = Vx_FullPageQuickNav.querySelector(
+            ".Vx_ScrollNav:not(.ScrollNav_Focus)"
+          );
+
+          // Lấy styles của cả hai class
+          const ScrollNav_FocusStyles =
+            window.getComputedStyle(ScrollNav_Focus);
+          const Vx_ScrollNavStyles = window.getComputedStyle(Vx_ScrollNav);
+
+          // Tạo style string cho Vx_ScrollNav
+          let Vx_ScrollNavStyleString = "";
+          for (let i = 0; i < Vx_ScrollNavStyles.length; i++) {
+            const property = Vx_ScrollNavStyles[i];
+            const value = Vx_ScrollNavStyles.getPropertyValue(property);
+            Vx_ScrollNavStyleString += `${property}: ${value}; `;
           }
 
-          // Sao chép tất cả attributes
-          const attributes = quickNav.attributes;
-          const attributesMap = new Map();
-          for (let i = 0; i < attributes.length; i++) {
-            const attr = attributes[i];
-            attributesMap.set(attr.name, attr.value);
+          // Tạo style string cho ScrollNav_Focus chỉ với các thuộc tính khác biệt
+          let ScrollNav_FocusStyleString = "";
+          for (let i = 0; i < ScrollNav_FocusStyles.length; i++) {
+            const property = ScrollNav_FocusStyles[i];
+            const focusValue = ScrollNav_FocusStyles.getPropertyValue(property);
+            const navValue = Vx_ScrollNavStyles.getPropertyValue(property);
+
+            // Chỉ thêm vào nếu giá trị khác nhau
+            if (focusValue !== navValue) {
+              ScrollNav_FocusStyleString += `${property}: ${focusValue}; `;
+            }
           }
 
-          // Tìm parent của Vx_FullPageWrap
-          const wrapParent = Vx_FullPageWrap.parentElement;
-          if (wrapParent) {
-            // Di chuyển quickNav
-            wrapParent.insertBefore(quickNav, Vx_FullPageWrap.nextSibling);
+          // Tạo style element
+          const styleElement = document.createElement("style");
+          styleElement.textContent = `
+                .Vx_ScrollNav {
+                  ${Vx_ScrollNavStyleString}
+                  transition: all 0.6s cubic-bezier(0.25, 0, 0, 1);
+                  cursor: pointer;
+                }
+                .ScrollNav_Focus { ${ScrollNav_FocusStyleString} }
+              `;
 
-            // Áp dụng lại tất cả attributes
-            attributesMap.forEach((value, key) => {
-              if (key !== "style") {
-                // Không ghi đè style attribute ngay
-                quickNav.setAttribute(key, value);
-              }
+          // Xóa nội dung cũ của Vx_FullPageQuickNav
+          Vx_FullPageQuickNav.innerHTML = "";
+          Vx_FullPageQuickNav.appendChild(styleElement);
+
+          // Tạo các thẻ navigation mới
+          Vx_FullScreenScroll.forEach((_, index) => {
+            Vx_navItems[index] = document.createElement("div");
+            Vx_navItems[index].className = "Vx_ScrollNav";
+            if (index === 0) {
+              Vx_navItems[index].classList.add("ScrollNav_Focus");
+            }
+
+            // Thêm sự kiện click
+            Vx_navItems[index].addEventListener("click", function () {
+              // Xóa class ScrollNav_Focus từ tất cả các thẻ
+              Vx_navItems[Vx_Scroll_Index].classList.remove("ScrollNav_Focus");
+
+              // Thêm class ScrollNav_Focus vào thẻ được click
+              this.classList.add("ScrollNav_Focus");
+
+              // Cập nhật scroll
+              Vx_Scroll_Index = index;
+              Vx_FullPageUpdateScroll(index);
             });
 
-            // Áp dụng lại styles
-            quickNav.style.cssText = inlineStyles;
-
-            console.log("quickNav transferred with styles preserved");
-          }
+            Vx_FullPageQuickNav.appendChild(Vx_navItems[index]);
+          });
         }
 
         // Xử lý footer
-        if (siteFooter) {
-          const footerClone = siteFooter.cloneNode(true);
-          siteFooter.remove();
-          Vx_FullPageWrap.appendChild(footerClone);
-        }
+        // if (siteFooter) {
+        //   const footerClone = siteFooter.cloneNode(true);
+        //   siteFooter.remove();
+        //   Vx_FullPageWrap.appendChild(footerClone);
+        // }
 
         // Lấy chiều cao của header
-        const Vx_Header_FixedHeight = header.getBoundingClientRect().height;
+        // const Vx_Header_FixedHeight = header.getBoundingClientRect().height;
 
         // Khởi tạo biến vị trí cuộn và trạng thái scroll
         let Vx_Scroll_Index = 0;
         let Vx_FullPage_Scroll_isBusy = false;
+
+        Vx_StaticCloneWrap.style.height = Vx_FullPageWrap.clientHeight + "px";
 
         // Thiết lập style cho Vx_FullPageWrap
         Vx_FullPageWrap.style.position = "fixed";
@@ -90,9 +143,28 @@
         // Function cập nhật scroll
         function Vx_FullPageUpdateScroll(newIndex) {
           if (Vx_FullPage_Scroll_isBusy) return;
+          if (
+            Vx_Scroll_Index === Vx_FullScreenScroll.length &&
+            Vx_StaticCloneWrap.getBoundingClientRect().top -
+              window.innerHeight +
+              Vx_FullPageWrap.clientHeight <
+              0
+          )
+            return;
+
+          // Xóa NavFocus cũ
+          Vx_navItems[
+            Math.min(Vx_Scroll_Index, Vx_FullScreenScroll.length - 1)
+          ].classList.remove("ScrollNav_Focus");
+
+          // Cập nhật index mới
+          Vx_Scroll_Index = newIndex;
+          // Cập nhật NavFocus mới
+          Vx_navItems[
+            Math.min(Vx_Scroll_Index, Vx_FullScreenScroll.length - 1)
+          ].classList.add("ScrollNav_Focus");
 
           Vx_FullPage_Scroll_isBusy = true;
-          Vx_Scroll_Index = newIndex;
 
           // Cập nhật vị trí sử dụng transform
           Vx_FullPageWrap.style.transform = `translateY(${-(
@@ -105,7 +177,7 @@
             behavior: "smooth",
           });
 
-          // Reset trạng thái sau 1 giây
+          // Reset trạng thái sau xx giây
           setTimeout(() => {
             Vx_FullPage_Scroll_isBusy = false;
           }, 500);
@@ -115,17 +187,21 @@
         window.addEventListener(
           "wheel",
           function (e) {
+            if (Vx_Scroll_Index < Vx_FullScreenScroll.length) {
+              e.preventDefault();
+            }
+
             if (e.deltaY > 0) {
               // Cuộn xuống
               Vx_FullPageUpdateScroll(
-                Math.min(Vx_Scroll_Index + 1, Vx_FullScreenScroll.length - 1)
+                Math.min(Vx_Scroll_Index + 1, Vx_FullScreenScroll.length)
               );
             } else {
               // Cuộn lên
               Vx_FullPageUpdateScroll(Math.max(Vx_Scroll_Index - 1, 0));
             }
           },
-          { passive: true }
+          { passive: false }
         );
 
         // Xử lý sự kiện keydown
@@ -133,12 +209,18 @@
           switch (e.key) {
             case "ArrowDown":
             case "PageDown":
+              if (Vx_Scroll_Index < Vx_FullScreenScroll.length) {
+                e.preventDefault();
+              }
               Vx_FullPageUpdateScroll(
-                Math.min(Vx_Scroll_Index + 1, Vx_FullScreenScroll.length - 1)
+                Math.min(Vx_Scroll_Index + 1, Vx_FullScreenScroll.length)
               );
               break;
             case "ArrowUp":
             case "PageUp":
+              if (Vx_Scroll_Index < Vx_FullScreenScroll.length) {
+                e.preventDefault();
+              }
               Vx_FullPageUpdateScroll(Math.max(Vx_Scroll_Index - 1, 0));
               break;
           }
@@ -166,11 +248,17 @@
               // Ngưỡng tối thiểu để xác định swipe
               if (touchDiff > 0) {
                 // Swipe lên
+                if (Vx_Scroll_Index < Vx_FullScreenScroll.length) {
+                  e.preventDefault();
+                }
                 Vx_FullPageUpdateScroll(
-                  Math.min(Vx_Scroll_Index + 1, Vx_FullScreenScroll.length - 1)
+                  Math.min(Vx_Scroll_Index + 1, Vx_FullScreenScroll.length)
                 );
               } else {
                 // Swipe xuống
+                if (Vx_Scroll_Index < Vx_FullScreenScroll.length) {
+                  e.preventDefault();
+                }
                 Vx_FullPageUpdateScroll(Math.max(Vx_Scroll_Index - 1, 0));
               }
             }
