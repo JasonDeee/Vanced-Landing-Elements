@@ -5,7 +5,7 @@ class CSSGenerator {
     this.controls = document.querySelector(".Vx_CSS_Gen_Controls");
     this.preview = document.querySelector(".Vx_CSS_Gen_FinalResult");
     this.codeDisplay = document.querySelector(".generated-css");
-    this.customPart = document.querySelector("#CustomPart");
+    this.customPart = document.querySelector(".CustomPart");
     this.mainClassInput = document.getElementById("MainClassInput_1");
 
     // Lưu trữ prefix classes
