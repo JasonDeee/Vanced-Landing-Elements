@@ -1,0 +1,455 @@
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+:root {
+  --MainColor: var(--text-color, #0c1136);
+  --AccentColor: var(--accent-color, #e72166);
+  --WhiteColor: var(--white-color, #fff);
+  --GrayColor: var(--gray-color, #e9e7e7);
+
+  --SecondAccentColor: var(--second-accent-color, #ffe9f1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Lexend", sans-serif;
+}
+
+body {
+  background-color: var(--white-color);
+  color: var(--WhiteColor);
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+  // padding: 2rem;
+}
+
+.OpusAgent_Containter {
+  width: 38vw;
+  background-image: url(https://images.pexels.com/photos/7858767/pexels-photo-7858767.jpeg);
+  background-size: cover;
+  background-position: center center;
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100%;
+
+  h2 {
+    font-size: 2.4rem;
+    text-transform: uppercase;
+  }
+}
+.pc-builder {
+  width: 62vw;
+  background-color: var(--WhiteColor);
+  padding: 2rem 4rem;
+  color: var(--MainColor);
+
+  &__header {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: solid 1px var(--MainColor);
+
+    h1 {
+      font-size: 1.5rem;
+      line-height: 1.7rem;
+
+      span {
+        font-weight: 300;
+        font-size: 1rem;
+      }
+    }
+
+    p {
+      color: var(--MainColor);
+      font-size: 0.8rem;
+    }
+  }
+
+  &__steps {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    .step {
+      padding: 12px 32px;
+      border: solid 1px var(--MainColor);
+      font-weight: 600;
+
+      box-shadow: 0px 0px 0px var(--MainColor);
+      transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+      cursor: pointer;
+
+      &--active {
+        background-color: var(--AccentColor);
+        color: var(--WhiteColor);
+        padding: 12px 42px;
+      }
+
+      &:hover {
+        box-shadow: 4px 4px 0px var(--MainColor);
+        transform: translate(-4px, -4px);
+      }
+    }
+  }
+
+  &__components {
+    gap: 1px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 2rem;
+
+    background: var(--MainColor);
+    @media only screen and (min-width: 1440px) {
+      overflow-y: scroll;
+    }
+
+    .component-row {
+      display: flex;
+      align-items: center;
+      padding: 1rem 1rem;
+      margin: 0 -1rem;
+      border-width: 1px;
+      border-style: solid;
+      border-color: transparent;
+
+      background: var(--WhiteColor);
+      transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+
+      &:hover {
+        border-color: var(--MainColor);
+        transform: translate(-4px, -4px);
+
+        .ProductControl {
+          .Change {
+            button {
+              width: 24px !important;
+              opacity: 1 !important;
+              pointer-events: auto !important;
+            }
+          }
+        }
+      }
+
+      &__label {
+        width: 150px;
+        font-weight: 600;
+      }
+
+      &__content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .product-card {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem;
+          border: solid var(--GrayColor);
+          border-width: 0 0 0 1px;
+          width: 100%;
+
+          img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+          }
+
+          &__info {
+            flex: 1;
+            max-width: 62%;
+
+            h3 {
+              font-size: 0.9rem;
+              margin-bottom: 0.5rem;
+              display: flex;
+
+              flex-direction: row;
+
+              align-content: center;
+              justify-content: center;
+              align-items: center;
+              min-width: 496px;
+
+              @media screen and (max-width: 1440px) {
+                flex-direction: column;
+                align-items: start;
+                min-width: 212px;
+              }
+            }
+
+            .warranty {
+              font-size: 0.8rem;
+              color: #666;
+            }
+          }
+
+          &__price {
+            color: var(--MainColor);
+            font-weight: 600;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+
+            align-items: stretch;
+            // justify-content: center;
+
+            p {
+              text-align: center;
+            }
+
+            span {
+              color: var(--MainColor);
+              font-size: 0.8rem;
+              font-weight: 300;
+              text-align: center;
+            }
+            .Qualtity {
+              display: flex;
+              flex-direction: row;
+              align-items: stretch;
+              justify-content: stretch;
+              border: 1px solid var(--MainColor);
+
+              p {
+                color: var(--MainColor);
+                font-size: 0.8rem;
+                font-weight: 600;
+                width: auto;
+                flex: auto;
+                text-align: center;
+                border: solid var(--MainColor);
+                border-width: 0px 1px 0px 1px;
+
+                min-width: 2rem;
+
+                justify-content: center;
+                align-content: center;
+              }
+              .Decrease,
+              .Increase {
+                button {
+                  all: unset;
+                  width: 2rem;
+                  height: 2rem;
+                  cursor: pointer;
+
+                  align-items: center;
+                  justify-content: center;
+                  text-align: center;
+                  color: var(--MainColor);
+                  line-height: 1rem;
+                  font-size: 1rem;
+
+                  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+
+                  &:hover {
+                    background-color: var(--AccentColor);
+                    color: var(--WhiteColor);
+                    font-size: 1.2rem;
+                  }
+                }
+              }
+            }
+          }
+
+          &__total {
+            color: var(--AccentColor);
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+          }
+
+          .ProductControl {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+
+            .Change,
+            .Remove {
+              button {
+                all: unset;
+                cursor: pointer;
+                width: 24px;
+                height: 24px;
+                color: var(--WhiteColor);
+
+                background-size: contain;
+                background-position: center center;
+                background-repeat: no-repeat;
+                transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+              }
+            }
+
+            .Change {
+              button {
+                width: 0px;
+                opacity: 0;
+                pointer-events: none;
+              }
+            }
+          }
+        }
+
+        .add-button {
+          background-color: var(--AccentColor);
+          color: var(--WhiteColor);
+          padding: 0.75rem 1.5rem;
+          border: none;
+          cursor: pointer;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 4rem;
+
+    margin: 0 -4rem;
+
+    border-top: 1px solid var(--GrayColor);
+    background-color: var(--GrayColor);
+
+    // position: fixed;
+    // bottom: 0;
+    // left: 0;
+    //  flex-direction: column;
+    // align-items: end;
+
+    justify-content: space-between;
+    align-items: end;
+
+    @media only screen and (min-width: 1440px) {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+
+      // flex-direction: row;
+    }
+
+    .promotions {
+      display: flex;
+      gap: 6px;
+      flex-direction: column;
+      max-width: 62%;
+
+      @media only screen and (min-width: 1440px) {
+        flex-direction: row;
+
+        // flex-direction: row;
+      }
+      .promo-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        border: 1px solid var(--MainColor);
+        box-shadow: 0px 0px 0px var(--MainColor);
+        transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+        background-color: var(--WhiteColor);
+
+        position: relative;
+
+        &::after {
+          content: "";
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          border-radius: 32px;
+
+          background: var(--GrayColor);
+          position: absolute;
+          top: 8px;
+          right: 8px;
+
+          border: 2px solid transparent;
+          transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+          box-shadow: 0px 0px 0px 2px transparent;
+        }
+
+        div {
+          font-size: 0.8rem;
+        }
+
+        &.selected {
+          border-color: var(--AccentColor);
+          background-color: var(--SecondAccentColor);
+
+          &::after {
+            border-color: var(--WhiteColor);
+
+            background: var(--AccentColor);
+
+            box-shadow: 0px 0px 0px 1px var(--AccentColor);
+          }
+        }
+
+        h1 {
+          font-size: 1rem;
+          font-weight: 600;
+        }
+
+        cursor: pointer;
+
+        &:hover {
+          box-shadow: 4px 4px 0px var(--MainColor);
+          transform: translate(-4px, -4px);
+        }
+
+        img {
+          width: 40px;
+          height: 40px;
+          object-fit: contain;
+        }
+
+        &__info {
+          font-size: 0.8rem;
+        }
+      }
+    }
+
+    .total-price {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: end;
+      justify-content: end;
+
+      h2 {
+        font-size: 0.8rem;
+        font-weight: 300;
+      }
+
+      .original-price {
+        text-decoration: line-through;
+        color: #666;
+        font-size: 1.2rem;
+      }
+
+      .final-price {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--AccentColor);
+      }
+    }
+  }
+}
+.line {
+  background: var(--MainColor);
+}

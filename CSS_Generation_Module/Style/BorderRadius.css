@@ -1,4 +1,4 @@
-:root {
+/* :root {
   --global-palette1: #e72166;
   --global-palette2: #2a38a1;
   --global-palette3: #0c1136;
@@ -9,7 +9,7 @@
   --global-palette8: #e9e7e7;
   --global-palette9: #ffffff;
   --global-palette9rgb: 255, 255, 255;
-}
+} */
 
 .Vx_SampleHolder * {
   cursor: not-allowed !important;
@@ -18,6 +18,7 @@
 .Vx_CSS_Gen_Containter {
   position: relative;
   padding: 32px;
+  border-radius: 24px;
 }
 
 .Vx_CSS_Gen_Containter .MainClassInput {
@@ -25,13 +26,13 @@
   outline: none;
   padding: 8px;
   -webkit-box-shadow: 4px 4px 0 var(--global-palette3);
-          box-shadow: 4px 4px 0 var(--global-palette3);
+  box-shadow: 4px 4px 0 var(--global-palette3);
   width: 62%;
-  border-radius: 0;
+  border-radius: 8px;
   position: absolute;
   top: 0;
   -webkit-transform: translateY(-50%);
-          transform: translateY(-50%);
+  transform: translateY(-50%);
   z-index: 100;
 }
 
@@ -40,15 +41,15 @@
   display: -ms-flexbox;
   display: flex;
   -webkit-box-align: stretch;
-      -ms-flex-align: stretch;
-          align-items: stretch;
+  -ms-flex-align: stretch;
+  align-items: stretch;
   -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: start;
+  -ms-flex-pack: start;
+  justify-content: start;
   -webkit-box-orient: vertical;
   -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
   max-height: 60vh;
   overflow-x: hidden;
   overflow-y: scroll;
@@ -68,16 +69,18 @@
 
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type="range"] {
   -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   background: none;
   border: none;
   cursor: pointer;
 }
 
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type="range"]::-webkit-slider-thumb {
+.Vx_CSS_Gen_Containter
+  .Vx_CSS_Gen_Controls
+  input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-          appearance: none;
+  appearance: none;
   cursor: e-resize;
   background: var(--global-palette9);
   width: 16px;
@@ -88,17 +91,23 @@
   display: block;
 }
 
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type="range"]::-webkit-slider-thumb:hover {
+.Vx_CSS_Gen_Containter
+  .Vx_CSS_Gen_Controls
+  input[type="range"]::-webkit-slider-thumb:hover {
   background: var(--global-palette1);
 }
 
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type="range"]::-webkit-slider-runnable-track {
+.Vx_CSS_Gen_Containter
+  .Vx_CSS_Gen_Controls
+  input[type="range"]::-webkit-slider-runnable-track {
   background: var(--global-palette9);
   height: 4px;
   border-radius: 4px;
 }
 
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls input[type="range"]::-webkit-slider-progres {
+.Vx_CSS_Gen_Containter
+  .Vx_CSS_Gen_Controls
+  input[type="range"]::-webkit-slider-progres {
   background: var(--global-palette1);
   height: 4px;
 }
@@ -107,8 +116,8 @@
   text-wrap: nowrap;
   gap: 4px;
   -webkit-box-pack: end;
-      -ms-flex-pack: end;
-          justify-content: end;
+  -ms-flex-pack: end;
+  justify-content: end;
 }
 
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput::content {
@@ -129,7 +138,10 @@
   cursor: pointer;
 }
 
-.Vx_CSS_Gen_Containter .Vx_CSS_Gen_Controls .RadialInput input:is(:first-child) {
+.Vx_CSS_Gen_Containter
+  .Vx_CSS_Gen_Controls
+  .RadialInput
+  input:is(:first-child) {
   margin-left: auto;
 }
 
@@ -141,17 +153,18 @@
   display: flex;
   -webkit-box-orient: vertical;
   -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
   -webkit-box-align: start;
-      -ms-flex-align: start;
-          align-items: start;
+  -ms-flex-align: start;
+  align-items: start;
   -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: start;
+  -ms-flex-pack: start;
+  justify-content: start;
   margin: 0 !important;
   padding: 16px;
   gap: 8px;
+  border-radius: 16px;
   position: relative;
   background: var(--global-palette8);
 }
@@ -161,11 +174,11 @@
   width: 100%;
   position: relative;
   -webkit-box-align: end;
-      -ms-flex-align: end;
-          align-items: end;
+  -ms-flex-align: end;
+  align-items: end;
   -webkit-box-pack: justify;
-      -ms-flex-pack: justify;
-          justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -180,14 +193,14 @@
   display: flex;
   -webkit-box-orient: horizontal;
   -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
   -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
   -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: start;
+  -ms-flex-pack: start;
+  justify-content: start;
   width: -webkit-fit-content;
   width: -moz-fit-content;
   width: fit-content;
@@ -197,14 +210,14 @@
 
 .Vx_CSS_Gen_Containter fieldset label input {
   -webkit-box-flex: 1;
-      -ms-flex: auto;
-          flex: auto;
+  -ms-flex: auto;
+  flex: auto;
   -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: start;
+  -ms-flex-pack: start;
+  justify-content: start;
   -webkit-box-align: start;
-      -ms-flex-align: start;
-          align-items: start;
+  -ms-flex-align: start;
+  align-items: start;
 }
 
 .Vx_CSS_Gen_Containter .Fieldset_Unit_Changable * {
@@ -218,17 +231,17 @@
   cursor: pointer;
   -webkit-box-orient: horizontal;
   -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
   -webkit-box-align: end;
-      -ms-flex-align: end;
-          align-items: end;
+  -ms-flex-align: end;
+  align-items: end;
   -webkit-box-pack: end;
-      -ms-flex-pack: end;
-          justify-content: end;
+  -ms-flex-pack: end;
+  justify-content: end;
   height: -webkit-fit-content;
   height: -moz-fit-content;
   height: fit-content;
@@ -247,19 +260,27 @@
   background: var(--global-palette7);
 }
 
-.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging li {
+.Vx_CSS_Gen_Containter
+  .Fieldset_Unit_Changable
+  .UnitChangeButton.UnitChanging
+  li {
   pointer-events: all;
   opacity: 1;
 }
 
-.Vx_CSS_Gen_Containter .Fieldset_Unit_Changable .UnitChangeButton.UnitChanging li ul {
+.Vx_CSS_Gen_Containter
+  .Fieldset_Unit_Changable
+  .UnitChangeButton.UnitChanging
+  li
+  ul {
   padding: 6px 24px;
   line-height: 1.2rem;
 }
 
 .Vx_CSS_Gen_Containter .Vx_CSS_Gen_Code {
   margin-top: 16px;
-  max-height: 34vh;
+  border-radius: 16px;
+  max-height: 16vh;
   overflow-x: hidden;
   overflow-y: scroll;
 }
@@ -270,22 +291,22 @@
   display: flex;
   -webkit-box-orient: horizontal;
   -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
   -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
   -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: start;
+  -ms-flex-pack: start;
+  justify-content: start;
   width: 100%;
   gap: 8px;
 }
 
 .RangeInput input[type="range"] {
   -webkit-box-flex: 1;
-      -ms-flex: auto;
-          flex: auto;
+  -ms-flex: auto;
+  flex: auto;
 }
 
 .RangeInput .UnitChangeButton {
@@ -295,17 +316,17 @@
   cursor: pointer;
   -webkit-box-orient: horizontal;
   -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
   -webkit-box-align: end;
-      -ms-flex-align: end;
-          align-items: end;
+  -ms-flex-align: end;
+  align-items: end;
   -webkit-box-pack: end;
-      -ms-flex-pack: end;
-          justify-content: end;
+  -ms-flex-pack: end;
+  justify-content: end;
   height: -webkit-fit-content;
   height: -moz-fit-content;
   height: fit-content;
@@ -329,14 +350,14 @@
   display: flex;
   -webkit-box-orient: vertical;
   -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
   -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
   -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: start;
+  -ms-flex-pack: start;
+  justify-content: start;
   background: var(--global-palette8);
   border: 2px solid #0c1136;
   list-style: none;
