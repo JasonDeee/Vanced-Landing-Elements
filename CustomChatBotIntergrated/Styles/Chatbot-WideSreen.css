@@ -1,58 +1,34 @@
 @charset "UTF-8";
 .Vx_chat-container {
   overflow: visible;
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-  -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: start;
-  -webkit-box-align: stretch;
-      -ms-flex-align: stretch;
-          align-items: stretch;
+  flex-direction: column;
+  justify-content: start;
+  align-items: stretch;
   position: relative;
 }
-
 .Vx_chat-container * {
   -webkit-appearance: unset;
      -moz-appearance: unset;
           appearance: unset;
   padding: 0;
   margin: 0;
-  -webkit-box-sizing: border-box;
-          box-sizing: border-box;
-  -webkit-transition: all 0.8s cubic-bezier(0.25, 0, 0, 1);
+  box-sizing: border-box;
   transition: all 0.8s cubic-bezier(0.25, 0, 0, 1);
 }
-
 .Vx_chat-container .Vx_ChatBotHeader {
   background-color: var(--global-palette3);
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: horizontal;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
-  -webkit-box-pack: start;
-      -ms-flex-pack: start;
-          justify-content: start;
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
   padding: 16px;
   gap: 16px;
   width: 100%;
-  height: -webkit-fit-content;
   height: -moz-fit-content;
   height: fit-content;
   color: var(--global-palette9);
 }
-
 .Vx_chat-container .Vx_ChatBotHeader .Vx_ChatBotLogo {
   width: 48px;
   height: 48px;
@@ -61,7 +37,6 @@
   position: relative;
   overflow: hidden;
 }
-
 .Vx_chat-container .Vx_ChatBotHeader .Vx_ChatBotLogo img {
   width: 100%;
   height: 100%;
@@ -69,34 +44,24 @@
   -o-object-fit: cover;
      object-fit: cover;
 }
-
 .Vx_chat-container .Vx_ChatBotHeader #AdditionInfo {
   width: 32px;
   height: 32px;
   position: relative;
   cursor: pointer;
 }
-
 .Vx_chat-container .Vx_ChatBotHeader #AdditionInfo svg {
   fill: var(--global-palette9);
 }
-
 .Vx_chat-container .Vx_ChatBotHeader #AdditionInfo::before {
   content: "Chat bot có thể mắc lỗi | Đoạn chat này sẽ được lưu lại. Hãy sử dụng thận trọng, không sử dụng ngôn ngữ không phù hợp.";
   position: absolute;
   bottom: 24px;
   left: 0;
-  -webkit-transform: translateX(-50%);
-          transform: translateX(-50%);
-  display: -webkit-box;
-  display: -ms-flexbox;
+  transform: translateX(-50%);
   display: flex;
-  -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+  justify-content: center;
+  align-items: center;
   background-color: var(--global-palette9);
   border-radius: 4px;
   padding: 8px;
@@ -106,34 +71,26 @@
   color: var(--global-palette3);
   opacity: 0;
   z-index: 100;
-  -webkit-transition: all 0.8s cubic-bezier(0.25, 0, 0, 1);
   transition: all 0.8s cubic-bezier(0.25, 0, 0, 1);
 }
-
 .Vx_chat-container .Vx_ChatBotHeader #AdditionInfo:hover svg {
   opacity: 0.6;
 }
-
 .Vx_chat-container .Vx_ChatBotHeader #AdditionInfo:hover::before {
   opacity: 1;
 }
-
 .Vx_chat-container .Vx_ChatBotHeader h1 {
   font-size: 1.2rem;
   font-weight: 600;
   color: var(--global-palette9);
   margin: 0;
-  -webkit-box-flex: 1;
-      -ms-flex: auto;
-          flex: auto;
+  flex: auto;
   line-height: 1.2rem;
 }
-
 .Vx_chat-container .Vx_ChatBotHeader h1 span {
   font-size: 0.8rem;
   font-weight: 400;
 }
-
 .Vx_chat-container.FloatingChat {
   position: fixed;
   min-width: 368px;
@@ -149,29 +106,17 @@
 }
 
 .Vx_chat-input {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
+  flex-direction: column;
   background-color: var(--global-palette9);
   border-top: 1px solid var(--global-palette7);
   position: relative;
 }
-
 .Vx_chat-input .Vx_Recommendation_Question {
-  height: -webkit-fit-content;
   height: -moz-fit-content;
   height: fit-content;
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: horizontal;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
+  flex-direction: row;
   top: 0;
   left: 0;
   padding: 16px;
@@ -180,35 +125,26 @@
   overflow-x: scroll;
   position: relative;
 }
-
 .Vx_chat-input .Vx_Recommendation_Question::-webkit-scrollbar {
   display: none;
 }
-
 .Vx_chat-input .Vx_Recommendation_Question p {
   all: unset;
   font-size: 0.9rem;
   white-space: nowrap;
-  width: -webkit-max-content;
   width: -moz-max-content;
   width: max-content;
   padding: 8px 16px;
   border-radius: 32px;
   border: 2px solid var(--global-palette3);
   cursor: pointer;
-  -webkit-box-shadow: 0px 0px 0px var(--global-palette3);
-          box-shadow: 0px 0px 0px var(--global-palette3);
-  -webkit-transition-duration: 0.33s;
-          transition-duration: 0.33s;
+  box-shadow: 0px 0px 0px var(--global-palette3);
+  transition-duration: 0.33s;
 }
-
 .Vx_chat-input .Vx_Recommendation_Question p:hover {
-  -webkit-box-shadow: 4px 4px 0px var(--global-palette3);
-          box-shadow: 4px 4px 0px var(--global-palette3);
-  -webkit-transform: translate(-4px, -4px);
-          transform: translate(-4px, -4px);
+  box-shadow: 4px 4px 0px var(--global-palette3);
+  transform: translate(-4px, -4px);
 }
-
 .Vx_chat-input::after {
   content: "";
   width: 16%;
@@ -216,60 +152,36 @@
   right: 0;
   top: 0;
   height: 64px;
-  background: -webkit-gradient(linear, left top, right top, from(#ffffff00), color-stop(90%, #ffffff));
-  background: linear-gradient(90deg, #ffffff00, #ffffff 90%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), #ffffff 90%);
   pointer-events: none;
 }
-
 .Vx_chat-input .Vx_Input_Area {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: horizontal;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: row;
-          flex-direction: row;
+  flex-direction: row;
   width: 100%;
   padding: 16px;
   padding-top: 0;
 }
-
 .Vx_chat-input input {
-  -webkit-box-flex: 1;
-      -ms-flex: 1;
-          flex: 1;
+  flex: 1;
   padding: 10px;
   border: 1px solid var(--global-palette8);
   border-radius: 4px;
   margin-right: 10px;
   font-size: 14px;
 }
-
-.Vx_chat-input input ::-webkit-input-placeholder {
+.Vx_chat-input input ::-moz-placeholder {
   color: var(--global-palette3) !important;
   opacity: 0.6 !important;
 }
-
-.Vx_chat-input input :-ms-input-placeholder {
-  color: var(--global-palette3) !important;
-  opacity: 0.6 !important;
-}
-
-.Vx_chat-input input ::-ms-input-placeholder {
-  color: var(--global-palette3) !important;
-  opacity: 0.6 !important;
-}
-
 .Vx_chat-input input ::placeholder {
   color: var(--global-palette3) !important;
   opacity: 0.6 !important;
 }
-
 .Vx_chat-input input:focus {
   outline: none;
   border-color: var(--global-palette1);
 }
-
 .Vx_chat-input button {
   padding: 10px 20px;
   background-color: var(--global-palette1);
@@ -278,14 +190,11 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  -webkit-transition: background-color 0.2s;
   transition: background-color 0.2s;
 }
-
 .Vx_chat-input button:hover {
   background-color: var(--global-palette3);
 }
-
 .Vx_chat-input button:active {
   background-color: var(--global-palette3);
 }
@@ -334,5 +243,4 @@
   font-size: 12px;
   overflow-x: auto;
   margin: 0;
-}
-/*# sourceMappingURL=Chatbot-WideSreen.css.map */
+}/*# sourceMappingURL=Chatbot-WideSreen.css.map */

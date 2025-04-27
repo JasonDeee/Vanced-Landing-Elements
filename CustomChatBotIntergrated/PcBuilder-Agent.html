@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Xây dựng cấu hình PC với Agent | Bản xem thử | Vanced Agency</title>
     <link rel="stylesheet" href="./Styles/PcBuildAgent.css" />
+    <script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+    <link
+      rel="shortcut icon"
+      href="https://dashboard.vanced.media/Lara.ico"
+      type="image/x-icon"
+    />
   </head>
+
   <body>
     <div class="pc-builder">
       <div class="pc-builder__header">
@@ -25,10 +33,11 @@
       </div>
 
       <div class="pc-builder__components">
-        <div class="component-row">
+        <div class="component-row" data-row="CPU">
           <div class="component-row__label">1. CPU</div>
           <div class="component-row__content">
-            <div class="product-card">
+            <button class="add-button" requestData="CPU">+ Chọn CPU</button>
+            <!-- <div class="product-card">
               <div class="product-card__info">
                 <h3>
                   <img
@@ -67,11 +76,11 @@
                   ></button>
                 </div>
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
 
-        <div class="component-row">
+        <div class="component-row" data-row="MainBoard">
           <div class="component-row__label">2. MainBoard</div>
           <div class="component-row__content">
             <button class="add-button" requestData="MainBoard">
@@ -166,6 +175,129 @@
     </div>
     <div class="OpusAgent_Containter">
       <h2>Bản xem thử</h2>
+    </div>
+    <div class="pc-builder_ComponentsSelector hidden">
+      <div class="SelectorContainer">
+        <nav class="SelectorNavigation">
+          <h3 class="SelectorNavigation__title">Lựa chọn</h3>
+          <div class="SelectorNavigation__Search">
+            <input type="text" />
+            <button
+              id="SelectorNavigation__Search__Button"
+              style="background-image: url(./Assets/SearchIcon.svg)"
+            ></button>
+          </div>
+          <button
+            class="SelectorNavigation__close"
+            id="SelectorNavigation__close"
+            style="background-image: url(./Assets/X_Icon.svg)"
+          ></button>
+        </nav>
+        <main class="ComponentsSelectorMain">
+          <div class="ComponentsFilters">
+            <div class="Filter">
+              <h3 for="Brand">Hãng sản xuất</h3>
+              <fieldset>
+                <label for="Brand">
+                  <input
+                    type="checkbox"
+                    name="Brand"
+                    value="AMD"
+                    placeholder="AMD"
+                  />AMD</label
+                >
+
+                <label for="Brand">
+                  <input
+                    type="checkbox"
+                    name="Brand"
+                    value="INTEL"
+                    placeholder="INTEL"
+                  />INTEL</label
+                >
+              </fieldset>
+            </div>
+
+            <div class="Filter">
+              <h3 for="Brand">Khoảng giá</h3>
+              <fieldset>
+                <label for="Price">
+                  <input
+                    type="checkbox"
+                    name="Price"
+                    value="AMD"
+                    placeholder="AMD"
+                  />Dưới 2 triệu (6)
+                </label>
+                <label for="Price">
+                  <input
+                    type="checkbox"
+                    name="Price"
+                    value="INTEL"
+                    placeholder="INTEL"
+                  />2 triệu - 4 triệu (20)</label
+                >
+                <label for="Price">
+                  <input
+                    type="checkbox"
+                    name="Price"
+                    value="INTEL"
+                    placeholder="INTEL"
+                  />4 triệu - 8 triệu (16)</label
+                >
+                <label for="Price">
+                  <input
+                    type="checkbox"
+                    name="Price"
+                    value="INTEL"
+                    placeholder="INTEL"
+                  />Trên 8 triệu (19)</label
+                >
+              </fieldset>
+            </div>
+          </div>
+          <div class="Components_Displayer">
+            <div class="SingleComponent_Display">
+              <div class="product-card__info">
+                <img
+                  src="https://hanoicomputercdn.com/media/product/77606_62475_cpu_intel_core_i5_12400__1_.jpg"
+                  alt="CPU Intel Core i5"
+                />
+                <h3>
+                  CPU Intel Core i5-14600KF (Up to 5.3GHz, 14 NHÂN 20 LUỒNG,
+                  24MB CACHE, 125W) - Socket Intel LGA 1700/RAPTOR LAKE
+                  <div class="warranty">Bảo hành: 60 Tháng</div>
+                  <div class="stock">Kho hàng: Còn hàng</div>
+                  <div class="product-card__price">
+                    <p>5.999.000₫</p>
+                  </div>
+                </h3>
+              </div>
+              <button
+                class="productSelectButton"
+                style="background-image: url(./Assets/Add_Icon.svg)"
+              ></button>
+            </div>
+          </div>
+          <div class="Filter_Updater">
+            <button class="Filter_Updater__button">Cập nhật</button>
+          </div>
+          <div class="ComponentsHolder">
+            <nav class="ComponentSortNav"></nav>
+            <div class="ComponentsList"></div>
+          </div>
+        </main>
+        <div class="ComopentLoading_Icon">
+          <lord-icon
+            src="https://cdn.lordicon.com/gkryirhd.json"
+            trigger="loop"
+            state="loop-snake-alt"
+            colors="primary:#0c1136"
+            style="width: 128px; height: 128px"
+          >
+          </lord-icon>
+        </div>
+      </div>
     </div>
   </body>
   <script src="./Scripts/OpusBuilder.js"></script>

@@ -75,6 +75,35 @@ function getAllProductDataByType(ProductType, PageCount) {
   // Lấy header của các cột từ hàng đầu tiên
   var headers = values[0];
 
+  // --- BẮT ĐẦU ĐỌC FILTER ---
+  // Đọc ô M2 (hàng 2, cột 13 - index 12)
+  var filterMetaRaw = sheet.getRange(2, 13).getValue();
+  var filterKeys = [];
+  try {
+    filterKeys = JSON.parse(filterMetaRaw);
+  } catch (e) {
+    filterKeys = [];
+  }
+  var filters = [];
+  if (filterKeys && filterKeys.length > 0) {
+    // Đọc từng cột filter bắt đầu từ cột N (cột 14, index 13)
+    for (var i = 0; i < filterKeys.length; i++) {
+      var colIdx = 14 + i; // cột bắt đầu từ 14
+      var filterArr = [];
+      var rowIdx = 1; // bắt đầu từ hàng 1 (bỏ header là hàng 0)
+      while (true) {
+        var val = sheet.getRange(rowIdx + 1, colIdx).getValue(); // rowIdx+1 vì Google Sheets bắt đầu từ 1
+        if (val === '' || val === null) break;
+        filterArr.push(val.trim());
+        rowIdx++;
+      }
+      var filterObj = {};
+      filterObj[filterKeys[i]] = filterArr;
+      filters.push(filterObj);
+    }
+  }
+  // --- KẾT THÚC ĐỌC FILTER ---
+
   // Tính toán hàng bắt đầu và hàng kết thúc cho trang hiện tại
   var startRow = (PageCount - 1) * PRODUCTS_PER_PAGE + 1; // +1 để bỏ qua hàng header
   var endRow = startRow + PRODUCTS_PER_PAGE;
@@ -117,10 +146,11 @@ function getAllProductDataByType(ProductType, PageCount) {
     isFinalPage = true;
   }
 
-  // 5. Trả về dữ liệu sản phẩm dưới dạng JSON, kèm theo thông tin IsFinalPage
+  // 5. Trả về dữ liệu sản phẩm dưới dạng JSON, kèm theo thông tin IsFinalPage và filters
   return {
     IsFinalPage: isFinalPage,
     products: productList,
+    filters: filters
   };
 }
 
@@ -139,7 +169,6 @@ function processRequest(requestData) {
     // Switch case để xử lý các loại RequestType khác nhau
     switch (requestType) {
       case "RequestSingleProductData":
-        // Kiểm tra và lấy dữ liệu cần thiết cho getSingleProductData
         if (!requestInfo.ProductType || !requestInfo.ProductID) {
           throw new Error(
             "Missing parameters for RequestSingleProductData. Must contain ProductType and ProductID."
@@ -152,7 +181,6 @@ function processRequest(requestData) {
         break;
 
       case "getAllProductDataByType":
-        // Kiểm tra và lấy dữ liệu cần thiết cho getAllProductDataByType
         if (!requestInfo.ProductType || !requestInfo.PageCount) {
           throw new Error(
             "Missing parameters for getAllProductDataByType. Must contain ProductType and PageCount."
@@ -174,63 +202,50 @@ function processRequest(requestData) {
   }
 }
 
-function doGet(e) {
-  // Thiết lập CORS headers
-  var headers = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
+function createJSONResponse(data, callback) {
+  var response = ContentService.createTextOutput();
+  if (callback) {
+    // Nếu có callback parameter, trả về JSONP
+    response.setContent(callback + "(" + JSON.stringify(data) + ")");
+    response.setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    // Nếu không, trả về JSON bình thường
+    response.setContent(JSON.stringify(data));
+    response.setMimeType(ContentService.MimeType.JSON);
+  }
+  return response;
+}
 
+function doGet(e) {
   try {
     // Xử lý parameters từ URL
     var params = e.parameter;
+    var callback = params.callback; // Lấy callback parameter nếu có
     var responseData = processRequest(params);
 
-    return ContentService.createTextOutput(JSON.stringify(responseData))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(headers);
+    return createJSONResponse(responseData, callback);
   } catch (error) {
     var errorResponse = {
       error: error.message,
     };
-    return ContentService.createTextOutput(JSON.stringify(errorResponse))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(headers);
+    return createJSONResponse(errorResponse, callback);
   }
 }
 
 function doPost(e) {
-  // Thiết lập CORS headers
-  var headers = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-
-  // Xử lý OPTIONS request
   if (e.requestMethod == "OPTIONS") {
-    return ContentService.createTextOutput()
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(headers);
+    return ContentService.createTextOutput("");
   }
 
   try {
-    // Parse dữ liệu JSON từ request body
     var requestData = JSON.parse(e.postData.contents);
     var responseData = processRequest(requestData);
 
-    return ContentService.createTextOutput(JSON.stringify(responseData))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(headers);
+    return createJSONResponse(responseData);
   } catch (error) {
     var errorResponse = {
       error: error.message,
     };
-    return ContentService.createTextOutput(JSON.stringify(errorResponse))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(headers);
+    return createJSONResponse(errorResponse);
   }
 }

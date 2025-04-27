@@ -24,6 +24,12 @@ body {
   // padding: 2rem;
 }
 
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+  // display: none;
+}
+
 .OpusAgent_Containter {
   width: 38vw;
   background-image: url(https://images.pexels.com/photos/7858767/pexels-photo-7858767.jpeg);
@@ -449,6 +455,390 @@ body {
       }
     }
   }
+
+  &_ComponentsSelector {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 100vw;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background: #ffffff56;
+    backdrop-filter: blur(16px);
+
+    transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+
+    * {
+      transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+    }
+
+    .SelectorContainer {
+      width: 62vw;
+      min-width: 1024px;
+      height: 90vh;
+
+      background: var(--WhiteColor);
+      box-shadow: 8px 8px 0px var(--MainColor);
+      border: solid 2px var(--MainColor);
+
+      display: flex;
+      flex-direction: column;
+      position: relative;
+
+      .SelectorNavigation {
+        width: 100%;
+        height: 60px;
+        background: var(--MainColor);
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+
+        .SelectorNavigation__title {
+          width: 256px;
+          max-width: 256px;
+          padding-left: 8px;
+        }
+
+        .SelectorNavigation__Search {
+          width: 32vw;
+
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+
+          cursor: pointer;
+
+          input {
+            // all: unset;
+
+            border: none;
+            outline: none;
+
+            background: var(--WhiteColor);
+            flex: auto;
+            height: 40px;
+            padding: 8px;
+            color: var(--MainColor);
+          }
+
+          #SelectorNavigation__Search__Button {
+            all: unset;
+            width: 76px;
+            height: 40px;
+
+            background: var(--AccentColor);
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: 20px 20px;
+          }
+        }
+        .SelectorNavigation__close {
+          all: unset;
+          width: 48px;
+          height: 48px;
+          margin-left: auto;
+          background-position: center center;
+          background-repeat: no-repeat;
+          background-size: 20px 20px;
+
+          cursor: pointer;
+        }
+      }
+      .ComponentsSelectorMain {
+        width: 100%;
+        height: calc(100% - 60px);
+
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: flex-start;
+
+        .ComponentsFilters {
+          width: 256px;
+          min-width: 256px;
+          height: 100%;
+
+          border-right: solid 1px var(--MainColor);
+          // margin: 8px;
+          padding: 8px;
+          padding-bottom: 64px;
+          overflow-y: scroll;
+          overflow-x: hidden;
+
+          &::-webkit-scrollbar {
+            width: 4px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background-color: var(--GrayColor);
+            border-radius: 2px;
+          }
+
+          .Filter {
+            border-bottom: solid 1px var(--MainColor);
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+
+            color: var(--MainColor);
+
+            flex-wrap: wrap;
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+            justify-content: start;
+
+            h3 {
+              font-size: 1rem;
+              font-weight: 600;
+              margin-bottom: 0.5rem;
+            }
+
+            fieldset {
+              all: unset;
+
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: start;
+              gap: 8px;
+
+              flex-wrap: wrap;
+
+              input {
+                all: unset;
+                min-width: 16px;
+                min-height: 16px;
+
+                border-radius: 16px;
+
+                border: solid 2px var(--MainColor);
+                background-color: var(--WhiteColor);
+                box-shadow: 0px 0px 0px var(--MainColor);
+                transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+                cursor: pointer;
+
+                &:checked {
+                  background-color: var(--AccentColor);
+                  border: solid 2px var(--WhiteColor);
+                  box-shadow: 0px 0px 0px 2px var(--AccentColor);
+                }
+              }
+
+              label {
+                font-size: 0.8rem;
+                font-weight: 400;
+
+                display: block;
+                flex: auto;
+
+                // width: max-content;
+
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+
+                justify-content: start;
+
+                // white-space: nowrap;
+
+                // margin: 0 4px 0 0;
+              }
+            }
+          }
+        }
+        .Components_Displayer {
+          flex: auto;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: flex-start;
+          max-height: 100%;
+          overflow-y: scroll;
+          overflow-x: hidden;
+
+          padding-bottom: 16px;
+
+          &::-webkit-scrollbar {
+            width: 4px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background-color: var(--GrayColor);
+            border-radius: 2px;
+          }
+
+          .SingleComponent_Display {
+            width: -webkit-fill-available;
+            max-width: 100%;
+            // height: 120px;
+            padding: 8px;
+            margin: 0 8px;
+            background: var(--WhiteColor);
+
+            border: solid 1px transparent;
+            border-bottom-color: var(--MainColor);
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            position: relative;
+
+            box-shadow: 0px 0px 0px 0px var(--MainColor);
+
+            &:hover {
+              box-shadow: 4px 4px 0px var(--MainColor);
+              transform: translate(-4px, -4px);
+              border-color: var(--MainColor);
+            }
+
+            .product-card__info {
+              height: 100%;
+              max-width: 84%;
+
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: flex-start;
+              gap: 4px;
+
+              position: relative;
+              img {
+                height: 128px;
+                width: 128px;
+                object-fit: contain;
+              }
+              h3 {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--MainColor);
+
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: center;
+
+                .warranty {
+                  margin-top: 8px;
+                }
+                .warranty,
+                .stock {
+                  font-size: 0.8rem;
+                  font-weight: 300;
+                }
+
+                .product-card__price {
+                  color: var(--AccentColor);
+                  font-size: 1.2rem;
+                  font-weight: 600;
+                }
+              }
+            }
+
+            .productSelectButton {
+              all: unset;
+              cursor: pointer;
+              width: 96px;
+              height: 48px;
+              margin-right: 8px;
+              background-color: var(--AccentColor);
+              background-position: center center;
+              background-repeat: no-repeat;
+              background-size: 20px 20px;
+            }
+          }
+        }
+        .Filter_Updater {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+
+          display: flex;
+          flex-direction: row;
+
+          align-items: center;
+          justify-content: flex-end;
+
+          padding: 8px;
+
+          width: 256px;
+          height: 60px;
+
+          background-color: var(--WhiteColor);
+
+          button {
+            all: unset;
+            cursor: pointer;
+            padding: 8px 16px;
+
+            color: var(--WhiteColor);
+            background-color: var(--AccentColor);
+
+            font-size: 0.8rem;
+            font-weight: 400;
+
+            transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+            box-shadow: 0px 0px 0px var(--MainColor);
+
+            &:hover {
+              box-shadow: 4px 4px 0px var(--MainColor);
+              transform: translate(-4px, -4px);
+            }
+          }
+        }
+      }
+
+      .ComopentLoading_Icon {
+        width: 100%;
+        height: 100%;
+
+        position: absolute;
+        left: 0;
+        top: 0;
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+  }
+
+  &_ComponentsSelector.hidden {
+    .SelectorContainer {
+      transform: translateY(20vh) scale(0.78);
+    }
+  }
+  &_ComponentsSelector.OnLoading {
+    pointer-events: none;
+    .ComponentsSelectorMain {
+      opacity: 0;
+    }
+    .ComopentLoading_Icon {
+      opacity: 1;
+    }
+  }
+}
+
+button {
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center center;
 }
 .line {
   background: var(--MainColor);
