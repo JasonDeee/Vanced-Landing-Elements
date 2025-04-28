@@ -55,7 +55,16 @@ body {
   width: 62vw;
   background-color: var(--WhiteColor);
   padding: 2rem 4rem;
+  padding-bottom: 0;
   color: var(--MainColor);
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  @media only screen and (max-width: 1440px) {
+    max-height: 100vh;
+  }
 
   &__header {
     padding-bottom: 1rem;
@@ -106,31 +115,44 @@ body {
   }
 
   &__components {
-    gap: 1px;
     display: flex;
     flex-direction: column;
+    margin: -2rem;
     margin-bottom: 2rem;
 
-    background: var(--MainColor);
+    // background: var(--MainColor);
     @media only screen and (min-width: 1440px) {
       overflow-y: scroll;
+      overflow-x: visible;
+    }
+
+    &::-webkit-scrollbar {
+      display: none;
     }
 
     .component-row {
       display: flex;
       align-items: center;
-      padding: 1rem 1rem;
-      margin: 0 -1rem;
+      padding: 1rem 0;
+      margin: 1rem 2rem 0;
       border-width: 1px;
       border-style: solid;
       border-color: transparent;
+      border-bottom-color: var(--MainColor);
 
       background: var(--WhiteColor);
       transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
 
+      box-shadow: 0px 0px 0px var(--MainColor);
+
       &:hover {
         border-color: var(--MainColor);
         transform: translate(-4px, -4px);
+        box-shadow: 4px 4px 0px var(--MainColor);
+
+        padding: 1rem;
+        margin: 1rem;
+        margin-bottom: 0;
 
         .ProductControl {
           .Change {
@@ -156,6 +178,7 @@ body {
 
         .product-card {
           display: flex;
+          justify-content: space-between;
           align-items: center;
           gap: 1rem;
           padding: 1rem;
@@ -181,7 +204,7 @@ body {
               flex-direction: row;
 
               align-content: center;
-              justify-content: center;
+              justify-content: flex-start;
               align-items: center;
               min-width: 496px;
 
@@ -192,9 +215,11 @@ body {
               }
             }
 
-            .warranty {
+            .warranty,
+            .stock {
               font-size: 0.8rem;
-              color: #666;
+              color: var(--MainColor);
+              opacity: 0.7;
             }
           }
 
@@ -340,13 +365,13 @@ body {
     justify-content: space-between;
     align-items: end;
 
-    @media only screen and (min-width: 1440px) {
-      position: fixed;
-      bottom: 0;
-      left: 0;
+    // @media only screen and (min-width: 1440px) {
+    //   position: fixed;
+    //   bottom: 0;
+    //   left: 0;
 
-      // flex-direction: row;
-    }
+    //   // flex-direction: row;
+    // }
 
     .promotions {
       display: flex;
@@ -356,6 +381,7 @@ body {
 
       @media only screen and (min-width: 1440px) {
         flex-direction: row;
+        max-width: 72%;
 
         // flex-direction: row;
       }
@@ -615,8 +641,8 @@ body {
 
               input {
                 all: unset;
-                min-width: 16px;
-                min-height: 16px;
+                min-width: 12px;
+                min-height: 12px;
 
                 border-radius: 16px;
 
@@ -646,8 +672,11 @@ body {
                 flex-direction: row;
                 align-items: center;
                 gap: 8px;
-
+                min-width: 78px;
+                // width: 78px;
+                //margin-right: 16px;
                 justify-content: start;
+                margin: 0;
 
                 // white-space: nowrap;
 
@@ -668,6 +697,7 @@ body {
           overflow-x: hidden;
 
           padding-bottom: 16px;
+          padding-top: 8px;
 
           &::-webkit-scrollbar {
             width: 4px;

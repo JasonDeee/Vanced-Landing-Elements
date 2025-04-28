@@ -147,17 +147,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Hàm render card sản phẩm cho component-row
+  // Hàm render card sản phẩm cho component-row (có kiểm soát số lượng)
   function renderSelectedComponent(product, rowSelector) {
     const row = document.querySelector(rowSelector);
     if (!row) return;
-    // Gán id sản phẩm vào attr
     row.setAttribute("data-product-id", product.id);
-    // Lấy vùng content để thay thế
     const content = row.querySelector(".component-row__content");
     if (!content) return;
-    // Xóa toàn bộ nội dung cũ
     content.innerHTML = "";
+    let quantity = 1;
     // Tạo card sản phẩm
     const card = document.createElement("div");
     card.className = "product-card";
@@ -171,8 +169,15 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="stock">Kho hàng: ${product.Status || ""}</div>
       </div>
       <div class="product-card__price">
-        <p>${formatPrice(product.price)}</p>
+        <p class="product-price">${formatPrice(product.price)}</p>
+        <span>x</span>
+        <div class="Qualtity">
+          <div class="Decrease"><button class="decrease-qty">-</button></div>
+          <p class="qty-value">1</p>
+          <div class="Increase"><button class="increase-qty">+</button></div>
+        </div>
       </div>
+      <div class="product-card__total">${formatPrice(product.price)}</div>
       <div class="ProductControl">
         <div class="Change">
           <button style="background-image: url(./Assets/Edit.svg)"></button>
@@ -183,6 +188,21 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
     content.appendChild(card);
+    // Sự kiện tăng/giảm số lượng và cập nhật giá tổng
+    const qtyValue = card.querySelector(".qty-value");
+    const totalPrice = card.querySelector(".product-card__total");
+    card.querySelector(".increase-qty").onclick = () => {
+      quantity++;
+      qtyValue.textContent = quantity;
+      totalPrice.textContent = formatPrice(product.price * quantity);
+    };
+    card.querySelector(".decrease-qty").onclick = () => {
+      if (quantity > 1) {
+        quantity--;
+        qtyValue.textContent = quantity;
+        totalPrice.textContent = formatPrice(product.price * quantity);
+      }
+    };
   }
 
   // Sự kiện chọn sản phẩm
@@ -229,6 +249,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   setupSelectorClose();
 
-  testGetAllProductDataByType(cpuButton, "CPU");
-  testGetAllProductDataByType(mainboardButton, "MainBoard");
+  // Khởi tạo sự kiện cho tất cả các nút add-button
+  function setupAddButtonEvents() {
+    const allTypes = [
+      "CPU",
+      "MainBoard",
+      "VGA",
+      "RAM",
+      "HDD",
+      "SSD",
+      "Case",
+      "PSU",
+      "AirCooler",
+      "LiquidCooler",
+    ];
+    allTypes.forEach((type) => {
+      const btn = document.querySelector(
+        `button.add-button[requestData="${type}"]`
+      );
+      if (btn) testGetAllProductDataByType(btn, type);
+    });
+  }
+  setupAddButtonEvents();
 });
