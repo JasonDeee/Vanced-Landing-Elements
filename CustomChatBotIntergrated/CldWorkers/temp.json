@@ -1,0 +1,83 @@
+{
+    "Answer": "Dưới đây là đề xuất cấu hình PC phù hợp cho streamer chơi LoL (Liên Minh Huyền Thoại) và live-stream, với ngân sách khoảng 40 triệu đồng. Lưu ý, giá chỉ mang tính tham khảo và có thể dao động tùy nơi bán, thời điểm; bạn nên xem xét các cửa hàng tin cậy để có giá tốt nhất nhé!",
+    "Summerize": "Với ngân sách này, bạn hoàn toàn đủ mạnh để vừa chơi vừa stream LMHT mượt mà, ổn định, chất lượng đẹp, và có thể cân thêm các tác vụ khác.",
+    "RecommendationQuestion": "Nếu muốn nâng cấp gì để có thể livestream game nặng hơn như PUBG/GTA V, bạn có thể cân nhắc các lựa chọn sau:",
+    "IsPC_Selected": true,
+    "RequestMultipleProductData": [
+        {
+            "Product": "CPU",
+            "Name": "AMD Ryzen 5 5600X",
+            "Price": "~5.500.000đ",
+            "Detail": "Lựa chọn tối ưu giá thành, lõi 6 nhân 12 luồng, xử lý đa nhiệm tốt"
+        },
+        {
+            "Product": "Mainboard",
+            "Name": "MSI B550M Pro-VDH WIFI (Hoặc Gigabyte B550M DS3H)",
+            "Price": "~2.400.000 - 2.800.000đ",
+            "Detail": "Phù hợp, có khe M.2, chuẩn AM4, hỗ trợ PCIe Gen4, có cả WiFi hoặc không"
+        },
+        {
+            "Product": "RAM",
+            "Name": "Kingston/ Corsair 16GB (2x8GB) DDR4 3200MHz",
+            "Price": "~1.200.000 - 1.400.000đ",
+            "Detail": "Đủ cho stream, chơi game, có thể nâng cấp dễ dàng sau này"
+        },
+        {
+            "Product": "SSD",
+            "Name": "Samsung 980 SSD 500GB NVMe M.2 PCIe Gen3",
+            "Price": "~1.400.000đ",
+            "Detail": "Giúp khởi động nhanh, game tải mượt, ghi hình đệm tốt"
+        },
+        {
+            "Product": "HDD",
+            "Name": "Seagate 1TB 7200rpm",
+            "Price": "~1.100.000đ",
+            "Detail": "Lưu trữ dữ liệu, clip, phim ảnh, backup an toàn"
+        },
+        {
+            "Product": "VGA (Card đồ họa)",
+            "Name": "NVIDIA RTX 3060 (dạng phiên bản 2 fan hoặc đời trẻ tốt, tùy thị trường)",
+            "Price": "~10.000.000 - 12.500.000đ",
+            "Detail": "Hỗ trợ NVENC, stream mượt, chơi game 1440p thoải mái, khởi chạy NVENC giúp giảm tải CPU"
+        },
+        {
+            "Product": "Nguồn",
+            "Name": "Corsair CV650, Cooler Master MWE V2 650W, Gigabyte P650B...",
+            "Price": "~1.700.000đ",
+            "Detail": "Ổn định, đủ công suất cho cấu hình, dư dả nâng cấp sau này"
+        },
+        {
+            "Product": "Case",
+            "Name": "Case tháp mid tower thoáng khí (Corsair 4000D, Tecware Forge S, FSP Windale, Deepcool Matrexx…)",
+            "Price": "~1.000.000 - 1.500.000đ",
+            "Detail": "Thông thoáng, dễ lắp đặt, đẹp mắt, hỗ trợ quạt tản nhiệt"
+        },
+        {
+            "Product": "Tản nhiệt CPU",
+            "Name": "ID-Cooling SE-224-XT hoặc Cooler Master Hyper 212 Black",
+            "Price": "~700.000đ",
+            "Detail": "Giúp CPU mát, tản nhiệt tốt, yên tĩnh"
+        },
+        {
+            "Product": "Fan Case",
+            "Name": "Bộ quạt tản nhiệt 3-4 cái (Noctua / Arctic / ID-Cooling…) hoặc lấy loại bất kỳ có đèn RGB nếu thích",
+            "Price": "~500.000đ",
+            "Detail": "Giúp PC luôn mát, giảm tiếng ồn, tăng tuổi thọ linh kiện"
+        },
+        {
+            "Product": "Màn hình",
+            "Name": "Không tính vào ngân sách này",
+            "Detail": "Bạn cần chuẩn bị riêng nếu chưa có. Nên chọn màn 144Hz cho LMHT, kích cỡ tùy ý 24-27 inch"
+        },
+        {
+            "Product": "Bàn phím/Chuột",
+            "Name": "Không tính vào ngân sách này",
+            "Detail": "Tùy sở thích chọn bàn phím cơ, chuột gaming phù hợp với phong cách stream"
+        },
+        {
+            "Product": "Webcam/Mic",
+            "Name": "Có thể chọn mua sau hoặc dùng webcam điện thoại phụ (nếu thích giao lưu với khán giả)",
+            "Detail": "Tùy vào nhu cầu tương tác với stream"
+        }
+    ]
+}
