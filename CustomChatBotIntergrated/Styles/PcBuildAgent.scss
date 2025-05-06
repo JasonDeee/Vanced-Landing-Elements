@@ -93,6 +93,12 @@ body {
 
     #Vx_chatMessages {
       flex: auto;
+
+      .Vx_message {
+        @media only screen and (max-width: 1440px) {
+          font-size: 0.9rem;
+        }
+      }
     }
 
     #Vx_chatContainer {

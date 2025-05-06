@@ -81,6 +81,11 @@ body {
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatMessages {
   flex: auto;
 }
+@media only screen and (max-width: 1440px) {
+  .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatMessages .Vx_message {
+    font-size: 0.9rem;
+  }
+}
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer {
   width: 100%;
   height: 100%;

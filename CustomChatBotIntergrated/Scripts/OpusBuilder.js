@@ -199,6 +199,25 @@ function opusUpdateChatDisplay(chatHistory) {
     const chatContainer = document.getElementById("Vx_chatMessages");
     if (!chatContainer) return;
     chatContainer.innerHTML = "";
+
+    // Hàm chuyển markdown cơ bản sang HTML an toàn
+    function basicMarkdownToHtml(text) {
+      if (!text) return "";
+      let html = text
+        .replace(/\n/g, "<br>")
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // **bold**
+        .replace(/\*(.*?)\*/g, "<em>$1</em>") // *italic*
+        .replace(/__(.*?)__/g, "<strong>$1</strong>") // __bold__
+        .replace(/_(.*?)_/g, "<em>$1</em>"); // _italic_
+      // Gạch đầu dòng markdown
+      html = html.replace(/^- (.*)$/gm, "<li>$1</li>");
+      // Nếu có <li>, bọc trong <ul>
+      if (/<li>/.test(html)) {
+        html = "<ul>" + html + "</ul>";
+      }
+      return html;
+    }
+
     chatHistory.forEach((message) => {
       let messageText =
         message.parts && message.parts[0] ? message.parts[0].text : "";
@@ -207,7 +226,7 @@ function opusUpdateChatDisplay(chatHistory) {
       messageElement.className = `Vx_message ${
         messageRole === "user" ? "Vx_user-message" : "Vx_bot-message"
       }`;
-      messageElement.textContent = messageText;
+      messageElement.innerHTML = basicMarkdownToHtml(messageText);
       chatContainer.appendChild(messageElement);
     });
     chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -247,7 +266,7 @@ async function opusSendMessageFromBuilder() {
   messageInput.value = "";
 
   try {
-    console.log("Đang gửi request tới CloudFunction");
+    console.log("Đang gửi request tới CloudFunction", combinedChat);
     const response = await fetch(Opus_Endpoint, {
       method: "POST",
       headers: {
@@ -258,14 +277,61 @@ async function opusSendMessageFromBuilder() {
         chatHistory: combinedChat,
       }),
     });
-    const result = await response.json();
-    console.log("[OpusBuilder] Kết quả từ CloudFunction:", result);
-    let botMessage =
-      result?.choices?.[0]?.message?.content ||
-      result?.message?.content ||
-      "[Lỗi] Không nhận được phản hồi từ AI.";
-    Opus_Chat_Log.push({ role: "assistant", parts: [{ text: botMessage }] });
-    opusUpdateChatDisplay(Opus_Chat_Log);
+
+    // Xử lý chunked response
+    console.log("Đang xử lý chunked response", response);
+    const reader = response.body.getReader();
+    let buffer = "";
+    let done = false;
+    while (!done) {
+      console.log("Not done");
+      const { value, done: readerDone } = await reader.read();
+      console.log("reading", value);
+      if (value) {
+        buffer += new TextDecoder().decode(value);
+        let lines = buffer.split("\n");
+        buffer = lines.pop(); // giữ lại đoạn chưa hoàn chỉnh
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const chunk = JSON.parse(line);
+            console.log("chunk", chunk);
+            if (chunk.type === "perplexity") {
+              const result = chunk.data;
+              console.log("result", result);
+              let botMessage =
+                result?.choices?.[0]?.message?.content.Answer ||
+                result?.message?.content.Answer ||
+                result?.Answer ||
+                "[Lỗi] Không nhận được phản hồi từ AI.";
+              Opus_Chat_Log.push({
+                role: "assistant",
+                parts: [{ text: botMessage }],
+              });
+              opusUpdateChatDisplay(Opus_Chat_Log);
+            } else if (chunk.type === "hacom") {
+              // Có thể tuỳ ý hiển thị kết quả hacom ra chat hoặc popup, ví dụ:
+              // Opus_Chat_Log.push({
+              //   role: "assistant",
+              //   parts: [
+              //     { text: "[Gợi ý sản phẩm]: " + JSON.stringify(chunk.data) },
+              //   ],
+              // });
+              // opusUpdateChatDisplay(Opus_Chat_Log);
+            } else if (chunk.type === "error") {
+              Opus_Chat_Log.push({
+                role: "assistant",
+                parts: [{ text: "[Lỗi]: " + chunk.error }],
+              });
+              opusUpdateChatDisplay(Opus_Chat_Log);
+            }
+          } catch (err) {
+            // ignore parse error
+          }
+        }
+      }
+      done = readerDone;
+    }
   } catch (e) {
     Opus_Chat_Log.push({
       role: "assistant",
@@ -290,11 +356,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ====== Khởi động khi load ======
-document.addEventListener("DOMContentLoaded", async () => {
-  await opusInitUserID();
-  const history = await opusGetChatHistory();
-  opusUpdateChatDisplay(history);
-});
+// document.addEventListener("DOMContentLoaded", async () => {
+//   await opusInitUserID();
+//   const history = await opusGetChatHistory();
+//   opusUpdateChatDisplay(history);
+// });
 
 // Dường dẫn API đây nhé https://script.google.com/macros/s/AKfycbxQxWGd5E0LkZ0iR2wpL3FtUgEJ_TdFSpdfdx2AwMPCW2EKasYJOQG-rA7uq_Gjl-hFKQ/exec
 
@@ -641,7 +707,7 @@ function addProductSelectEvents(products, rowSelector, type) {
 
 // Thêm event listener khi DOM đã load
 document.addEventListener("DOMContentLoaded", async () => {
-  const userID = await opusPageLoadRequest();
+  // const userID = await opusPageLoadRequest();
   console.log("[OpusBuilder] UserID nhận từ Worker:", userID);
 
   // Tìm nút chọn CPU và Mainboard
