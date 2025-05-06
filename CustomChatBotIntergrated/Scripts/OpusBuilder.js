@@ -1,15 +1,12 @@
 // Logic chat của Opus Agent hãy để vào đây
 // API tới Proxy Apps Script: https://script.google.com/macros/s/AKfycbwV5I-296NQDsjnh_K_ECZVAi8teIblDDM0P0ApxniFAOVyMO3upDerwom53UU7f8w/exec
-// API KEY cho perplexity tạm thởi: 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
 // ====== Khởi tạo & Quản lý UserID ======
 let Opus_UserID = null;
 let Opus_Chat_Log = [];
-const perplexityApiKey =
-  "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";
+const perplexityApiKey = "";
 // Perplexity sẽ đóng vai trò lên cấu hình PC
 
-const OPENROUTER_API_KEY =
-  "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";
+const OPENROUTER_API_KEY = "";
 // OpenRouter sẽ đóng vai trò tìm thông tin tồn kho (id) của sản phẩm dựa trên cấu hình PC mà Perplexity đã lên
 
 // Import schema từ file responseSchema.json (hardcode cho client-side)

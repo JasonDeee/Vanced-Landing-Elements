@@ -4,6 +4,7 @@
   --AccentColor: var(--accent-color, #e72166);
   --WhiteColor: var(--white-color, #fff);
   --GrayColor: var(--gray-color, #e9e7e7);
+  --DeepGrayColor: var(--deep-gray-color, #c9c7c7);
 
   --SecondAccentColor: var(--second-accent-color, #ffe9f1);
 }
@@ -108,6 +109,171 @@ body {
         p {
           font-size: 0.8rem;
           font-weight: 400;
+        }
+      }
+
+      .OpusPC_Slot_Message {
+        width: 316px;
+        height: auto;
+        min-height: 128px;
+        border: 1px solid var(--AccentColor);
+
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+
+        position: relative;
+        * {
+          transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+        }
+
+        .OpusPC_Slot_Message__Title {
+          h2 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--MainColor);
+            text-transform: none;
+            border-bottom: solid 1px var(--DeepGrayColor);
+            width: 100%;
+            padding-bottom: 0.8rem;
+          }
+          width: 100%;
+          padding: 1rem;
+
+          display: flex;
+          position: relative;
+        }
+        .OpusPC_Slot_Lister {
+          width: 100%;
+          height: auto;
+          padding: 0 1rem;
+
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: flex-start;
+          gap: 8px;
+
+          color: var(--MainColor);
+
+          position: relative;
+
+          .CPU {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/CPU.svg");
+            }
+          }
+          .MainBoard {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/MainBoard.svg");
+            }
+          }
+          .RAM {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/RAM.svg");
+            }
+          }
+          .PSU {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/PSU.svg");
+            }
+          }
+          .Case {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/Case.svg");
+            }
+          }
+          .HDD {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/HDD.svg");
+            }
+          }
+          .VGA {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/VGA.svg");
+            }
+          }
+
+          .LiquidCooler {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/LiquidCooler.svg");
+            }
+          }
+          .AirCooler {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/AirCooler.svg");
+            }
+          }
+
+          .OpusPC_SingleComponent_Slot {
+            background: var(--GrayColor);
+            padding: 12px;
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            gap: 8px;
+
+            .OpusPC_SingleComponent_Slot_Information {
+              max-width: 78%;
+              flex: auto;
+              position: relative;
+            }
+
+            .OpusPC_SingleComponent_Slot_Icon {
+              min-width: 18px;
+              width: 18px;
+              height: 18px;
+
+              background-position: center center;
+              background-repeat: no-repeat;
+              background-size: contain;
+            }
+
+            h3 {
+              font-size: 0.8rem;
+              font-weight: 400;
+              text-transform: none;
+
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+        }
+        .OpusPC_Slot_Footer {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+
+          width: 100%;
+          padding: 1rem;
+
+          .Slot_Price {
+            h3 {
+              font-size: 0.8rem;
+              font-weight: 400;
+              text-transform: none;
+            }
+            p {
+              font-size: 1rem;
+              font-weight: 600;
+            }
+          }
+          button {
+            padding: 1rem 2rem;
+            background-color: var(--AccentColor);
+            color: var(--WhiteColor);
+            border: none;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+          }
         }
       }
     }
