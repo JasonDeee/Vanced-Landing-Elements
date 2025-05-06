@@ -1,6 +1,10 @@
 // Đây là phía google App Scripts hãy xem kỹ file này
 
-const REQUEST_TYPES = ["RequestSingleProductData", "getAllProductDataByType"];
+const REQUEST_TYPES = [
+  "RequestSingleProductData",
+  "getAllProductDataByType",
+  "RequestMultipleProductData",
+];
 
 /**
  * API endpoint xử lý các request POST.
@@ -93,8 +97,8 @@ function getAllProductDataByType(ProductType, PageCount) {
       var rowIdx = 1; // bắt đầu từ hàng 1 (bỏ header là hàng 0)
       while (true) {
         var val = sheet.getRange(rowIdx + 1, colIdx).getValue(); // rowIdx+1 vì Google Sheets bắt đầu từ 1
-        if (val === '' || val === null) break;
-        filterArr.push(val.trim());
+        if (val === "" || val === null) break;
+        filterArr.push(val.toString().trim());
         rowIdx++;
       }
       var filterObj = {};
@@ -150,8 +154,60 @@ function getAllProductDataByType(ProductType, PageCount) {
   return {
     IsFinalPage: isFinalPage,
     products: productList,
-    filters: filters
+    filters: filters,
   };
+}
+
+/**
+ * Lấy nhiều sản phẩm theo mảng [ [loại, id], ... ]
+ * @param {Array} arr - Mảng các cặp [ProductType, ProductID]
+ * @returns {Array} - Mảng các object sản phẩm chi tiết
+ */
+function RequestMultipleProductData(arr) {
+  Logger.log("[RequestMultipleProductData] Input arr:", JSON.stringify(arr));
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var result = [];
+  if (!Array.isArray(arr)) {
+    Logger.log("[RequestMultipleProductData] arr is not array!");
+    return result;
+  }
+  for (var idx = 0; idx < arr.length; idx++) {
+    var pair = arr[idx];
+    Logger.log("[RequestMultipleProductData] pair:", JSON.stringify(pair));
+    if (!Array.isArray(pair) || pair.length !== 2) continue;
+    var type = pair[0];
+    var id = pair[1];
+    Logger.log("[RequestMultipleProductData] type:", type, "id:", id);
+    if (!type || !id) continue;
+    var sheet = spreadsheet.getSheetByName(type);
+    if (!sheet) {
+      Logger.log("[RequestMultipleProductData] Sheet not found for type:", type);
+      continue;
+    }
+    var dataRange = sheet.getDataRange();
+    var values = dataRange.getValues();
+    var headers = values[0];
+    var found = null;
+    for (var i = 1; i < values.length; i++) {
+      var row = values[i];
+      var rowId = row[0];
+      if (rowId == id) {
+        found = {};
+        for (var h = 0; h < headers.length; h++) {
+          found[headers[h]] = row[h];
+        }
+        Logger.log("[RequestMultipleProductData] Found product:", JSON.stringify(found));
+        break;
+      }
+    }
+    if (found) {
+      result.push(found);
+    } else {
+      Logger.log("[RequestMultipleProductData] Product not found for type:", type, "id:", id);
+    }
+  }
+  Logger.log("[RequestMultipleProductData] Final result:", JSON.stringify(result));
+  return result;
 }
 
 function processRequest(requestData) {
@@ -190,6 +246,27 @@ function processRequest(requestData) {
           requestInfo.ProductType,
           requestInfo.PageCount
         );
+        break;
+
+      case "RequestMultipleProductData":
+        Logger.log("[DEBUG] Raw requestInfo: " + JSON.stringify(requestInfo));
+        // Nếu là string (do client gửi JSON.stringify), parse lại
+        if (typeof requestInfo === "string") {
+          try {
+            requestInfo = JSON.parse(requestInfo);
+            Logger.log(
+              "[DEBUG] Parsed requestInfo: " + JSON.stringify(requestInfo)
+            );
+          } catch (e) {
+            throw new Error("RequestInfo parse error: " + e.message);
+          }
+        }
+        if (!requestInfo || !Array.isArray(requestInfo)) {
+          throw new Error(
+            "Missing parameters for RequestMultipleProductData. Must be array of pairs."
+          );
+        }
+        responseData = RequestMultipleProductData(requestInfo);
         break;
 
       default:

@@ -41,59 +41,9 @@ body {
   top: 0;
   height: 100%;
 }
-.OpusAgent_Containter * {
-  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
-}
 .OpusAgent_Containter h2 {
   font-size: 2.4rem;
   text-transform: uppercase;
-}
-.OpusAgent_Containter .CreditInfo {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  padding: 2rem;
-  color: var(--WhiteColor);
-  font-size: 0.8rem;
-  font-weight: 300;
-  opacity: 0.7;
-}
-.OpusAgent_Containter .CreditInfo strong {
-  font-weight: 600;
-}
-.OpusAgent_Containter .OpusAgent_ChatInterface {
-  width: 26vw;
-  height: 72vh;
-  min-height: 512px;
-  min-width: 420px;
-  max-width: 768px;
-  position: absolute;
-  bottom: 2rem;
-  right: 2rem;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  z-index: 1;
-  border: solid 2px var(--MainColor);
-  box-shadow: 8px 8px 0px var(--MainColor);
-}
-.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatMessages {
-  flex: auto;
-}
-.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer {
-  width: 100%;
-  height: 100%;
-}
-.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer #AdditionInfo::before {
-  bottom: 32px;
-  transform: translateX(-100%);
-}
-.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .Vx_Recommendation_Question {
-  color: var(--MainColor);
-}
-.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .Vx_Recommendation_Question p {
-  font-size: 0.8rem;
-  font-weight: 400;
 }
 
 .pc-builder {

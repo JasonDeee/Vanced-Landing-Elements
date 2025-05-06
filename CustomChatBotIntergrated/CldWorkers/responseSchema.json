@@ -18,13 +18,5 @@
   "Topic": {
     "type": "string",
     "description": "Chủ đề của cuộc hội thoại"
-  },
-  "PriceConcern": {
-    "type": "string",
-    "description": "Nếu người dùng trao đổi về giá, hãy trả về dưới dạng tiền tệ, ví dụ: 500.000₫. Nếu người dùng không nói đến giá, hãy trả về null"
-  },
-  "UserRate": {
-    "type": "number",
-    "description": "Đánh giá của người dùng về sản phẩm, từ 1 đến 10. Nếu người dùng không nói đến đánh giá, hãy trả về null"
   }
 }

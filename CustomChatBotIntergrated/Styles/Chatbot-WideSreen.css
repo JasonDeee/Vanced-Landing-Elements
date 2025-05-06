@@ -1,4 +1,21 @@
 @charset "UTF-8";
+html {
+  --global-palette1: #e72166;
+  --global-palette2: #2a38a1;
+  --global-palette3: #0c1136;
+  --global-palette4: #0c1136;
+  --global-palette5: #0c1136;
+  --global-palette6: #7081ff;
+  --global-palette7: #c9c7c7;
+  --global-palette8: #e9e7e7;
+  --global-palette9: #ffffff;
+}
+
+.dark {
+  --global-palette8: #e9e7e7;
+  --global-palette9: #ffffff;
+}
+
 .Vx_chat-container {
   overflow: visible;
   display: flex;
@@ -104,6 +121,13 @@
   overflow-y: auto;
   background-color: var(--global-palette9);
 }
+.Vx_chat-messages::-webkit-scrollbar {
+  width: 4px;
+  background-color: var(--global-palette7);
+}
+.Vx_chat-messages::-webkit-scrollbar-thumb {
+  background-color: var(--global-palette6);
+}
 
 .Vx_chat-input {
   display: flex;
@@ -141,9 +165,22 @@
   box-shadow: 0px 0px 0px var(--global-palette3);
   transition-duration: 0.33s;
 }
+.Vx_chat-input .Vx_Recommendation_Question p::after {
+  content: "";
+  display: inline-block;
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
 .Vx_chat-input .Vx_Recommendation_Question p:hover {
   box-shadow: 4px 4px 0px var(--global-palette3);
   transform: translate(-4px, -4px);
+}
+.Vx_chat-input .Vx_Recommendation_Question p:hover::after {
+  transform: translate(4px, 4px);
 }
 .Vx_chat-input::after {
   content: "";
@@ -165,9 +202,8 @@
 .Vx_chat-input input {
   flex: 1;
   padding: 10px;
-  border: 1px solid var(--global-palette8);
-  border-radius: 4px;
-  margin-right: 10px;
+  border: 1px solid var(--global-palette7);
+  border-right-width: 0;
   font-size: 14px;
 }
 .Vx_chat-input input ::-moz-placeholder {
@@ -183,11 +219,10 @@
   border-color: var(--global-palette1);
 }
 .Vx_chat-input button {
-  padding: 10px 20px;
+  padding: 8px 24px;
   background-color: var(--global-palette1);
   color: var(--global-palette9);
   border: none;
-  border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
   transition: background-color 0.2s;
