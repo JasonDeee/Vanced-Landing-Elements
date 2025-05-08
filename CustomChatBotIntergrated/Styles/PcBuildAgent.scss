@@ -119,7 +119,8 @@ body {
       }
 
       .OpusPC_Slot_Message,
-      .OpusPC_SingleComponent_Message {
+      .OpusPC_SingleComponent_Message,
+      .OpusPC_RequestForRealAssist_Message {
         width: 316px;
         height: auto;
         min-height: 128px;
@@ -129,6 +130,8 @@ body {
         flex-direction: column;
         align-items: flex-start;
         justify-content: flex-start;
+
+        margin-bottom: 8px;
 
         position: relative;
         * {
@@ -155,6 +158,9 @@ body {
           width: 100%;
           height: auto;
           padding: 0 1rem;
+          max-height: 256px;
+          overflow-y: scroll;
+          overflow-x: hidden;
 
           display: flex;
           flex-direction: column;
@@ -165,6 +171,15 @@ body {
           color: var(--MainColor);
 
           position: relative;
+
+          &::-webkit-scrollbar {
+            width: 4px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background-color: var(--GrayColor);
+            border-radius: 2px;
+          }
 
           .CPU {
             .OpusPC_SingleComponent_Slot_Icon {
@@ -223,7 +238,7 @@ body {
             justify-content: flex-start;
             width: 100%;
             position: relative;
-            overflow: hidden;
+            // overflow: hidden;
             gap: 8px;
 
             .OpusPC_SingleComponent_Slot_Information {
@@ -318,6 +333,40 @@ body {
             width: 100%;
             height: auto;
             object-fit: cover;
+          }
+        }
+      }
+
+      .OpusPC_RequestForRealAssist_Message {
+        color: var(--MainColor);
+        padding: 24px;
+        .OpusPC_RequestForRealAssist_Message__Contents {
+          h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-transform: none;
+            margin-bottom: 4px;
+          }
+          p {
+            font-size: 0.8rem;
+            font-weight: 400;
+            text-transform: none;
+          }
+        }
+        .OpusPC_Slot_Footer {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          border: none;
+          padding: 0;
+          button {
+            width: 100%;
+            margin-bottom: 8px;
+          }
+          .Opus_StayWithOpus_Button {
+            border: solid 1px var(--MainColor);
+            background: var(--WhiteColor);
+            color: var(--MainColor);
           }
         }
       }
