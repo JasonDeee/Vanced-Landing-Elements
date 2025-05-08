@@ -142,10 +142,11 @@ html {
 
   &::-webkit-scrollbar {
     width: 4px;
-    background-color: var(--global-palette7);
+    // background-color: var(--global-palette7);
   }
   &::-webkit-scrollbar-thumb {
-    background-color: var(--global-palette6);
+    background-color: var(--global-palette7);
+    border-radius: 2px;
   }
 }
 

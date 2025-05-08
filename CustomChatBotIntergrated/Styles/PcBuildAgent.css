@@ -137,14 +137,14 @@ body {
   text-transform: none;
   border-bottom: solid 1px var(--DeepGrayColor);
   width: 100%;
-  padding-bottom: 0.8rem;
+  padding-bottom: 8px;
 }
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister,
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister,
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister {
   width: 100%;
   height: auto;
-  padding: 0 1rem;
+  padding: 0 calc(1rem - 4px) 1rem 1rem;
   max-height: 256px;
   overflow-y: scroll;
   overflow-x: hidden;
@@ -261,7 +261,6 @@ body {
   justify-content: space-between;
   width: 100%;
   padding: 1rem;
-  margin-top: 16px;
   border-top: solid 1px var(--DeepGrayColor);
 }
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Footer .Slot_Price,
@@ -330,6 +329,9 @@ body {
   color: var(--MainColor);
   padding: 24px;
 }
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_RequestForRealAssist_Message__Contents {
+  margin-bottom: 16px;
+}
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_RequestForRealAssist_Message__Contents h2 {
   font-size: 1.2rem;
   font-weight: 600;
@@ -356,6 +358,7 @@ body {
   border: solid 1px var(--MainColor);
   background: var(--WhiteColor);
   color: var(--MainColor);
+  margin-bottom: unset;
 }
 
 .pc-builder {
