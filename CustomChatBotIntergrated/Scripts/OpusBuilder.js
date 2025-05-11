@@ -300,10 +300,10 @@ async function opusSendMessageFromBuilder() {
               const result = chunk.data;
               console.log("result", result);
               let botMessage =
-                result?.choices?.[0]?.message?.content.Answer ||
-                result?.message?.content.Answer ||
-                result?.Answer ||
-                "[Lỗi] Không nhận được phản hồi từ AI.";
+                typeof result?.Answer === "string"
+                  ? result?.Answer
+                  : JSON.stringify(result?.Answer) ||
+                    "[Lỗi] Không nhận được phản hồi từ AI.";
               Opus_Chat_Log.push({
                 role: "assistant",
                 parts: [{ text: botMessage }],
