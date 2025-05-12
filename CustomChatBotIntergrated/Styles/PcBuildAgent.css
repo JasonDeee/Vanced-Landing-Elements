@@ -315,6 +315,29 @@ body {
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer button:hover ::after {
   transform: translate(4px, 4px);
 }
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .loader_Small,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .loader_Small,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .loader_Small {
+  width: 100%;
+  height: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: var(--WhiteColor);
+  margin: 0 auto;
+  opacity: 0;
+  pointer-events: none;
+}
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message.pending .loader_Small,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message.pending .loader_Small,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message.pending .loader_Small {
+  opacity: 1;
+  height: 100%;
+  pointer-events: all;
+}
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Components_Message_Image {
   width: 100%;
   height: auto;
