@@ -296,7 +296,7 @@ async function opusSendMessageFromBuilder() {
           try {
             const chunk = JSON.parse(line);
             console.log("chunk", chunk);
-            if (chunk.type === "perplexity") {
+            if (chunk.type === "Chunk1Result") {
               const result = chunk.data;
               console.log("result", result);
               let botMessage =
