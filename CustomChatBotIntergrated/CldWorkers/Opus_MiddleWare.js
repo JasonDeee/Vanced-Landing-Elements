@@ -207,8 +207,8 @@ async function handleSendMessageRequest(body, res) {
             Answer: chunk1Content.Answer,
             // rawResult: chunk1Result,
             RecommendationQuestion: chunk1Content.RecommendationQuestion || "",
-            IsRequestingHumanSupport: false,
-            IsPC_Selected: false,
+            // IsRequestingHumanSupport: false,
+            // IsPC_Selected: false,
           },
         }) + "\n"
       );
