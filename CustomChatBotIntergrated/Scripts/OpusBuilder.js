@@ -37,6 +37,10 @@ const OPUS_RESPONSE_SCHEMA = {
 };
 const messageInput = document.getElementById("Vx_messageInput");
 
+// ====== Biến lưu dữ liệu từ các chunk ======
+let chunk2Data = null; // Lưu dữ liệu từ chunk 2
+let pendingPCConfigElement = null; // Lưu element PC Config đang chờ
+
 // OpenRouter Schema Guide
 const OpenRouter_Schema_Guide =
   "Above is the list of products. Please find the IDs of the following products and return the data as an array of 'id's in the exact order requested. If an appropriate ID cannot be found, return null. If a product has multiple identical IDs, return the first ID you find:";
@@ -235,6 +239,113 @@ function opusUpdateChatDisplay(chatHistory) {
   }
 }
 
+// ====== Hàm tạo HTML cho cấu hình PC từ dữ liệu ======
+
+// Đâu vào mẫu:
+// [
+// [{
+//   "productName": "AMD Ryzen 9 5900X",
+//   "productSKU": "PR-100123",
+//   "quantity": 50,
+//   "price": 4999000
+// }],...]
+function renderPCConfigMessage(productsData) {
+  // Kiểm tra dữ liệu đầu vào
+  if (!Array.isArray(productsData) || productsData.length === 0) {
+    console.error("[OpusChat] Không có dữ liệu để hiển thị cấu hình PC");
+    return { mainHTML: "", footerHTML: "" };
+  }
+
+  // Tính tổng tiền từ giá các sản phẩm
+  let totalPrice = 0;
+  productsData.forEach((product) => {
+    if (product && product.price) {
+      const quantity = product.quantity || 1;
+      totalPrice += product.price * quantity;
+    }
+  });
+
+  // Tạo HTML cho phần nội dung của main (danh sách linh kiện)
+  // Không bao gồm thẻ <main> bên ngoài
+  let mainHTML = "";
+
+  // Map các component types
+  const componentTypesMap = {
+    CPU: "CPU",
+    MainBoard: "MainBoard",
+    RAM: "RAM",
+    VGA: "VGA",
+    HDD: "HDD",
+    SSD: "SSD",
+    Case: "Case",
+    PSU: "PSU",
+    AirCooler: "AirCooler",
+    LiquidCooler: "LiquidCooler",
+  };
+
+  // Tạo các linh kiện từ dữ liệu
+  productsData.forEach((product) => {
+    if (!product || !product.productName) return;
+
+    // Xác định loại linh kiện
+    let componentType = product.type || "";
+    // Đảm bảo có một loại mặc định nếu không xác định được
+    if (!componentTypesMap[componentType]) {
+      // Thử xác định từ tên sản phẩm
+      if (product.productName.includes("CPU")) componentType = "CPU";
+      else if (product.productName.includes("Main"))
+        componentType = "MainBoard";
+      else if (product.productName.includes("RAM")) componentType = "RAM";
+      else if (
+        product.productName.includes("VGA") ||
+        product.productName.includes("Card")
+      )
+        componentType = "VGA";
+      else if (product.productName.includes("HDD")) componentType = "HDD";
+      else if (product.productName.includes("SSD")) componentType = "SSD";
+      else if (product.productName.includes("Case")) componentType = "Case";
+      else if (
+        product.productName.includes("PSU") ||
+        product.productName.includes("Nguồn")
+      )
+        componentType = "PSU";
+      else if (product.productName.includes("Tản khí"))
+        componentType = "AirCooler";
+      else if (product.productName.includes("Tản nước"))
+        componentType = "LiquidCooler";
+      else componentType = "CPU"; // Mặc định nếu không xác định được
+    }
+
+    mainHTML += `
+      <div class="OpusPC_SingleComponent_Slot ${componentType}">
+        <div class="OpusPC_SingleComponent_Slot_Icon"></div>
+        <div class="OpusPC_SingleComponent_Slot_Information">
+          <h3>${product.productName}</h3>
+        </div>
+      </div>
+    `;
+  });
+
+  // Tạo HTML cho phần footer (giá tiền)
+  const formattedPrice = new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(totalPrice);
+
+  const footerHTML = `
+    <footer class="OpusPC_Slot_Footer">
+      <div class="Slot_Price">
+        <h3>Chi phí dự tính</h3>
+        <p>${formattedPrice}</p>
+      </div>
+      <button>Nhập</button>
+    </footer>
+  `;
+
+  return { mainHTML, footerHTML };
+}
+
 // ====== Hàm gửi và xử lý tin nhắn từ input chat PC Builder ======
 async function opusSendMessageFromBuilder() {
   if (!messageInput) return;
@@ -259,8 +370,7 @@ async function opusSendMessageFromBuilder() {
 
   console.log("[OpusBuilder] Mảng chat mới:", combinedChat);
 
-  // Gửi request tới CloudFunction với requestType: 'SendMessage'
-
+  // Thêm tin nhắn người dùng vào chat log và hiển thị
   Opus_Chat_Log.push({ role: "user", parts: [{ text: message }] });
   opusUpdateChatDisplay(Opus_Chat_Log);
   messageInput.value = "";
@@ -283,61 +393,209 @@ async function opusSendMessageFromBuilder() {
     const reader = response.body.getReader();
     let buffer = "";
     let done = false;
+
     while (!done) {
-      console.log("Not done");
       const { value, done: readerDone } = await reader.read();
-      console.log("reading", value);
       if (value) {
         buffer += new TextDecoder().decode(value);
         let lines = buffer.split("\n");
         buffer = lines.pop(); // giữ lại đoạn chưa hoàn chỉnh
+
         for (const line of lines) {
           if (!line.trim()) continue;
+
           try {
             const chunk = JSON.parse(line);
             console.log("chunk", chunk);
+
             if (chunk.type === "Chunk1Result") {
               const result = chunk.data;
-              console.log("result", result);
+              console.log("Chunk1Result:", result);
+
+              // Hiển thị tin nhắn từ bot
               let botMessage =
                 typeof result?.Answer === "string"
                   ? result?.Answer
                   : JSON.stringify(result?.Answer) ||
                     "[Lỗi] Không nhận được phản hồi từ AI.";
+
               Opus_Chat_Log.push({
                 role: "assistant",
                 parts: [{ text: botMessage }],
               });
               opusUpdateChatDisplay(Opus_Chat_Log);
-            } else if (chunk.type === "hacom") {
-              // Có thể tuỳ ý hiển thị kết quả hacom ra chat hoặc popup, ví dụ:
-              // Opus_Chat_Log.push({
-              //   role: "assistant",
-              //   parts: [
-              //     { text: "[Gợi ý sản phẩm]: " + JSON.stringify(chunk.data) },
-              //   ],
-              // });
-              // opusUpdateChatDisplay(Opus_Chat_Log);
+
+              // Nếu yêu cầu cấu hình PC, tạo placeholder cho cấu hình
+              if (result.IsPC_Selected) {
+                // Tạo element PC Config đang chờ
+                const chatContainer =
+                  document.getElementById("Vx_chatMessages");
+                if (chatContainer) {
+                  pendingPCConfigElement = document.createElement("div");
+                  pendingPCConfigElement.className =
+                    "OpusPC_Slot_Message pending";
+                  pendingPCConfigElement.innerHTML = `
+                    <header class="OpusPC_Slot_Message__Title">
+                      <h2>Yêu cầu đã được triển khai</h2>
+                    </header>
+                    <main class="OpusPC_Slot_Lister">
+                      <!-- Sẽ được cập nhật sau -->
+                    </main>
+                    <footer class="OpusPC_Slot_Footer">
+                      <!-- Sẽ được cập nhật sau -->
+                    </footer>
+                    <div class="loader_Small">
+                      <lord-icon
+                        src="https://cdn.lordicon.com/gkryirhd.json"
+                        trigger="loop"
+                        state="loop-snake-alt"
+                        colors="primary:#0c1136"
+                        style="width: 32px; height: 32px"
+                      >
+                      </lord-icon>
+                    </div>
+                  `;
+                  chatContainer.appendChild(pendingPCConfigElement);
+                  chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+              }
+            } else if (chunk.type === "Chunk2Result") {
+              // Lưu dữ liệu từ Chunk 2 để kết hợp với Chunk 3 sau này
+              chunk2Data = chunk.data.RequestMultipleProductData;
+              console.log("Chunk2Data:", chunk2Data);
+            } else if (chunk.type === "Chunk3Result") {
+              // Kết hợp dữ liệu từ Chunk 2 và Chunk 3
+              if (
+                chunk2Data &&
+                Array.isArray(chunk2Data) &&
+                chunk.data &&
+                Array.isArray(chunk.data)
+              ) {
+                console.log("Chunk3Result:", chunk.data);
+
+                // Chuẩn bị dữ liệu cho renderPCConfigMessage
+                const combinedData = [];
+
+                // Xác định nếu chunk2Data là mảng các object hoặc mảng lồng mảng
+                const isObjectArray =
+                  chunk2Data.length > 0 &&
+                  typeof chunk2Data[0] === "object" &&
+                  !Array.isArray(chunk2Data[0]);
+
+                // Duyệt qua mỗi sản phẩm trong chunk3
+                chunk.data.forEach((product, index) => {
+                  if (
+                    product &&
+                    Array.isArray(product) &&
+                    product.length > 0 &&
+                    chunk2Data[index]
+                  ) {
+                    // Lấy sản phẩm đầu tiên từ mảng kết quả tìm kiếm
+                    const productData = product[0];
+
+                    // Kết hợp thông tin từ chunk2 và chunk3
+                    if (productData) {
+                      if (isObjectArray) {
+                        // Sử dụng định dạng mới (mảng các object)
+                        const item = chunk2Data[index];
+                        combinedData.push({
+                          productName: productData.productName || item.name,
+                          productSKU: productData.productSKU,
+                          price: parseFloat(productData.price) || 0,
+                          quantity: parseInt(item.quantity) || 1,
+                          type: item.type,
+                          productImage:
+                            productData.productImage?.original || "",
+                        });
+                      } else {
+                        // Hỗ trợ định dạng cũ (mảng lồng mảng)
+                        if (Array.isArray(chunk2Data[index])) {
+                          const [type, name, quantity, slot, keyword] =
+                            chunk2Data[index];
+                          combinedData.push({
+                            productName: productData.productName || name,
+                            productSKU: productData.productSKU,
+                            price: parseFloat(productData.price) || 0,
+                            quantity: parseInt(quantity) || 1,
+                            type: type,
+                            productImage:
+                              productData.productImage?.original || "",
+                          });
+                        }
+                      }
+                    }
+                  }
+                });
+
+                console.log("CombinedData:", combinedData);
+
+                // Render cấu hình PC nếu có dữ liệu và element placeholder
+                if (combinedData.length > 0 && pendingPCConfigElement) {
+                  const { mainHTML, footerHTML } =
+                    renderPCConfigMessage(combinedData);
+
+                  // Cập nhật nội dung element
+                  const mainElement =
+                    pendingPCConfigElement.querySelector("main");
+                  const footerElement =
+                    pendingPCConfigElement.querySelector("footer");
+
+                  if (mainElement) mainElement.innerHTML = mainHTML;
+                  if (footerElement) footerElement.outerHTML = footerHTML;
+
+                  // Xóa trạng thái pending
+                  pendingPCConfigElement.classList.remove("pending");
+
+                  // Xóa icon loading
+                  const loader =
+                    pendingPCConfigElement.querySelector(".loader_Small");
+                  if (loader) loader.remove();
+
+                  // Scroll xuống để hiển thị kết quả
+                  const chatContainer =
+                    document.getElementById("Vx_chatMessages");
+                  if (chatContainer)
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+
+                // Reset dữ liệu
+                chunk2Data = null;
+                pendingPCConfigElement = null;
+              }
             } else if (chunk.type === "error") {
+              // Hiển thị lỗi
               Opus_Chat_Log.push({
                 role: "assistant",
                 parts: [{ text: "[Lỗi]: " + chunk.error }],
               });
               opusUpdateChatDisplay(Opus_Chat_Log);
+
+              // Xóa element pending nếu có
+              if (pendingPCConfigElement) {
+                pendingPCConfigElement.remove();
+                pendingPCConfigElement = null;
+              }
             }
           } catch (err) {
-            // ignore parse error
+            console.error("Lỗi khi xử lý chunk:", err);
           }
         }
       }
       done = readerDone;
     }
   } catch (e) {
+    console.error("Lỗi khi xử lý tin nhắn:", e);
     Opus_Chat_Log.push({
       role: "assistant",
       parts: [{ text: "[Lỗi] Không nhận được phản hồi từ AI." }],
     });
     opusUpdateChatDisplay(Opus_Chat_Log);
+
+    // Xóa element pending nếu có
+    if (pendingPCConfigElement) {
+      pendingPCConfigElement.remove();
+      pendingPCConfigElement = null;
+    }
   }
 }
 
