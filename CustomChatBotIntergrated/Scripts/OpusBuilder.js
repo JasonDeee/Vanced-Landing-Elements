@@ -408,7 +408,23 @@ async function opusSendMessageFromBuilder() {
             const chunk = JSON.parse(line);
             console.log("chunk", chunk);
 
-            if (chunk.type === "Chunk1Result") {
+            if (chunk.type === "humanSupport") {
+              // Xử lý yêu cầu hỗ trợ từ tư vấn viên
+              console.log("Human Support Request:", chunk.data);
+
+              const chatContainer = document.getElementById("Vx_chatMessages");
+              if (chatContainer) {
+                const humanSupportElement = renderHumanSupportUI(chunk.data);
+                if (humanSupportElement) {
+                  chatContainer.appendChild(humanSupportElement);
+                  chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+              }
+
+              // Không cần xử lý các chunk khác nữa
+              done = true;
+              break;
+            } else if (chunk.type === "Chunk1Result") {
               const result = chunk.data;
               console.log("Chunk1Result:", result);
 
@@ -1389,3 +1405,101 @@ const ALL_COMPONENT_TYPES = [
   "AirCooler",
   "LiquidCooler",
 ];
+
+// ====== Hàm tạo UI hỗ trợ từ tư vấn viên ======
+function renderHumanSupportUI(data) {
+  // Kiểm tra dữ liệu đầu vào
+  if (!data || !data.Answer) {
+    console.error("[OpusChat] Không đủ dữ liệu để hiển thị UI tư vấn viên");
+    return null;
+  }
+
+  // Lấy dữ liệu UI từ response hoặc sử dụng mặc định
+  const uiData = data.HumanSupportUI || {
+    title: "Chuyển hướng gặp tư vấn viên.",
+    message:
+      "Không phải mô hình nào cũng hoàn hảo, đôi khi Opus sẽ mắc lỗi. Bạn có thể yêu cầu chat với CSKH hoặc tiếp tục trò chuyện với Opus về lỗi bạn đang gặp phải.",
+    primaryButtonText: "Gặp tư vấn viên",
+    secondaryButtonText: "Tiếp tục với Opus",
+  };
+
+  // Tạo element cho UI tư vấn viên
+  const element = document.createElement("div");
+  element.className = "OpusPC_RequestForRealAssist_Message";
+  element.style.animation = "opus-highlight-pulse 2s ease-in-out";
+
+  // Thêm style animation nếu chưa có
+  if (!document.getElementById("opus-support-animations")) {
+    const styleEl = document.createElement("style");
+    styleEl.id = "opus-support-animations";
+    styleEl.textContent = `
+      @keyframes opus-highlight-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(var(--AccentColor-rgb), 0.7); transform: scale(0.98); }
+        50% { box-shadow: 0 0 0 10px rgba(var(--AccentColor-rgb), 0); transform: scale(1.02); }
+        100% { box-shadow: 0 0 0 0 rgba(var(--AccentColor-rgb), 0); transform: scale(1); }
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
+  element.innerHTML = `
+    <main class="OpusPC_RequestForRealAssist_Message__Contents">
+      <h2>${uiData.title}</h2>
+      <p>${uiData.message}</p>
+    </main>
+    <footer class="OpusPC_Slot_Footer">
+      <button class="Opus_RequestForRealAssist_Button">${uiData.primaryButtonText}</button>
+      <button class="Opus_StayWithOpus_Button">${uiData.secondaryButtonText}</button>
+    </footer>
+  `;
+
+  // Thêm tin nhắn từ AI vào chat log
+  Opus_Chat_Log.push({
+    role: "assistant",
+    parts: [{ text: data.Answer }],
+  });
+  opusUpdateChatDisplay(Opus_Chat_Log);
+
+  // Thêm sự kiện cho các nút
+  setTimeout(() => {
+    const requestSupportBtn = element.querySelector(
+      ".Opus_RequestForRealAssist_Button"
+    );
+    const stayWithOpusBtn = element.querySelector(".Opus_StayWithOpus_Button");
+
+    if (requestSupportBtn) {
+      requestSupportBtn.addEventListener("click", () => {
+        // TODO: Chuyển tiếp tới hệ thống chat CSKH thật
+        alert(
+          "Tính năng đang được phát triển. Sẽ chuyển bạn tới hệ thống chat CSKH."
+        );
+      });
+    }
+
+    if (stayWithOpusBtn) {
+      stayWithOpusBtn.addEventListener("click", () => {
+        // Xóa UI hỗ trợ
+        element.remove();
+
+        // Thêm tin nhắn thông báo rằng người dùng đã chọn tiếp tục với Opus
+        const continueMessage =
+          "Cảm ơn bạn đã chọn tiếp tục với Opus. Tôi sẽ cố gắng hỗ trợ bạn tốt nhất có thể. Bạn có thể đặt câu hỏi hoặc yêu cầu khác không?";
+
+        Opus_Chat_Log.push({
+          role: "assistant",
+          parts: [{ text: continueMessage }],
+        });
+
+        opusUpdateChatDisplay(Opus_Chat_Log);
+
+        // Scroll xuống để hiển thị tin nhắn mới
+        const chatContainer = document.getElementById("Vx_chatMessages");
+        if (chatContainer) {
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+      });
+    }
+  }, 100);
+
+  return element;
+}

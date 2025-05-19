@@ -193,6 +193,24 @@ body {
   padding-bottom: 8px;
 }
 
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Message__Title h2 a,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Message__Title h2 a,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Message__Title h2 a {
+  all: unset;
+  -webkit-transition: inherit;
+  transition: inherit;
+  cursor: pointer;
+  border-bottom: solid 1px transparent;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Message__Title h2 a:hover,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Message__Title h2 a:hover,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Message__Title h2 a:hover {
+  color: var(--AccentColor);
+  border-bottom: solid 1px var(--AccentColor);
+  text-decoration: none;
+}
+
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister,
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister,
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister {

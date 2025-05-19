@@ -72,44 +72,26 @@ let Opus_Tunned_Data = "";
 
 // Chunk 2: Nếu người dùng yêu cầu cấu hình PC, sử dụng perplexity để tìm kiếm cấu hình phù hợp
 // Chunk 2 sẽ nhận thông tin từ chunk 1 và sử dụng Perplexity để tìm kiếm cấu hình phù hợp
-// Chunk 2 sẽ hoạt động dưới phương thức Prompt Chaining để tăng cường độ chính xác và tính tương tác. Chain 1 sẽ có chức năng dựng cấu hình cơ bản nhưng không cần trả về theo schema. Chain 2 sẽ đánh giá lại cấu hình kết quả của chain 1, chỉnh sửa nếu cần và tổng hợp trả về theo schema.
-
-// Chain 1 prefix
-const Opus_Chunk2_Chain1_Prefix =
-  "Bạn là một chuyên gia xây dựng bộ cấu hình máy tính theo yêu cầu của người dùng. Mỗi bộ có tối đa 10 loại linh kiện là CPU, MainBoard, RAM, VGA, HDD, SSD, Case, PSU, Tản nhiệt khí, tản nhiệt nước. Bạn sẽ nhận được yêu cầu từ người dùng cùng với mong muốn của họ. Hãy tìm kiếm thông tin thật chính xác và trả về các linh kiện mà bạn cho là phù hợp với mong muốn của người dùng.";
-const Opus_Chunk2_Chain1_Guide =
-  "Hãy trả về kết quả thật ngắn gọn và tuân thủ các bước sau khi lên cấu hình";
-
-const Opus_Chunk2_Chain1_GuideStep = [
-  "Hãy chú ý vào mức giá của bộ máy đầu tiên. Nếu người dùng không cung cấp ngân sách, hãy tự đặt ra mức giá dựa trên thông tin khác",
-  "\n",
-  "Hãy xem xét nhu cầu của người dùng để lựa chọn CPU và VGA phù hợp. Nếu người dùng không yêu cầu đặc biệt về CPU và VGA, hãy đảm bảo giá của CPU cộng VGA trong khoảng 45%-60% giá trị của bộ máy",
-  "\n",
-  "Tiếp theo, hãy đảm bảo mức giá của MainBoard phù hợp với thế hệ CPU hiện tại. Đảm bảo PSU có công suất phù hợp với VGA và có mức giá trong khoảng 10-20% giá trị của bộ máy",
-  "\n",
-  "Các linh kiện còn lại bạn hoàn toàn có thể tự tối ưu và sáng tạo.",
-];
-
-const Opus_Chunk2_Chain1_Guide_After =
-  "Chỉ cần trả về danh sách cấu hình, không cần trả về bất kỳ thông tin nào khác. Ví dụ: CPU Intel Core i7-14700K, MainBoard ASRock Z790 Taichi, RAM 16GB, VGA 5060, PSU A650BN, HDD 1TB, SSD 1TB, Case XXX, AirCooler XXX, LiquidCooler XXX";
 
 const Opus_Chunk2_Prefix =
-  "Bạn là một bot trong một Promt Chain. Bạn sẽ đóng vai chuyên gia lxây dựng bộ cấu hình máy tính theo yêu cầu của người dùng và bạn có thể hiển thị cáu hình đó tới người xem. Bạn sẽ nhận được yêu cầu của người dùng và một bộ cấu hình máy tính mẫu của Promt trước đang xây dựng dựa trên nhu cầu đó. Mỗi bộ có tối đa 10 loại (type) linh kiện là 'CPU', 'MainBoard', 'RAM', 'VGA', 'HDD', 'SSD', 'Case', 'PSU', 'AirCooler', 'LiquidCooler'. Bạn hãy xem lại cấu hình mẫu sau đó đánh giá lại mức độ phù hợp với nhu cầu của người dùng. Nếu bạn thấy có vấn đề với cấu hình đó, hãy chỉnh sửa lại sao cho phù hợp với nhu cầu của người dùng";
+  "Bạn là một bot với vai trò là một chuyên gia xây dựng bộ cấu hình máy tính theo yêu cầu của người dùng sau đó hiển thị tới người xem. Mỗi bộ có tối đa 10 loại (type) linh kiện là 'CPU', 'MainBoard', 'RAM', 'VGA', 'HDD', 'SSD', 'Case', 'PSU', 'AirCooler', 'LiquidCooler'. Bạn sẽ nhận được yêu cầu từ người dùng cùng với mong muốn của họ. Hãy tìm kiếm thông tin thật chính xác và trả về các linh kiện mà bạn cho là phù hợp với mong muốn của người dùng.";
 
-const Opus_UpSale_Products_Prefix =
-  "Bạn sẽ nhận được một danh sách sản phẩm đang cần đẩy mạnh bán hàng. Hãy sử dụng chúng nếu có thể. Nhưng ưu tiên hàng đầu là đáp ứng đúng yêu cầu và ngân sách của người dùng và bạn hoàn toàn có thể sử dụng các sản phẩm khác ngoài danh sách này để đảm bảo.";
-let Opus_UpSale_Products = null;
-const Opus_Chunk2_After_Rule = "Lưu ý: Bắt buộc về kết quả theo schema sau:";
 const Opus_Response_Schema_Shorten = {
   type: "object",
   properties: {
     RequestMultipleProductData: { type: "array" },
   },
   required: ["RequestMultipleProductData"],
-}; // Schema cho chunk 2
+};
 
 const Opus_Perplexity_Chunk2_Schema_Explain =
-  "RequestMultipleProductData là trường để bạn trả về cấu hình mà bạn đang muốn hiện thị. Hãy trả về dạng mảng các object [{type, name, quantity, keyword}, ...], trong đó mỗi object đại diện cho một linh kiện. Type gồm 1 trong 10 loại linh kiện. Name là tên sản phẩm, ví dụ `CPU Intel Core i7-14700K`, `MainBoard ASRock Z790 Taichi`. Quantity là số lượng sản phẩm bạn muốn đưa vào cấu hình. Keyword để tìm kiếm sản phẩm trong kho là một cụm từ khóa thật ngắn gọn - kết hợp giữa type và thông số nổi bật hoặc tên mã sản phẩm, ví dụ 'CPU 14700K', 'MainBoard Z790', 'RAM 16GB', 'VGA 5060', 'PSU A650BN'.";
+  "RequestMultipleProductData là một trường để bạn trả về cấu hình mà bạn đang muốn hiện thị. Hãy trả về dạng mảng các object [{type, name, quantity, keyword}, ...], trong đó mỗi object đại diện cho một linh kiện. Type gồm 1 trong 10 loại linh kiện. Name là tên sản phẩm, ví dụ `CPU Intel Core i7-14700K`, `MainBoard ASRock Z790 Taichi`. Quantity là số lượng sản phẩm bạn muốn đưa vào cấu hình. Keyword để tìm kiếm sản phẩm trong kho là một cụm từ khóa thật ngắn gọn - kết hợp giữa type và thông số nổi bật hoặc tên mã sản phẩm, ví dụ 'CPU 14700K', 'MainBoard Z790', 'RAM 16GB', 'VGA 5060', 'PSU A650BN'.";
+
+const Opus_UpSale_Products_Prefix =
+  "Sau đây là một số sản phẩm đang cần đẩy mạnh bán hàng. Hãy sử dụng chúng nếu có thể. Tuy nhiên bạn hoàn toàn có thể sử dụng các sản phẩm khác ngoài danh sách này để đảm bảo cấu hình phù hợp với yêu cầu của người dùng";
+let Opus_UpSale_Products = null;
+const Opus_Chunk2_After_Rule =
+  "Danh sách sản phẩm đẩy mạnh chứa các sản phẩm được khuyến nghị, nhưng ưu tiên hàng đầu là đáp ứng ngân sách của người dùng. Nếu ngân sách là X triệu, tổng giá trị cấu hình phải xấp xỉ X triệu (chênh lệch không quá 10%). Chỉ sử dụng sản phẩm từ danh sách UpSale khi chúng phù hợp với ngân sách và nhu cầu.";
 
 //  Chunk 3: Với kết quả tìm kiếm của chunk 2, Sử dụng hàm OpenRouter thứ 2 và searchHacom để tìm kiếm thông tin sản phẩm
 
@@ -242,10 +224,10 @@ async function handleSendMessageRequest(body, res) {
       return;
     }
 
-    // CHUNK 2: Nếu là yêu cầu cấu hình PC, gọi OpenRouterChunk2Builder để lấy thông tin cấu hình
+    // CHUNK 2: Nếu là yêu cầu cấu hình PC, gọi Perplexity để lấy thông tin cấu hình
     if (ENABLE_LATENCY_TRACKING) {
       startTime = Date.now();
-      console.log("[Opus_MW] Bắt đầu gọi OpenRouterChunk2Builder Chunk 2...");
+      console.log("[Opus_MW] Bắt đầu gọi Perplexity Chunk 2...");
     }
 
     // Lấy thông tin từ PassToPerplexity từ Chunk 1
@@ -254,37 +236,18 @@ async function handleSendMessageRequest(body, res) {
       chatHistory ||
       "Hãy gợi ý một cấu hình PC phù hợp.";
 
-    // Chuẩn bị nội dung system prompt cho Chunk 2
-    const chunk2SystemContent =
-      Opus_Chunk2_Prefix +
-      "\n---\n" +
-      Opus_Perplexity_Chunk2_Schema_Explain +
-      "\n---\n" +
-      Opus_UpSale_Products_Prefix +
-      "\n" +
-      (typeof Opus_UpSale_Products === "string"
-        ? Opus_UpSale_Products
-        : JSON.stringify(Opus_UpSale_Products)) +
-      "\n---\n";
-
-    // Gọi OpenRouterChunk2Builder với message và system content
-    const result = await OpenRouterChunk2Builder(
-      chunk2Message,
-      chunk2SystemContent
-    );
+    // Gọi Perplexity với message đơn giản
+    const result = await opusRequestPerplexity(chunk2Message);
 
     if (ENABLE_LATENCY_TRACKING) {
       const latency = Date.now() - startTime;
       console.log(
-        `[Opus_MW] Độ trễ của OpenRouterChunk2Builder Chunk 2: ${latency}ms`
+        `[Opus_MW] Độ trễ của opusRequestPerplexity Chunk 2: ${latency}ms`
       );
     }
 
     if (result.error) {
-      console.error(
-        "[Opus_MW] Lỗi từ OpenRouterChunk2Builder Chunk 2:",
-        result.error
-      );
+      console.error("[Opus_MW] Lỗi từ Perplexity Chunk 2:", result.error);
       res.write(
         JSON.stringify({
           type: "error",
@@ -306,10 +269,7 @@ async function handleSendMessageRequest(body, res) {
       }
     }
 
-    console.log(
-      "[Opus_MW] Kết quả từ OpenRouterChunk2Builder Chunk 2:",
-      content
-    );
+    console.log("[Opus_MW] Kết quả từ Perplexity Chunk 2:", content);
 
     // Nếu không có RequestMultipleProductData hoặc mảng rỗng
     if (
@@ -605,6 +565,7 @@ async function opusRequestPerplexity(passToPerplexityMessage) {
     "string"
       ? Opus_UpSale_Products
       : JSON.stringify(Opus_UpSale_Products),
+    Opus_Chunk2_After_Rule,
   ];
   const systemPrompt = systemPromptParts.join("\n---\n");
 
@@ -772,83 +733,6 @@ async function opusRequestOpenRouter(inventoryList, userRequestlist) {
     return data;
   } catch (err) {
     return { error: "Lỗi request OpenRouter: " + err };
-  }
-}
-
-// Hàm request OpenRouter với model deepseek cho Chunk 2
-async function OpenRouterChunk2Builder(inputData) {
-  console.log("[Opus_MW] Bắt đầu gọi OpenRouterChunk2Builder...");
-  const url = "https://openrouter.ai/api/v1/chat/completions";
-
-  let systemContent;
-
-  const payload = {
-    model: "deepseek/deepseek-r1-distill-llama-70b:free",
-    messages: [
-      {
-        role: "system",
-        content: systemContent,
-      },
-      {
-        role: "user",
-        content:
-          typeof inputData === "string" ? inputData : JSON.stringify(inputData),
-      },
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "Chunk2Result",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            RequestMultipleProductData: { type: "array" },
-          },
-          required: ["RequestMultipleProductData"],
-        },
-      },
-    },
-  };
-
-  try {
-    const startTime = Date.now(); // Đo thời gian xử lý
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + OPENROUTER_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const latency = Date.now() - startTime;
-    console.log(`[Opus_MW] Độ trễ của OpenRouterChunk2Builder: ${latency}ms`);
-
-    const data = await res.json();
-
-    // Parse kết quả nếu cần
-    if (
-      data.choices &&
-      data.choices[0] &&
-      data.choices[0].message &&
-      data.choices[0].message.content
-    ) {
-      try {
-        let content = JSON.parse(data.choices[0].message.content);
-        data.choices[0].message.content = content;
-      } catch (e) {
-        console.warn(
-          "[Opus_MW] Không thể parse JSON từ OpenRouterChunk2Builder:",
-          e
-        );
-      }
-    }
-
-    return data;
-  } catch (err) {
-    console.error("[Opus_MW] Lỗi khi gọi OpenRouterChunk2Builder:", err);
-    return { error: "Lỗi request OpenRouterChunk2Builder: " + err };
   }
 }
 
