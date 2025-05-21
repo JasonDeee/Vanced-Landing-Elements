@@ -72,7 +72,7 @@ let Opus_Tunned_Data = "";
 
 // Chunk 2: Nếu người dùng yêu cầu cấu hình PC, sử dụng perplexity để tìm kiếm cấu hình phù hợp
 // Chunk 2 sẽ nhận thông tin từ chunk 1 và sử dụng Perplexity để tìm kiếm cấu hình phù hợp
-// Chunk 2 sẽ hoạt động dưới phương thức Prompt Chaining để tăng cường độ chính xác và tính tương tác. Chain 1 sẽ có chức năng dựng cấu hình cơ bản nhưng không cần trả về theo schema. Chain 2 sẽ đánh giá lại cấu hình kết quả của chain 1, chỉnh sửa nếu cần và tổng hợp trả về theo schema.
+// Chunk 2 sẽ hoạt động dưới phương thức Prompt Chaining để tăng cường độ chính xác và tính tương tác. Chain 1 sẽ có chức năng dựng cấu hình cơ bản nhưng không cần trả về theo schema. Chain 2 sẽ đánh giá lại cấu hình kết quả của chain 1, chỉnh sửa nếu cần và tổng hợp trả về theo schema. Cả 2 chain đều sử dụng chung một mô hình thông qua OpenRouterChunk2Builder nhưng sẽ có phần system content khác nhau.
 
 // Chain 1 prefix
 const Opus_Chunk2_Chain1_Prefix =
@@ -87,19 +87,20 @@ const Opus_Chunk2_Chain1_GuideStep = [
   "\n",
   "Tiếp theo, hãy đảm bảo mức giá của MainBoard phù hợp với thế hệ CPU hiện tại. Đảm bảo PSU có công suất phù hợp với VGA và có mức giá trong khoảng 10-20% giá trị của bộ máy",
   "\n",
-  "Các linh kiện còn lại bạn hoàn toàn có thể tự tối ưu và sáng tạo.",
+  "Các linh kiện còn lại bạn hoàn toàn có thể tự tối ưu mức giá và số lượng dựa trên sáng tạo của bạn.",
 ];
 
 const Opus_Chunk2_Chain1_Guide_After =
   "Chỉ cần trả về danh sách cấu hình, không cần trả về bất kỳ thông tin nào khác. Ví dụ: CPU Intel Core i7-14700K, MainBoard ASRock Z790 Taichi, RAM 16GB, VGA 5060, PSU A650BN, HDD 1TB, SSD 1TB, Case XXX, AirCooler XXX, LiquidCooler XXX";
 
 const Opus_Chunk2_Prefix =
-  "Bạn là một bot trong một Promt Chain. Bạn sẽ đóng vai chuyên gia lxây dựng bộ cấu hình máy tính theo yêu cầu của người dùng và bạn có thể hiển thị cáu hình đó tới người xem. Bạn sẽ nhận được yêu cầu của người dùng và một bộ cấu hình máy tính mẫu của Promt trước đang xây dựng dựa trên nhu cầu đó. Mỗi bộ có tối đa 10 loại (type) linh kiện là 'CPU', 'MainBoard', 'RAM', 'VGA', 'HDD', 'SSD', 'Case', 'PSU', 'AirCooler', 'LiquidCooler'. Bạn hãy xem lại cấu hình mẫu sau đó đánh giá lại mức độ phù hợp với nhu cầu của người dùng. Nếu bạn thấy có vấn đề với cấu hình đó, hãy chỉnh sửa lại sao cho phù hợp với nhu cầu của người dùng";
+  "Bạn là một bot trong một Promt Chain. Bạn sẽ đóng vai chuyên gia xây dựng bộ cấu hình máy tính theo yêu cầu của người dùng và bạn có thể hiển thị cáu hình đó tới người xem. Bạn sẽ nhận được yêu cầu của người dùng và một bộ cấu hình máy tính mẫu của Promt trước đang xây dựng dựa trên nhu cầu đó. Mỗi bộ có tối đa 10 loại (type) linh kiện là 'CPU', 'MainBoard', 'RAM', 'VGA', 'HDD', 'SSD', 'Case', 'PSU', 'AirCooler', 'LiquidCooler'. Bạn hãy xem lại cấu hình mẫu sau đó đánh giá lại mức độ phù hợp với nhu cầu của người dùng. Nếu bạn thấy có vấn đề với cấu hình đó, hãy chỉnh sửa lại sao cho phù hợp với nhu cầu của người dùng";
 
 const Opus_UpSale_Products_Prefix =
-  "Bạn sẽ nhận được một danh sách sản phẩm đang cần đẩy mạnh bán hàng. Hãy sử dụng chúng nếu có thể. Nhưng ưu tiên hàng đầu là đáp ứng đúng yêu cầu và ngân sách của người dùng và bạn hoàn toàn có thể sử dụng các sản phẩm khác ngoài danh sách này để đảm bảo.";
+  "Bạn sẽ nhận được một danh sách sản phẩm đang cần đẩy mạnh bán hàng. Hãy sử dụng chúng nếu có thể. Nhưng ưu tiên hàng đầu là đáp ứng đúng yêu cầu và ngân sách của người dùng và bạn hoàn toàn có thể sử dụng các sản phẩm khác ngoài danh sách này để đảm bảo. Không thay đổi ngân sách của người dùng kể cả khi có sản phẩm khác có giá rẻ hơn.";
 let Opus_UpSale_Products = null;
-const Opus_Chunk2_After_Rule = "Lưu ý: Bắt buộc về kết quả theo schema sau:";
+const Opus_Chunk2_After_Rule =
+  "Lưu ý: Bắt buộc về kết quả theo schema sau bên trong dấu ```. Chỉ trả về schema, không thêm thông tin nào khác.";
 const Opus_Response_Schema_Shorten = {
   type: "object",
   properties: {
@@ -109,7 +110,7 @@ const Opus_Response_Schema_Shorten = {
 }; // Schema cho chunk 2
 
 const Opus_Perplexity_Chunk2_Schema_Explain =
-  "RequestMultipleProductData là trường để bạn trả về cấu hình mà bạn đang muốn hiện thị. Hãy trả về dạng mảng các object [{type, name, quantity, keyword}, ...], trong đó mỗi object đại diện cho một linh kiện. Type gồm 1 trong 10 loại linh kiện. Name là tên sản phẩm, ví dụ `CPU Intel Core i7-14700K`, `MainBoard ASRock Z790 Taichi`. Quantity là số lượng sản phẩm bạn muốn đưa vào cấu hình. Keyword để tìm kiếm sản phẩm trong kho là một cụm từ khóa thật ngắn gọn - kết hợp giữa type và thông số nổi bật hoặc tên mã sản phẩm, ví dụ 'CPU 14700K', 'MainBoard Z790', 'RAM 16GB', 'VGA 5060', 'PSU A650BN'.";
+  "schema là 1 mảng để bạn trả về cấu hình mà bạn đang muốn hiện thị. Hãy trả về dạng mảng các object [{type, name, quantity, keyword}, ...], trong đó mỗi object đại diện cho một linh kiện. Type gồm 1 trong 10 loại linh kiện. Name là tên sản phẩm, ví dụ `CPU Intel Core i7-14700K`, `MainBoard ASRock Z790 Taichi`. Quantity là số lượng sản phẩm bạn muốn đưa vào cấu hình. Keyword để tìm kiếm sản phẩm trong kho là một cụm từ khóa thật ngắn gọn - kết hợp giữa type và thông số nổi bật hoặc tên mã sản phẩm, ví dụ 'CPU 14700K', 'MainBoard Z790', 'RAM 16GB', 'VGA 5060', 'PSU A650BN'.";
 
 //  Chunk 3: Với kết quả tìm kiếm của chunk 2, Sử dụng hàm OpenRouter thứ 2 và searchHacom để tìm kiếm thông tin sản phẩm
 
@@ -254,35 +255,28 @@ async function handleSendMessageRequest(body, res) {
       chatHistory ||
       "Hãy gợi ý một cấu hình PC phù hợp.";
 
-    // Chuẩn bị nội dung system prompt cho Chunk 2
-    const chunk2SystemContent =
-      Opus_Chunk2_Prefix +
+    let systemContent =
+      Opus_Chunk2_Chain1_Prefix +
       "\n---\n" +
-      Opus_Perplexity_Chunk2_Schema_Explain +
-      "\n---\n" +
-      Opus_UpSale_Products_Prefix +
+      Opus_Chunk2_Chain1_Guide +
       "\n" +
-      (typeof Opus_UpSale_Products === "string"
-        ? Opus_UpSale_Products
-        : JSON.stringify(Opus_UpSale_Products)) +
-      "\n---\n";
+      Opus_Chunk2_Chain1_GuideStep +
+      "\n---\n" +
+      Opus_Chunk2_Chain1_Guide_After;
 
     // Gọi OpenRouterChunk2Builder với message và system content
-    const result = await OpenRouterChunk2Builder(
-      chunk2Message,
-      chunk2SystemContent
-    );
+    const result = await OpenRouterChunk2Builder(chunk2Message, systemContent);
 
     if (ENABLE_LATENCY_TRACKING) {
       const latency = Date.now() - startTime;
       console.log(
-        `[Opus_MW] Độ trễ của OpenRouterChunk2Builder Chunk 2: ${latency}ms`
+        `[Opus_MW] Độ trễ của OpenRouterChunk2Builder Chunk 2 (Chain 1): ${latency}ms`
       );
     }
 
     if (result.error) {
       console.error(
-        "[Opus_MW] Lỗi từ OpenRouterChunk2Builder Chunk 2:",
+        "[Opus_MW] Lỗi từ OpenRouterChunk2Builder Chunk 2 (Chain 1):",
         result.error
       );
       res.write(
@@ -295,20 +289,108 @@ async function handleSendMessageRequest(body, res) {
       return;
     }
 
-    // Parse lại content từ Chunk 2 nếu là chuỗi JSON
-    let content = result?.choices?.[0]?.message?.content;
-    if (typeof content === "string") {
+    // Parse lại content từ Chunk 2 Chain 1 nếu là chuỗi JSON
+    let chain1Result = result?.choices?.[0]?.message?.content;
+    if (typeof chain1Result === "string") {
       try {
-        content = JSON.parse(content);
-        result.choices[0].message.content = content;
+        // Thử parse nếu là JSON, nhưng không ép buộc vì Chain 1 trả về văn bản thuần
+        chain1Result = JSON.parse(chain1Result);
       } catch (e) {
-        console.warn("[Opus_MW] Không thể parse JSON từ Chunk 2 content:", e);
+        // Chain 1 trả về dạng văn bản thuần, không cần xử lý
+        console.log(
+          "[Opus_MW] Chain 1 trả về dạng văn bản thuần:",
+          chain1Result,
+          result
+        );
       }
     }
 
     console.log(
-      "[Opus_MW] Kết quả từ OpenRouterChunk2Builder Chunk 2:",
-      content
+      "[Opus_MW] Kết quả từ OpenRouterChunk2Builder Chunk 2 (Chain 1):",
+      chain1Result,
+      result
+    );
+
+    // ===== CHAIN 2: Xử lý kết quả từ Chain 1 =====
+
+    if (ENABLE_LATENCY_TRACKING) {
+      startTime = Date.now();
+      console.log(
+        "[Opus_MW] Bắt đầu gọi OpenRouterChunk2Builder Chunk 2 (Chain 2)..."
+      );
+    }
+
+    // Chuẩn bị nội dung cho Chain 2
+    // Chain 2 nhận cả request ban đầu và cấu hình từ Chain 1
+    const chain2Message = {
+      originalRequest: chunk2Message,
+      chain1Configuration:
+        typeof chain1Result === "string"
+          ? chain1Result
+          : JSON.stringify(chain1Result),
+    };
+
+    // System content cho Chain 2
+    const chain2SystemContent =
+      Opus_Chunk2_Prefix +
+      "\n---\n" +
+      Opus_UpSale_Products_Prefix +
+      "\n" +
+      (typeof Opus_UpSale_Products === "string"
+        ? Opus_UpSale_Products
+        : JSON.stringify(Opus_UpSale_Products)) +
+      "\n---\n" +
+      Opus_Chunk2_After_Rule +
+      "\n" +
+      Opus_Perplexity_Chunk2_Schema_Explain;
+
+    // Gọi OpenRouterChunk2Builder cho Chain 2
+    const chain2Result = await OpenRouterChunk2Builder(
+      chain2Message,
+      chain2SystemContent,
+      2
+    );
+
+    if (ENABLE_LATENCY_TRACKING) {
+      const latency = Date.now() - startTime;
+      console.log(
+        `[Opus_MW] Độ trễ của OpenRouterChunk2Builder Chunk 2 (Chain 2): ${latency}ms`
+      );
+    }
+
+    if (chain2Result.error) {
+      console.error(
+        "[Opus_MW] Lỗi từ OpenRouterChunk2Builder Chunk 2 (Chain 2):",
+        chain2Result.error
+      );
+      res.write(
+        JSON.stringify({
+          type: "error",
+          error: "Không thể tạo cấu hình PC lúc này, vui lòng thử lại sau.",
+        }) + "\n"
+      );
+      res.end();
+      return;
+    }
+
+    // Parse lại content từ Chain 2 nếu là chuỗi JSON
+    let content = chain2Result?.choices?.[0]?.message?.content;
+    if (typeof content === "string") {
+      try {
+        content = JSON.parse(content);
+        chain2Result.choices[0].message.content = content;
+      } catch (e) {
+        console.warn(
+          "[Opus_MW] Không thể parse JSON từ Chunk 2 (Chain 2) content:",
+          e
+        );
+      }
+    }
+
+    console.log(
+      "[Opus_MW] Kết quả từ OpenRouterChunk2Builder Chunk 2 (Chain 2):",
+      content,
+      chain2Result
     );
 
     // Nếu không có RequestMultipleProductData hoặc mảng rỗng
@@ -335,7 +417,7 @@ async function handleSendMessageRequest(body, res) {
         data: {
           // Answer: chunk1Content.Answer,
           // IsPC_Selected: true,
-          rawChunk2Result: result,
+          rawChunk2Result: chain2Result,
           RequestMultipleProductData: content.RequestMultipleProductData,
         },
       }) + "\n"
@@ -715,7 +797,8 @@ async function opusRequestOpenRouter(inventoryList, userRequestlist) {
   const url = "https://openrouter.ai/api/v1/chat/completions";
   const payload = {
     // model: "deepseek/deepseek-v3-base:free",
-    model: "meta-llama/llama-4-scout:free",
+    // model: "meta-llama/llama-4-scout:free",
+    model: "meta-llama/llama-4-maverick:free",
 
     messages: [
       {
@@ -741,6 +824,9 @@ async function opusRequestOpenRouter(inventoryList, userRequestlist) {
             : JSON.stringify(userRequestlist)),
       },
     ],
+    provider: {
+      sort: "throughput",
+    },
     response_format: {
       type: "json_schema",
       json_schema: {
@@ -760,6 +846,7 @@ async function opusRequestOpenRouter(inventoryList, userRequestlist) {
   //   payload.messages[1].content
   // );
   try {
+    const startTime = Date.now();
     const res = await fetch(url, {
       method: "POST",
       headers: {
@@ -768,19 +855,56 @@ async function opusRequestOpenRouter(inventoryList, userRequestlist) {
       },
       body: JSON.stringify(payload),
     });
+
     const data = await res.json();
+
+    const latency = Date.now() - startTime;
+    console.log(`[Opus_MW] Độ trễ của opusRequestOpenRouter: ${latency}ms`);
+
+    // Xử lý parse JSON nếu cần
+    if (
+      data.choices &&
+      data.choices[0] &&
+      data.choices[0].message &&
+      data.choices[0].message.content
+    ) {
+      try {
+        let content = data.choices[0].message.content;
+        // Thử parse nếu là string
+        if (typeof content === "string") {
+          data.choices[0].message.content = JSON.parse(content);
+        }
+      } catch (e) {
+        console.warn(
+          "[Opus_MW] Không thể parse JSON từ opusRequestOpenRouter:",
+          e
+        );
+        // Giữ nguyên content nếu parse thất bại
+      }
+    }
+
     return data;
   } catch (err) {
+    console.error("[Opus_MW] Lỗi request OpenRouter:", err);
     return { error: "Lỗi request OpenRouter: " + err };
   }
 }
 
-// Hàm request OpenRouter với model deepseek cho Chunk 2
-async function OpenRouterChunk2Builder(inputData) {
+// Hàm request OpenRouter với model deepseek cho chain1 của Chunk 2
+async function OpenRouterChunk2Builder(
+  inputData,
+  systemContent,
+  chainPhase = 1
+) {
   console.log("[Opus_MW] Bắt đầu gọi OpenRouterChunk2Builder...");
   const url = "https://openrouter.ai/api/v1/chat/completions";
 
-  let systemContent;
+  // Điều chỉnh system content cho chainPhase 2 để yêu cầu JSON trong code block
+  // if (chainPhase === 2) {
+  //   systemContent +=
+  //     "\n\nĐặc biệt quan trọng: Phản hồi của bạn PHẢI được đặt trong khối mã JSON (```json và ```) và tuân theo schema yêu cầu. Không trả lời dưới bất kỳ định dạng nào khác.";
+  // }
+  // Không cần thiết vì đã quy định ở bên trên
 
   const payload = {
     model: "deepseek/deepseek-r1-distill-llama-70b:free",
@@ -795,20 +919,10 @@ async function OpenRouterChunk2Builder(inputData) {
           typeof inputData === "string" ? inputData : JSON.stringify(inputData),
       },
     ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "Chunk2Result",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            RequestMultipleProductData: { type: "array" },
-          },
-          required: ["RequestMultipleProductData"],
-        },
-      },
+    provider: {
+      sort: "throughput",
     },
+    // Bỏ response_format cho deepseek model vì không được hỗ trợ tốt
   };
 
   try {
@@ -827,21 +941,66 @@ async function OpenRouterChunk2Builder(inputData) {
 
     const data = await res.json();
 
-    // Parse kết quả nếu cần
+    // Xử lý kết quả trả về, đặc biệt cho chainPhase 2
     if (
       data.choices &&
       data.choices[0] &&
       data.choices[0].message &&
       data.choices[0].message.content
     ) {
-      try {
-        let content = JSON.parse(data.choices[0].message.content);
-        data.choices[0].message.content = content;
-      } catch (e) {
-        console.warn(
-          "[Opus_MW] Không thể parse JSON từ OpenRouterChunk2Builder:",
-          e
-        );
+      let content = data.choices[0].message.content;
+
+      // Với chainPhase 2, trích xuất JSON từ code block ```json
+      if (chainPhase === 2) {
+        console.log("[Opus_MW] Xử lý nội dung chainPhase 2:", content);
+        const jsonRegex = /```(?:json)?\s*([\s\S]*?)```/;
+        const match = content.match(jsonRegex);
+
+        if (match && match[1]) {
+          try {
+            const jsonContent = JSON.parse(match[1].trim());
+            data.choices[0].message.content = jsonContent;
+            console.log(
+              "[Opus_MW] Đã trích xuất JSON từ code block thành công"
+            );
+          } catch (e) {
+            console.warn(
+              "[Opus_MW] Không thể parse JSON từ code block:",
+              e,
+              match[1]
+            );
+            // Trả về dưới dạng chuỗi nếu parse thất bại
+            data.choices[0].message.content = match[1].trim();
+          }
+        } else {
+          console.warn(
+            "[Opus_MW] Không tìm thấy code block JSON trong kết quả"
+          );
+
+          // Kiểm tra xem nội dung có phải là JSON hợp lệ không
+          try {
+            const jsonContent = JSON.parse(content);
+            data.choices[0].message.content = jsonContent;
+            console.log("[Opus_MW] Nội dung trả về dưới dạng JSON hợp lệ");
+          } catch (e) {
+            console.warn(
+              "[Opus_MW] Nội dung không phải là JSON và không có code block"
+            );
+          }
+        }
+      }
+      // Với chainPhase 1 hoặc các trường hợp khác, thử parse nếu có thể
+      else {
+        try {
+          const jsonContent = JSON.parse(content);
+          data.choices[0].message.content = jsonContent;
+        } catch (e) {
+          // Không có vấn đề nếu không parse được - chain 1 có thể trả về text
+          console.log(
+            "[Opus_MW] Chain 1 trả về nội dung không phải JSON:",
+            content.substring(0, 100) + "..."
+          );
+        }
       }
     }
 
@@ -1043,13 +1202,21 @@ async function opusRequestOpenRouter_Chunk1(chatLog) {
     },
     ...chatHistory,
   ];
-  console.log("[Opus_MW] Messages cho OpenRouter Chunk 1:", chatHistory);
+
+  // Giảm log để cải thiện hiệu suất
+  console.log(
+    "[Opus_MW] Messages cho OpenRouter Chunk 1:",
+    chatHistory.length,
+    "tin nhắn"
+  );
+
   // Chuẩn bị payload cho OpenRouter API
   const payload = {
-    model: "meta-llama/llama-4-scout:free", // Có thể thay đổi model tùy nhu cầu và chi phí
-    // temperature: 0.8,
-    // top_p: 0.9,
+    model: "meta-llama/llama-4-maverick:free",
     messages: messages,
+    provider: {
+      sort: "throughput",
+    },
     response_format: {
       type: "json_schema",
       json_schema: {
@@ -1086,10 +1253,12 @@ async function opusRequestOpenRouter_Chunk1(chatLog) {
       body: JSON.stringify(payload),
     });
 
-    const latency = Date.now() - startTime;
-    console.log(`[Opus_MW] Độ trễ của OpenRouter Chunk 1: ${latency}ms`);
+    let latency = Date.now() - startTime;
+    console.log(`[Opus_MW] Độ trễ của OpenRouter Chunk 1-Bước1: ${latency}ms`);
 
-    const data = await res.json();
+    const data = await res.json(); // Đã sửa từ res.json() thành await res.json()
+    latency = Date.now() - startTime;
+    console.log(`[Opus_MW] Độ trễ của OpenRouter Chunk 1-Bước2: ${latency}ms`);
 
     // Parse kết quả nếu cần
     if (
@@ -1106,6 +1275,7 @@ async function opusRequestOpenRouter_Chunk1(chatLog) {
           "[Opus_MW] Không thể parse JSON từ OpenRouter Chunk 1:",
           e
         );
+        // Nếu không parse được, giữ nguyên chuỗi
       }
     }
 
