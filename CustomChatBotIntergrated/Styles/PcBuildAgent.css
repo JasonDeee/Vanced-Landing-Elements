@@ -1,3 +1,4 @@
+@charset "UTF-8";
 @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
 :root {
   --MainColor: var(--text-color, #0c1136);
@@ -463,6 +464,10 @@ body {
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
   position: absolute;
   top: 0;
   left: 0;
@@ -470,6 +475,21 @@ body {
   margin: 0 auto;
   opacity: 0;
   pointer-events: none;
+  gap: 8px;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .loader_Small::after,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .loader_Small::after,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .loader_Small::after {
+  content: "Models đôi lúc có thể mất nhiều thời gian hơn.";
+  display: inline-block;
+  max-width: 62%;
+  height: auto;
+  color: var(--MainColor);
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: none;
 }
 
 .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message.pending .loader_Small,
