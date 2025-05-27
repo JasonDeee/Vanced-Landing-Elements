@@ -94,6 +94,35 @@ body {
     #Vx_chatMessages {
       flex: auto;
 
+      &::after {
+        content: "Đang tải...";
+        display: block;
+        background-color: var(--AccentColor);
+        width: 5%;
+        padding-left: 32px;
+
+        border-radius: 8px;
+        font-size: 0.9rem;
+        opacity: 0;
+        white-space: nowrap;
+        letter-spacing: 8px;
+        pointer-events: none;
+        height: auto;
+        max-height: 0;
+
+        justify-content: center;
+        transition: none;
+      }
+      &.AwaitingResponse {
+        &::after {
+          opacity: 1;
+          width: 32%;
+          letter-spacing: 0;
+          padding: 8px 16px;
+          max-height: 48px;
+          transition: all 0.66s 0.3s cubic-bezier(0.25, 0, 0, 1);
+        }
+      }
       .Vx_message {
         @media only screen and (max-width: 1440px) {
           font-size: 0.9rem;

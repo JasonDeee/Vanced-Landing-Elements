@@ -114,6 +114,37 @@ body {
           flex: auto;
 }
 
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatMessages::after {
+  content: "Đang tải...";
+  display: block;
+  background-color: var(--AccentColor);
+  width: 5%;
+  padding-left: 32px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  opacity: 0;
+  white-space: nowrap;
+  letter-spacing: 8px;
+  pointer-events: none;
+  height: auto;
+  max-height: 0;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-transition: none;
+  transition: none;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatMessages.AwaitingResponse::after {
+  opacity: 1;
+  width: 32%;
+  letter-spacing: 0;
+  padding: 8px 16px;
+  max-height: 48px;
+  -webkit-transition: all 0.66s 0.3s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.66s 0.3s cubic-bezier(0.25, 0, 0, 1);
+}
+
 @media only screen and (max-width: 1440px) {
   .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatMessages .Vx_message {
     font-size: 0.9rem;

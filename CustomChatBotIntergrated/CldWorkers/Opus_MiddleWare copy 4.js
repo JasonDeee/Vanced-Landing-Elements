@@ -51,7 +51,7 @@ const Open_Chunk1_Schema = {
     name: "RecommendationQuestion",
     type: "string",
     description:
-      "Gợi ý 3 câu hỏi tiếp theo cho người dùng, các câu hỏi phân tách nhau bằng dấu\\",
+      "Gợi ý 3 câu hỏi tiếp theo cho người dùng, các câu hỏi phân tách nhau bằng dấu &nbsp*&nbsp",
   },
 };
 
@@ -118,9 +118,9 @@ const Opus_Response_Chunk2_Chain2_Schema_Shorten = {
     schema: {
       type: "array",
       description: "Đây là RequestMultipleProductData",
-      required: ["RequestMultipleProductData"],
     },
   },
+  required: ["RequestMultipleProductData"],
 };
 
 const Opus_Perplexity_Chunk2_Schema_Explain =
@@ -279,10 +279,7 @@ async function handleSendMessageRequest(body, res) {
       Opus_Chunk2_Chain1_Guide_After;
 
     // Gọi OpenRouterChunk2Builder với message và system content
-    const result = await OpenRouterChunk2Builder_Chain1(
-      chunk2Message,
-      systemContent
-    );
+    const result = await OpenRouterChunk2Builder(chunk2Message, systemContent);
 
     if (ENABLE_LATENCY_TRACKING) {
       const latency = Date.now() - startTime;
@@ -361,9 +358,10 @@ async function handleSendMessageRequest(body, res) {
       Opus_Perplexity_Chunk2_Schema_Explain;
 
     // Gọi OpenRouterChunk2Builder cho Chain 2
-    const chain2Result = await OpenRouterChunk2Builder_Chain2(
+    const chain2Result = await OpenRouterChunk2Builder(
       chain2Message,
-      chain2SystemContent
+      chain2SystemContent,
+      2
     );
 
     if (ENABLE_LATENCY_TRACKING) {
@@ -815,8 +813,8 @@ async function opusRequestOpenRouter(inventoryList, userRequestlist) {
   const url = "https://openrouter.ai/api/v1/chat/completions";
   const payload = {
     // model: "deepseek/deepseek-v3-base:free",
-    model: "meta-llama/llama-4-scout:free",
-    // model: "meta-llama/llama-4-maverick:free",
+    // model: "meta-llama/llama-4-scout:free",
+    model: "meta-llama/llama-4-maverick:free",
 
     messages: [
       {
@@ -909,18 +907,41 @@ async function opusRequestOpenRouter(inventoryList, userRequestlist) {
 }
 
 // Hàm request OpenRouter với model deepseek cho chain1 của Chunk 2
-async function OpenRouterChunk2Builder_Chain1(inputData, systemContent) {
-  console.log("[Opus_MW] Bắt đầu gọi OpenRouterChunk2Builder_Chain1...");
+async function OpenRouterChunk2Builder(
+  inputData,
+  systemContent,
+  chainPhase = 1
+) {
+  // console.log("[Opus_MW] Bắt đầu gọi OpenRouterChunk2Builder...");
   const url = "https://openrouter.ai/api/v1/chat/completions";
 
-  // Cấu hình cho Chain 1 (DeepSeek)
-  const payload = {
+  // Cấu hình cơ bản cho Chain 1 (Phi-4)
+  const chain1Config = {
     model: "deepseek/deepseek-r1-distill-llama-70b:free",
+    // model: "tngtech/deepseek-r1t-chimera:free",
     max_tokens: 5000,
     reasoning: {
       max_tokens: 5000,
     },
+    provider: {
+      sort: "throughput",
+    },
+  };
 
+  // Cấu hình cơ bản cho Chain 2 (Llama-4)
+  const chain2Config = {
+    // model: "meta-llama/llama-4-maverick:free",
+    model: "meta-llama/llama-4-scout:free",
+    // response_format: Opus_Response_Chunk2_Chain2_Schema_Shorten,
+    provider: {
+      order: ["chutes/bf16", "meta/fp8"],
+    },
+  };
+
+  // Chọn cấu hình dựa trên chain phase
+  let selectedConfig = chainPhase === 2 ? chain2Config : chain1Config;
+
+  let payload = {
     messages: [
       {
         role: "system",
@@ -928,23 +949,17 @@ async function OpenRouterChunk2Builder_Chain1(inputData, systemContent) {
       },
       {
         role: "user",
-        content:
-          typeof inputData === "string" ? inputData : JSON.stringify(inputData),
+        content: inputData,
       },
     ],
-    provider: {
-      sort: "throughput",
-    },
+    ...selectedConfig,
   };
 
   try {
     const startTime = Date.now();
     console.log(
-      "[Opus_MW] Chain 1 - Đang xử lý:",
-      (typeof inputData === "string"
-        ? inputData
-        : JSON.stringify(inputData)
-      ).slice(0, 30) + "...",
+      "[Opus_MW]Đang xử lý chunk 2:",
+      inputData.slice(0, 12) + "...",
       systemContent.slice(0, 30) + "..."
     );
 
@@ -957,161 +972,137 @@ async function OpenRouterChunk2Builder_Chain1(inputData, systemContent) {
       body: JSON.stringify(payload),
     });
 
-    let data = await res.json();
     let latency = Date.now() - startTime;
 
+    let data = await res.json(); // Đã sửa: thêm await
+    let content = data.choices[0].message.content;
     console.log(
-      "[Opus_MW] Chain 1 - Hoàn thành:",
+      "Hoàn Thành get data chunk 2",
       `Độ trễ: ${latency}ms`,
       data.choices[0].message
     );
 
-    let content = data.choices[0].message.content;
-
-    // Với Chain 1, thử parse nếu có thể, nhưng không bắt buộc
-    try {
-      const jsonContent = JSON.parse(content);
-      data.choices[0].message.content = jsonContent;
-      console.log("[Opus_MW] Chain 1 - Đã parse content thành JSON");
-    } catch (e) {
-      // Không có vấn đề nếu không parse được - chain 1 có thể trả về text
-      console.log(
-        "[Opus_MW] Chain 1 trả về nội dung không phải JSON:",
-        content.substring(0, 100) + "..."
-      );
-    }
-
-    return data;
-  } catch (err) {
-    console.error("[Opus_MW] Lỗi khi gọi OpenRouterChunk2Builder_Chain1:", err);
-    return { error: "Lỗi request OpenRouterChunk2Builder_Chain1: " + err };
-  }
-}
-
-// Hàm request OpenRouter cho chain2 của Chunk 2 (sử dụng Llama-4-Maverick)
-async function OpenRouterChunk2Builder_Chain2(inputData, systemContent) {
-  console.log("[Opus_MW] Bắt đầu gọi OpenRouterChunk2Builder_Chain2...");
-  const url = "https://openrouter.ai/api/v1/chat/completions";
-
-  // Cấu hình riêng cho Chain 2 (Llama-4)
-  // // temperature: 0.1,
-  // top_p: 0.1,
-  // model: "meta-llama/llama-4-maverick:free",
-  // model: "meta-llama/llama-4-scout:free",
-
-  const payload = {
-    model: "meta-llama/llama-4-scout:free",
-    provider: {
-      order: ["chutes/bf16", "meta/fp8"],
-    },
-    messages: [
-      {
-        role: "system",
-        content:
-          systemContent +
-          "\n\nLưu ý đặc biệt: Bạn PHẢI trả về mảng RequestMultipleProductData chứa các đối tượng linh kiện với định dạng được mô tả ở trên. Không để trống.",
-      },
-      {
-        role: "user",
-        content:
-          typeof inputData === "string" ? inputData : JSON.stringify(inputData),
-      },
-    ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "RequestMultipleProductData",
-        strict: true,
-        schema: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              type: {
-                type: "string",
-              },
-              name: {
-                type: "string",
-              },
-              quantity: {
-                type: "number",
-              },
-              keyword: {
-                type: "string",
-              },
-            },
-            required: ["type", "name", "quantity", "keyword"],
-            additionalProperties: false,
-          },
-        },
-      },
-    },
-  };
-
-  try {
-    const startTime = Date.now();
-    console.log(
-      "[Opus_MW] Chain 2 - Đang xử lý:",
-      (typeof inputData === "string"
-        ? inputData
-        : JSON.stringify(inputData)
-      ).slice(0, 30) + "...",
-      systemContent.slice(0, 30) + "..."
-    );
-
-    let res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + OPENROUTER_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    let data = await res.json();
-    let latency = Date.now() - startTime;
-
-    console.log(
-      "[Opus_MW] Chain 2 - Hoàn thành:",
-      `Độ trễ: ${latency}ms`,
-      data.choices[0].message
-    );
-
-    // Parse content nếu có thể
-    let content = data.choices[0].message.content;
-
-    if (typeof content === "string") {
-      try {
-        content = JSON.parse(content);
-        data.choices[0].message.content = content;
-        console.log("[Opus_MW] Chain 2 - Đã parse content thành JSON");
-      } catch (e) {
-        console.warn(
-          "[Opus_MW] Chain 2 - Không thể parse JSON từ content:",
-          e.message
-        );
+    // Xử lý kết quả trả về, đặc biệt cho chainPhase 2
+    if (
+      data.choices &&
+      data.choices[0] &&
+      data.choices[0].message &&
+      data.choices[0].message.content
+    ) {
+      // Với chainPhase 2, trích xuất JSON từ code block ```json
+      if (chainPhase === 2) {
+        console.log("[Opus_MW] Xử lý nội dung chainPhase 2:", inputData);
+        // // Thử nhiều pattern regex để bắt JSON
+        // const jsonPatterns = [
+        //   /```json\s*([\s\S]*?)```/, // ```json ... ```
+        //   /```\s*([\s\S]*?)```/, // ``` ... ```
+        //   /`([^`]*)`/, // `...`
+        // ];
+        // let jsonContent = null;
+        // let extractedText = null;
+        // for (const pattern of jsonPatterns) {
+        //   //   const match = content.match(pattern);
+        //   //   if (match && match[1]) {
+        //   //     extractedText = match[1].trim();
+        //   //     try {
+        //   //       jsonContent = JSON.parse(extractedText);
+        //   //       console.log(
+        //   //         "[Opus_MW] Đã trích xuất JSON từ code block thành công với pattern:",
+        //   //         pattern
+        //   //       );
+        //   //       break;
+        //   //     } catch (e) {
+        //   //       console.warn(
+        //   //         `[Opus_MW] Thử parse với pattern ${pattern} thất bại:`,
+        //   //         e.message
+        //   //       );
+        //   //       continue;
+        //   //     }
+        //   //   }
+        // }
+        // if (jsonContent) {
+        //   //   data.choices[0].message.content = jsonContent;
+        // } else {
+        //   //   console.warn(
+        //   //     "[Opus_MW] Không thể trích xuất JSON từ bất kỳ pattern nào"
+        //   //   );
+        //   //   // Thử parse trực tiếp toàn bộ content
+        //   //   try {
+        //   //     const directJsonContent = JSON.parse(content);
+        //   //     data.choices[0].message.content = directJsonContent;
+        //   //     console.log("[Opus_MW] Parse trực tiếp toàn bộ content thành công");
+        //   //   } catch (e) {
+        //   //     console.warn(
+        //   //       "[Opus_MW] Parse trực tiếp toàn bộ content thất bại:",
+        //   //       e.message
+        //   //     );
+        //   //     // Giữ nguyên content gốc nếu tất cả đều thất bại
+        //   //     console.log(
+        //   //       "[Opus_MW] Giữ nguyên content gốc:",
+        //   //       content.substring(0, 200) + "..."
+        //   //     );
+        //   //   }
+        // }
+      }
+      // Với chainPhase 1 hoặc các trường hợp khác, thử parse nếu có thể
+      else {
+        try {
+          const jsonContent = JSON.parse(content);
+          data.choices[0].message.content = jsonContent;
+          console.log("Đã xử lý content");
+        } catch (e) {
+          // Không có vấn đề nếu không parse được - chain 1 có thể trả về text
+          console.log(
+            "[Opus_MW] Chain 1 trả về nội dung không phải JSON:",
+            content.substring(0, 100) + "..."
+          );
+        }
       }
     }
-
+    latency = Date.now() - startTime;
     return data;
   } catch (err) {
-    console.error("[Opus_MW] Lỗi khi gọi OpenRouterChunk2Builder_Chain2:", err);
-    return { error: "Lỗi request OpenRouterChunk2Builder_Chain2: " + err };
+    console.error("[Opus_MW] Lỗi khi gọi OpenRouterChunk2Builder:", err);
+    return { error: "Lỗi request OpenRouterChunk2Builder: " + err };
   }
 }
 
-// Function cũ giữ lại cho tương thích
-async function OpenRouterChunk2Builder(
-  inputData,
-  systemContent,
-  chainPhase = 1
-) {
-  if (chainPhase === 1) {
-    return await OpenRouterChunk2Builder_Chain1(inputData, systemContent);
-  } else {
-    return await OpenRouterChunk2Builder_Chain2(inputData, systemContent);
-  }
-}
+// function ExtractSingleProductData(item) {
+//   if (!item || typeof item !== "object") return null;
+//   return {
+//     id: item.productSKU,
+//     name: item.productName,
+//     price: item.price,
+//     marketPrice: item.marketPrice,
+//     productImage:
+//       item.productImage && item.productImage.original
+//         ? item.productImage.original
+//         : "",
+//     warranty: item.warranty || "",
+//     status: Number(item.quantity) > 0 ? "Sẵn hàng" : "Liên hệ",
+//     brand: item.brand && item.brand.name ? item.brand.name : "",
+//     // categories: Array.isArray(item.categories)
+//     //   ? item.categories.map((c) => c.name).join(", ")
+//     //   : "",
+//     url: item.productUrl || "",
+//   };
+// }
+
+// Làm phẳng dữ liệu kết quả tìm kiếm Hacom
+// function FlattenHacomSearchResult(rawData) {
+//   // rawData là mảng lồng mảng hoặc mảng có thể rỗng
+//   if (!Array.isArray(rawData)) return [];
+//   // Lấy tất cả các object sản phẩm từ các mảng con
+//   return rawData
+//     .filter(Array.isArray) // chỉ lấy các phần tử là mảng
+//     .flat() // làm phẳng thành 1 mảng các object sản phẩm
+//     .filter(
+//       (item) =>
+//         item &&
+//         typeof item === "object" &&
+//         (item.productName || item.productSKU)
+//     );
+// }
 
 // Lọc dữ liệu Hacom, chỉ giữ các trường productSKU, productName, price, quantity
 function FilterHacomSearchResult(rawData) {
@@ -1278,12 +1269,9 @@ async function opusRequestOpenRouter_Chunk1(chatLog) {
   // Chuẩn bị payload cho OpenRouter API
   const payload = {
     model: "meta-llama/llama-4-maverick:free",
-    // model: "meta-llama/llama-4-scout:free",
-
     messages: messages,
     provider: {
-      order: ["chutes/bf16", "meta/fp8"],
-      //   sort: "throughput",
+      sort: "throughput",
     },
     response_format: {
       type: "json_schema",
@@ -1296,10 +1284,10 @@ async function opusRequestOpenRouter_Chunk1(chatLog) {
           required: [
             "Chunk1Result",
             "Answer",
+            "RecommendationQuestion",
             "IsRequestingHumanSupport",
             "IsPC_Selected",
             "PassToPerplexity",
-            "RecommendationQuestion",
           ],
         },
       },
@@ -1322,34 +1310,30 @@ async function opusRequestOpenRouter_Chunk1(chatLog) {
     });
 
     let latency = Date.now() - startTime;
+    console.log(`[Opus_MW] Độ trễ của OpenRouter Chunk 1-Bước1: ${latency}ms`);
 
     const data = await res.json(); // Đã sửa từ res.json() thành await res.json()
-    console.log(
-      `[Opus_MW] Độ trễ của OpenRouter Chunk 1-Bước1: ${latency}ms`,
-      data.choices[0].message.content
-    );
+    latency = Date.now() - startTime;
+    console.log(`[Opus_MW] Độ trễ của OpenRouter Chunk 1-Bước2: ${latency}ms`);
 
     // Parse kết quả nếu cần
-    // if (
-    //   data.choices &&
-    //   data.choices[0] &&
-    //   data.choices[0].message &&
-    //   data.choices[0].message.content
-    // ) {
-    //   try {
-    //     if (typeof data.choices[0].message.content != "object") {
-    //       data.choices[0].message.content = JSON.parse(
-    //         data.choices[0].message.content
-    //       );
-    //     }
-    //   } catch (e) {
-    //     console.warn(
-    //       "[Opus_MW] Không thể parse JSON từ OpenRouter Chunk 1:",
-    //       e
-    //     );
-    //     // Nếu không parse được, giữ nguyên chuỗi
-    //   }
-    // }
+    if (
+      data.choices &&
+      data.choices[0] &&
+      data.choices[0].message &&
+      data.choices[0].message.content
+    ) {
+      try {
+        let content = JSON.parse(data.choices[0].message.content);
+        data.choices[0].message.content = content;
+      } catch (e) {
+        console.warn(
+          "[Opus_MW] Không thể parse JSON từ OpenRouter Chunk 1:",
+          e
+        );
+        // Nếu không parse được, giữ nguyên chuỗi
+      }
+    }
 
     return data;
   } catch (err) {

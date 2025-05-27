@@ -84,6 +84,8 @@ async function opusGetBrowserFingerprint() {
   };
 }
 
+const chatContainer = document.getElementById("Vx_chatMessages");
+
 // Hàm map dữ liệu sản phẩm về dạng [{id, Name, price}, ...]
 function mapProductData(data) {
   return data.map((item) => ({
@@ -200,7 +202,6 @@ async function hacomSearchProduct(q, limit = 10) {
 // ====== Hàm tiện ích cập nhật giao diện chat cho PC Builder ======
 function opusUpdateChatDisplay(chatHistory) {
   try {
-    const chatContainer = document.getElementById("Vx_chatMessages");
     if (!chatContainer) return;
     chatContainer.innerHTML = "";
 
@@ -373,6 +374,7 @@ async function opusSendMessageFromBuilder() {
   // Thêm tin nhắn người dùng vào chat log và hiển thị
   Opus_Chat_Log.push({ role: "user", parts: [{ text: message }] });
   opusUpdateChatDisplay(Opus_Chat_Log);
+  chatContainer.classList.add("AwaitingResponse");
   messageInput.value = "";
 
   try {
@@ -412,7 +414,6 @@ async function opusSendMessageFromBuilder() {
               // Xử lý yêu cầu hỗ trợ từ tư vấn viên
               console.log("Human Support Request:", chunk.data);
 
-              const chatContainer = document.getElementById("Vx_chatMessages");
               if (chatContainer) {
                 const humanSupportElement = renderHumanSupportUI(chunk.data);
                 if (humanSupportElement) {
@@ -439,13 +440,13 @@ async function opusSendMessageFromBuilder() {
                 role: "assistant",
                 parts: [{ text: botMessage }],
               });
+              chatContainer.classList.remove("AwaitingResponse");
               opusUpdateChatDisplay(Opus_Chat_Log);
 
               // Nếu yêu cầu cấu hình PC, tạo placeholder cho cấu hình
               if (result.IsPC_Selected) {
                 // Tạo element PC Config đang chờ
-                const chatContainer =
-                  document.getElementById("Vx_chatMessages");
+
                 if (chatContainer) {
                   pendingPCConfigElement = document.createElement("div");
                   pendingPCConfigElement.className =
@@ -568,8 +569,7 @@ async function opusSendMessageFromBuilder() {
                   if (loader) loader.remove();
 
                   // Scroll xuống để hiển thị kết quả
-                  const chatContainer =
-                    document.getElementById("Vx_chatMessages");
+
                   if (chatContainer)
                     chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
@@ -584,6 +584,7 @@ async function opusSendMessageFromBuilder() {
                 role: "assistant",
                 parts: [{ text: "[Lỗi]: " + chunk.error }],
               });
+              chatContainer.classList.remove("AwaitingResponse");
               opusUpdateChatDisplay(Opus_Chat_Log);
 
               // Xóa element pending nếu có
@@ -605,6 +606,7 @@ async function opusSendMessageFromBuilder() {
       role: "assistant",
       parts: [{ text: "[Lỗi] Không nhận được phản hồi từ AI." }],
     });
+    chatContainer.classList.remove("AwaitingResponse");
     opusUpdateChatDisplay(Opus_Chat_Log);
 
     // Xóa element pending nếu có
@@ -1458,6 +1460,7 @@ function renderHumanSupportUI(data) {
     role: "assistant",
     parts: [{ text: data.Answer }],
   });
+  chatContainer.classList.remove("AwaitingResponse");
   opusUpdateChatDisplay(Opus_Chat_Log);
 
   // Thêm sự kiện cho các nút
@@ -1489,11 +1492,9 @@ function renderHumanSupportUI(data) {
           role: "assistant",
           parts: [{ text: continueMessage }],
         });
-
         opusUpdateChatDisplay(Opus_Chat_Log);
 
         // Scroll xuống để hiển thị tin nhắn mới
-        const chatContainer = document.getElementById("Vx_chatMessages");
         if (chatContainer) {
           chatContainer.scrollTop = chatContainer.scrollHeight;
         }
