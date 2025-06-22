@@ -1,3 +1,7 @@
+// Chúng ta cần tổ chức lại dự án này (node.js 22), chia nhỏ thành các component cụ thể, mỗi component sẽ có một file và chức năng riêng biệt
+// Opus_MiddleWare.js sẽ là file chính (index.js trong Cloud Run Function), nơi chúng ta sẽ nhận request từ client và import các hàm từ component khác để xử lý và trả về kết quả
+// Lưu ý: Chúng ta cũng sẽ thay đổi cả tên khai báo của từng biến và hàm. Cách đặt tên như sau: Mở đầu bằng "Vx_" + Tên chức năng + "_" + Nếu biến này tạo riêng để xử lý cho một thực thể khác, hãy đưa tên thực thể đó vào sau tên biến. \n ví dụ: Vx_ResponseSchema_ForChunk1_Opus; Vx_KeyWordExtractor_ForChunk3. Cách đặt tên này sẽ áp dụng cho cả các component khác.
+
 const functions = require("@google-cloud/functions-framework");
 const express = require("express");
 const fs = require("fs");
@@ -100,13 +104,49 @@ const Opus_UpSale_Products_Prefix =
   "Bạn sẽ nhận thêm một danh sách sản phẩm đang cần đẩy mạnh bán hàng. Hãy sử dụng chúng nếu có thể. Nhưng ưu tiên hàng đầu là cấu hình đầu ra đáp ứng đúng yêu cầu và ngân sách của người dùng kể cả phải sử dụng các sản phẩm khác ngoài danh sách này.";
 let Opus_UpSale_Products = null;
 const Opus_Chunk2_After_Rule =
-  "Lưu ý: Bắt buộc về kết quả theo schema đặt trong dấu ```json```. Chỉ trả về schema, không thêm thông tin nào khác.";
+  "Lưu ý: Bắt buộc về kết quả dạng mảng các object theo và đặt trong thẻ <PC_Components>. Và không được phép để keyword trống. ";
+
+// Schema mới (Bọc thêm 1 lớp object vào mảng schema cũ) - Giúp AI dễ trả về hơn
+const Opus_Response_Chunk2_Chain2_Schema_Shorten_New = {
+  type: "json_schema",
+  json_schema: {
+    name: "PCConfigurationResponse",
+    strict: true,
+    schema: {
+      type: "object",
+      properties: {
+        PC_Components: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              type: {
+                type: "string",
+              },
+              name: {
+                type: "string",
+              },
+              quantity: {
+                type: "string",
+              },
+              keyword: {
+                type: "string",
+              },
+            },
+          },
+        },
+      },
+      required: ["PC_Components"],
+      additionalProperties: false,
+    },
+  },
+};
 
 // Schema mới cho Llama 4
 const Opus_Response_Chunk2_Chain2_Schema_Shorten = {
   type: "json_schema",
   json_schema: {
-    name: "RequestMultipleProductData",
+    name: "PCConfigurationResponse",
     strict: true,
     schema: {
       type: "array",
@@ -126,15 +166,15 @@ const Opus_Response_Chunk2_Chain2_Schema_Shorten = {
             type: "string",
           },
         },
-        required: ["type", "name", "quantity", "keyword"],
-        additionalProperties: false,
+        // required: ["type", "name", "quantity", "keyword"],
+        // additionalProperties: false,
       },
     },
   },
 };
 
 const Opus_Perplexity_Chunk2_Schema_Explain =
-  "schema là 1 mảng các object để bạn trả về cấu hình mà bạn đang muốn hiện thị. Hãy trả về dạng mảng các object [{type, name, quantity, keyword}, ...], trong đó mỗi object đại diện cho một linh kiện. Type gồm 1 trong 10 loại linh kiện. Name là tên sản phẩm, ví dụ `CPU Intel Core i7-14700K`, `MainBoard ASRock Z790 Taichi`. Quantity là số lượng sản phẩm bạn muốn đưa vào cấu hình. Keyword để tìm kiếm sản phẩm trong kho là một cụm từ khóa thật ngắn gọn - kết hợp giữa type và thông số nổi bật hoặc tên mã sản phẩm, ví dụ 'CPU 14700K', 'MainBoard Z790', 'RAM 16GB', 'VGA 5060', 'PSU A650BN'.";
+  'Hãy trả về cấu hình PC trong thẻ <PC_Components> dưới dạng JSON array. Mỗi item trong array có 4 trường: type, name, quantity, keyword. Type gồm: CPU, MainBoard, RAM, VGA, HDD, SSD, Case, PSU, AirCooler, LiquidCooler. Ví dụ format:\n\n<PC_Components>\n[{"type":"CPU","name":"Intel Core i7-14700K","quantity":1,"keyword":"CPU 14700K"},{"type":"VGA","name":"RTX 4060","quantity":1,"keyword":"VGA 4060"}]\n</PC_Components>\n\nChỉ trả về thẻ <PC_Components> và JSON bên trong, không thêm text nào khác.';
 
 //  Chunk 3: Với kết quả tìm kiếm của chunk 2, Sử dụng hàm OpenRouter thứ 2 và searchHacom để tìm kiếm thông tin sản phẩm
 
@@ -363,7 +403,8 @@ async function handleSendMessageRequest(body, res) {
       "\n---\n" +
       Opus_Chunk2_After_Rule +
       "\n" +
-      Opus_Perplexity_Chunk2_Schema_Explain;
+      Opus_Perplexity_Chunk2_Schema_Explain +
+      '\n\nVí dụ response hoàn chỉnh:\n<PC_Components>\n[{"type":"CPU","name":"Intel Core i5-12400F","quantity":1,"keyword":"CPU 12400F"},{"type":"MainBoard","name":"MSI B660M PRO-VDH","quantity":1,"keyword":"MainBoard B660M"},{"type":"RAM","name":"Corsair Vengeance LPX 16GB","quantity":1,"keyword":"RAM 16GB"},{"type":"VGA","name":"RTX 4060","quantity":1,"keyword":"VGA 4060"},{"type":"SSD","name":"Samsung 980 500GB","quantity":1,"keyword":"SSD 500GB"},{"type":"PSU","name":"Corsair CV650","quantity":1,"keyword":"PSU 650W"},{"type":"Case","name":"Cooler Master MasterBox Q300L","quantity":1,"keyword":"Case Mini"}]\n</PC_Components>';
 
     // Gọi OpenRouterChunk2Builder cho Chain 2
     const chain2Result = await OpenRouterChunk2Builder(
@@ -419,8 +460,15 @@ async function handleSendMessageRequest(body, res) {
 
     console.log("[Opus_MW] Kết quả đã xử lý từ Chain 2:", content);
 
-    // Nếu không có RequestMultipleProductData hoặc mảng rỗng
-    if (!content || (Array.isArray(content) && content.length === 0)) {
+    // Nếu không có PC_Components hoặc mảng rỗng
+    if (
+      !content ||
+      (Array.isArray(content) && content.length === 0) ||
+      (typeof content === "object" &&
+        (!content.PC_Components ||
+          (Array.isArray(content.PC_Components) &&
+            content.PC_Components.length === 0)))
+    ) {
       res.write(
         JSON.stringify({
           type: "error",
@@ -442,7 +490,8 @@ async function handleSendMessageRequest(body, res) {
           // Answer: chunk1Content.Answer,
           // IsPC_Selected: true,
           rawChunk2Result: chain2Result,
-          RequestMultipleProductData: content,
+          RequestMultipleProductData:
+            content && content.PC_Components ? content.PC_Components : content,
         },
       }) + "\n"
     );
@@ -451,9 +500,9 @@ async function handleSendMessageRequest(body, res) {
     if (typeof res.flush === "function") res.flush();
 
     // CHUNK 3: Xử lý tìm kiếm sản phẩm
-    // Lấy keyword và name từ RequestMultipleProductData (dạng mảng các object)
+    // Lấy keyword và name từ PC_Components (dạng object chứa mảng các object)
     console.log(
-      "[Opus_MW] Xử lý Chunk 3 | RequestMultipleProductData - Nay chỉ còn là phần content"
+      "[Opus_MW] Xử lý Chunk 3 | PC_Components - Nay chỉ còn là phần content"
     );
     let keywords = [];
     let names = [];
@@ -469,11 +518,34 @@ async function handleSendMessageRequest(body, res) {
             productItems = JSON.parse(productItems.replace(/'/g, '"'));
           } catch (e2) {
             console.warn(
-              "[Opus_MW] Không thể parse RequestMultipleProductData từ string:",
+              "[Opus_MW] Không thể parse PC_Components từ string:",
               e2.message
             );
-            productItems = [];
+            productItems = {};
           }
+        }
+      }
+
+      // Trích xuất mảng PC_Components từ object response hoặc từ plain text
+      if (
+        productItems &&
+        typeof productItems === "object" &&
+        productItems.PC_Components
+      ) {
+        productItems = productItems.PC_Components;
+        console.log(
+          "[Opus_MW] Đã trích xuất PC_Components từ object:",
+          productItems
+        );
+      } else if (typeof productItems === "string") {
+        // Nếu là string, thử trích xuất từ PC_Components tag
+        const extractedFromTag = extractJSONFromPCComponentsTag(productItems);
+        if (extractedFromTag) {
+          productItems = extractedFromTag;
+          console.log(
+            "[Opus_MW] Đã trích xuất PC_Components từ string tag:",
+            productItems
+          );
         }
       }
 
@@ -530,10 +602,7 @@ async function handleSendMessageRequest(body, res) {
       console.log("[Opus_MW] Extracted keywords:", keywords);
       console.log("[Opus_MW] Extracted names:", names);
     } catch (e) {
-      console.warn(
-        "[Opus_MW] Không thể parse RequestMultipleProductData:",
-        e.message
-      );
+      console.warn("[Opus_MW] Không thể parse PC_Components:", e.message);
     }
 
     // Chunk 3: Tìm kiếm sản phẩm với searchHacom
@@ -847,11 +916,11 @@ async function OpenRouterChunk2Builder(
     },
   };
 
-  // Cấu hình cơ bản cho Chain 2 (Llama-4)
+  // Cấu hình cơ bản cho Chain 2 (Llama-4) - Không dùng schema, dùng plain text
   const chain2Config = {
-    // model: "meta-llama/llama-4-maverick:free",
-    model: "meta-llama/llama-4-scout:free",
-    response_format: undefined,
+    model: "meta-llama/llama-4-maverick:free",
+    // model: "meta-llama/llama-4-scout:free",
+    // Bỏ response_format để AI trả về plain text
     provider: {
       order: ["chutes/bf16", "chutes/fp8", "meta/fp8"],
     },
@@ -877,11 +946,11 @@ async function OpenRouterChunk2Builder(
 
   try {
     const startTime = Date.now();
-    console.log(
-      "[Opus_MW]Đang xử lý chunk 2:",
-      inputData.slice(0, 12) + "...",
-      systemContent.slice(0, 30) + "..."
-    );
+    // console.log(
+    //   "[Opus_MW]Đang xử lý chunk 2:",
+    //   inputData.slice(0, 12) + "...",
+    //   systemContent.slice(0, 30) + "..."
+    // );
 
     // khi là Chain 2 hãy nhận dạng ```json```
     // if (chainPhase === 2) {
@@ -917,50 +986,47 @@ async function OpenRouterChunk2Builder(
     ) {
       let content = data.choices[0].message.content;
 
-      // Với chainPhase 2, trích xuất JSON từ code block ```json
+      // Với chainPhase 2, trích xuất JSON từ thẻ <PC_Components>
       if (chainPhase === 2) {
         console.log("[Opus_MW] Xử lý nội dung chainPhase 2");
-        console.log(
-          "[Opus_MW] Raw content Chain 2:",
-          content.substring(0, 200) + "..."
-        );
+        console.log("[Opus_MW] Raw content Chain 2:", content);
 
-        // Thử trích xuất JSON từ code block ```json```
-        const extractedJSON = extractJSONFromCodeBlock(content);
+        // Thử trích xuất JSON từ thẻ <PC_Components>
+        const extractedJSON = extractJSONFromPCComponentsTag(content);
 
         if (extractedJSON) {
-          // Thành công trích xuất JSON
+          // Thành công trích xuất JSON từ PC_Components tag
           data.choices[0].message.content = extractedJSON;
           console.log(
-            "[Opus_MW] Đã trích xuất JSON từ code block Chain 2 thành công:",
+            "[Opus_MW] Đã trích xuất JSON từ PC_Components tag Chain 2 thành công:",
             JSON.stringify(extractedJSON).substring(0, 100) + "..."
           );
         } else {
-          // Không tìm thấy JSON trong code block, thử parse trực tiếp
-          try {
-            const directParsed = JSON.parse(content);
-            data.choices[0].message.content = directParsed;
-            console.log("[Opus_MW] Đã parse trực tiếp JSON Chain 2 thành công");
-          } catch (e) {
-            console.warn(
-              "[Opus_MW] Không thể parse content Chain 2, giữ nguyên dạng string:",
-              e.message,
-              "\nContent bắt đầu với:",
-              content.substring(0, 50)
+          // Fallback: Thử trích xuất từ code block nếu có
+          const codeBlockJSON = extractJSONFromCodeBlock(content);
+          if (codeBlockJSON) {
+            data.choices[0].message.content = codeBlockJSON;
+            console.log(
+              "[Opus_MW] Đã trích xuất JSON từ code block Chain 2 (fallback)"
             );
+          } else {
+            // Fallback cuối: Thử parse trực tiếp
+            try {
+              const directParsed = JSON.parse(content);
+              data.choices[0].message.content = directParsed;
+              console.log(
+                "[Opus_MW] Đã parse trực tiếp JSON Chain 2 thành công"
+              );
+            } catch (e) {
+              console.warn(
+                "[Opus_MW] Không thể parse content Chain 2 bằng mọi cách:",
+                e.message,
+                "\nContent:",
+                content.substring(0, 200)
+              );
 
-            // Thử sử dụng hàm extractJSONFromText để trích xuất JSON từ văn bản
-            if (typeof extractJSONFromText === "function") {
-              const extractedText = extractJSONFromText(content);
-              if (extractedText) {
-                console.log(
-                  "[Opus_MW] Đã trích xuất JSON từ văn bản thành công"
-                );
-                data.choices[0].message.content = extractedText;
-              }
+              // Giữ nguyên content dạng string để xử lý ở bước tiếp theo
             }
-
-            // Giữ nguyên content dạng string để xử lý ở bước tiếp theo
           }
         }
       }
@@ -1295,7 +1361,76 @@ function extractJSONFromText(text) {
   }
 }
 
-// Hàm trích xuất JSON từ code block ```json```
+// Hàm trích xuất JSON từ thẻ <PC_Components>
+function extractJSONFromPCComponentsTag(text) {
+  if (typeof text !== "string") return null;
+
+  try {
+    console.log("[Opus_MW] Bắt đầu trích xuất từ PC_Components tag:", text);
+
+    // Tìm nội dung trong thẻ <PC_Components>...</PC_Components>
+    const pcComponentsRegex =
+      /<PC_Components>\s*([\s\S]*?)\s*<\/PC_Components>/i;
+    const match = text.match(pcComponentsRegex);
+
+    if (match && match[1]) {
+      const jsonText = match[1].trim();
+      console.log(
+        "[Opus_MW] Tìm thấy nội dung trong PC_Components tag:",
+        jsonText
+      );
+
+      try {
+        const jsonContent = JSON.parse(jsonText);
+        console.log("[Opus_MW] Đã parse JSON thành công từ PC_Components tag");
+        return jsonContent;
+      } catch (e) {
+        console.warn(
+          "[Opus_MW] Lỗi parse JSON từ PC_Components tag:",
+          e.message
+        );
+        // Thử clean và parse lại
+        try {
+          const cleanedJson = jsonText
+            .replace(/'/g, '"') // Thay ' thành "
+            .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":') // Thêm quotes cho keys
+            .replace(/:\s*([^",{\[\]}\s]+?)(\s*[,}\]])/g, ':"$1"$2'); // Thêm quotes cho values
+
+          const jsonContent = JSON.parse(cleanedJson);
+          console.log(
+            "[Opus_MW] Đã parse JSON sau khi clean từ PC_Components tag"
+          );
+          return jsonContent;
+        } catch (e2) {
+          console.warn("[Opus_MW] Vẫn lỗi sau khi clean:", e2.message);
+        }
+      }
+    }
+
+    // Fallback: Tìm JSON array trực tiếp trong text
+    const arrayMatch = text.match(/\[\s*\{[\s\S]*?\}\s*\]/);
+    if (arrayMatch) {
+      try {
+        const jsonContent = JSON.parse(arrayMatch[0]);
+        console.log("[Opus_MW] Đã trích xuất mảng JSON fallback thành công");
+        return jsonContent;
+      } catch (e) {
+        console.warn("[Opus_MW] Lỗi parse mảng JSON fallback:", e.message);
+      }
+    }
+
+    console.log("[Opus_MW] Không tìm thấy PC_Components tag hoặc JSON hợp lệ");
+    return null;
+  } catch (e) {
+    console.error(
+      "[Opus_MW] Lỗi khi trích xuất từ PC_Components tag:",
+      e.message
+    );
+    return null;
+  }
+}
+
+// Hàm trích xuất JSON từ code block ```json``` (giữ lại để backward compatibility)
 function extractJSONFromCodeBlock(text) {
   if (typeof text !== "string") return null;
 

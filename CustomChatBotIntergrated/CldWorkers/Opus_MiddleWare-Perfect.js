@@ -134,7 +134,7 @@ const Opus_Response_Chunk2_Chain2_Schema_Shorten = {
           },
         },
         required: ["type", "name", "quantity", "keyword"],
-        additionalProperties: false,
+        // additionalProperties: false,
       },
     },
   },
@@ -852,7 +852,7 @@ async function opusRequestOpenRouter(inventoryList, userRequestlist) {
       },
     ],
     provider: {
-      order: ["chutes/bf16", "meta/fp8"],
+      order: ["chutes/bf16", "chutes/fp8", "meta/fp8"],
     },
 
     response_format: {
@@ -945,7 +945,7 @@ async function OpenRouterChunk2Builder(
     model: "meta-llama/llama-4-scout:free",
     response_format: Opus_Response_Chunk2_Chain2_Schema_Shorten,
     provider: {
-      order: ["chutes/bf16", "meta/fp8"],
+      order: ["chutes/bf16", "chutes/fp8", "meta/fp8"],
     },
   };
 
@@ -1246,7 +1246,7 @@ async function opusRequestOpenRouter_Chunk1(chatLog) {
 
     messages: messages,
     provider: {
-      order: ["chutes/bf16", "meta/fp8"],
+      order: ["chutes/bf16", "chutes/fp8", "meta/fp8"],
       //   sort: "throughput",
     },
     response_format: {

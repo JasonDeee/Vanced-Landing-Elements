@@ -1,0 +1,15 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "Names_Of_Items",
+    "strict": true,
+    "schema": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Item Name"
+      },
+      "description": "Array of item names that user want to get"
+    }
+  }
+}
