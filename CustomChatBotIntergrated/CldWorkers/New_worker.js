@@ -12,7 +12,7 @@ import {
 
 // Cấu hình Gemini API
 let GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-flash-lite-latest";
+const GEMINI_MODEL = "gemini-2.5-flash-lite";
 // let GEMINI_API_URL;
 
 /**
@@ -24,8 +24,18 @@ export default {
     // GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
     // CORS headers
+    const allowedOrigins = [
+      "http://127.0.0.1:5500",
+      "https://package.vanced.media",
+      "https://vanced.media",
+      "https://beta.vanced.media",
+    ];
+
+    const origin = request.headers.get("Origin");
     const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": allowedOrigins.includes(origin)
+        ? origin
+        : "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     };
