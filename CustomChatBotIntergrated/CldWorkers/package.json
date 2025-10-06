@@ -1,17 +1,29 @@
 {
-  "name": "vx-chatbot-cloud-function",
+  "name": "vanced-support-chatbot",
   "version": "1.0.0",
-  "description": "Vanced Media Chatbot Cloud Function",
-  "main": "index_CloudFunc.js",
+  "description": "Customer support chatbot using Cloudflare Workers and Gemini Flash Lite",
+  "main": "New_worker.js",
   "scripts": {
-    "start": "functions-framework --target=vxChatbot"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env development",
+    "deploy:prod": "wrangler deploy --env production",
+    "tail": "wrangler tail",
+    "test": "wrangler dev --local"
   },
-  "dependencies": {
-    "@google-cloud/functions-framework": "^3.3.0",
-    "@google/generative-ai": "^0.2.0",
-    "node-fetch": "^2.7.0"
+  "keywords": [
+    "chatbot",
+    "customer-support",
+    "cloudflare-workers",
+    "gemini",
+    "ai"
+  ],
+  "author": "Vanced Agency",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=16.0.0"
   }
 }

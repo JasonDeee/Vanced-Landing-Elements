@@ -1,14 +1,13 @@
-// Chúng ta cần tổ chức lại dự án này (node.js 22), chia nhỏ thành các component cụ thể, mỗi component sẽ có một file và chức năng riêng biệt
-// Opus_MiddleWare.js sẽ là file chính (index.js trong Cloud Run Function), nơi chúng ta sẽ nhận request từ client và import các hàm từ component khác để xử lý và trả về kết quả
-// Lưu ý: Chúng ta cũng sẽ thay đổi cả tên khai báo của từng biến và hàm. Cách đặt tên như sau: Mở đầu bằng "Vx_" + Tên chức năng + "_" + Nếu biến này tạo riêng để xử lý cho một thực thể khác, hãy đưa tên thực thể đó vào sau tên biến. \n ví dụ: Vx_ResponseSchema_ForChunk1_Opus; Vx_KeyWordExtractor_ForChunk3. Cách đặt tên này sẽ áp dụng cho cả các component khác.
-
 const functions = require("@google-cloud/functions-framework");
 const express = require("express");
 const fs = require("fs");
 
-// API KEY cho perplexity và openrouter
+// API KEY cho perplexity, openrouter và gemini
 const perplexityApiKey = process.env.PERPLEXITY_API_KEY;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const OPENROUTER_API_KEY2 = process.env.OPENROUTER_API_KEY2;
+const GEMINI_API_KEY = process.env.GEMINI_API_TEMP;
+const GEMINI_API_KEY2 = process.env.GEMINI_API_TEMP2;
 
 // Endpoint Google Apps Script
 const API_Chat_ENDPOINT = process.env.API_CHAT_ENDPOINT;
@@ -74,9 +73,10 @@ const Open_Chunk1_Schema_Simple = Object.fromEntries(
 
 let Opus_Tunned_Data = "";
 
-// Chunk 2: Nếu người dùng yêu cầu cấu hình PC, sử dụng perplexity để tìm kiếm cấu hình phù hợp
-// Chunk 2 sẽ nhận thông tin từ chunk 1 và sử dụng Perplexity để tìm kiếm cấu hình phù hợp
-// Chunk 2 sẽ hoạt động dưới phương thức Prompt Chaining để tăng cường độ chính xác và tính tương tác. Chain 1 sẽ có chức năng dựng cấu hình cơ bản nhưng không cần trả về theo schema. Chain 2 sẽ đánh giá lại cấu hình kết quả của chain 1, chỉnh sửa nếu cần và tổng hợp trả về theo schema. Cả 2 chain đều sử dụng chung một mô hình thông qua OpenRouterChunk2Builder nhưng sẽ có phần system content khác nhau.
+// Chunk 2: Nếu người dùng yêu cầu cấu hình PC, sử dụng prompt chaining để tạo cấu hình
+// Chunk 2 sẽ nhận thông tin từ chunk 1 và xử lý theo 2-chain prompting
+// Chain 1: Dùng OpenRouter (DeepSeek) để dựng cấu hình cơ bản, trả về text thuần
+// Chain 2: Dùng Gemini để đánh giá và chuẩn hóa cấu hình từ Chain 1, trả về JSON schema chuẩn
 
 // Chain 1 prefix
 const Opus_Chunk2_Chain1_Prefix =
@@ -144,42 +144,40 @@ const Opus_Response_Chunk2_Chain2_Schema_Shorten_New = {
 
 // Schema mới cho Llama 4
 const Opus_Response_Chunk2_Chain2_Schema_Shorten = {
-  type: "json_schema",
-  json_schema: {
-    name: "PCConfigurationResponse",
-    strict: true,
-    schema: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          type: {
-            type: "string",
-          },
-          name: {
-            type: "string",
-          },
-          quantity: {
-            type: "number",
-          },
-          keyword: {
-            type: "string",
-          },
-        },
-        // required: ["type", "name", "quantity", "keyword"],
-        // additionalProperties: false,
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      type: {
+        type: "string",
+        description: "Loại của vật phẩm",
+      },
+      name: {
+        type: "string",
+        description: "Tên của vật phẩm",
+      },
+      quantity: {
+        type: "number",
+        description: "Số lượng của vật phẩm",
+      },
+      keyword: {
+        type: "string",
+        description: "Từ khóa liên quan đến vật phẩm",
       },
     },
+    required: ["type", "name", "quantity", "keyword"],
   },
 };
 
 const Opus_Perplexity_Chunk2_Schema_Explain =
-  'Hãy trả về cấu hình PC trong thẻ <PC_Components> dưới dạng JSON array. Mỗi item trong array có 4 trường: type, name, quantity, keyword. Type gồm: CPU, MainBoard, RAM, VGA, HDD, SSD, Case, PSU, AirCooler, LiquidCooler. Ví dụ format:\n\n<PC_Components>\n[{"type":"CPU","name":"Intel Core i7-14700K","quantity":1,"keyword":"CPU 14700K"},{"type":"VGA","name":"RTX 4060","quantity":1,"keyword":"VGA 4060"}]\n</PC_Components>\n\nChỉ trả về thẻ <PC_Components> và JSON bên trong, không thêm text nào khác.';
+  'Hãy trả về cấu hình PC dưới dạng JSON array. Mỗi item trong array có 4 trường: type, name, quantity, keyword. Type gồm: CPU, MainBoard, RAM, VGA, HDD, SSD, Case, PSU, AirCooler, LiquidCooler. Ví dụ format:\n\n[{"type":"CPU","name":"Intel Core i7-14700K","quantity":1,"keyword":"CPU 14700K"},{"type":"VGA","name":"RTX 4060","quantity":1,"keyword":"VGA 4060"}]\n\nChỉ trả về JSON array, không thêm text hay tag nào khác.';
 
-//  Chunk 3: Với kết quả tìm kiếm của chunk 2, Sử dụng hàm OpenRouter thứ 2 và searchHacom để tìm kiếm thông tin sản phẩm
+//  Chunk 3: Với kết quả tìm kiếm của chunk 2, Sử dụng hàm GeminiChunk3Builder và searchHacom để tìm kiếm thông tin sản phẩm
 
 const OpenRouter_Schema_System_Guide =
-  "You will receive a list of products and their inventory information. Then, the user will send an array containing the names of the products they want to find. Your task is to search for products that exactly match the names requested by the user and return the exact 'productSKU' of those products in an array. If there are multiple products with the same name, select the product with the highest 'quantity' remaining, or, if quantities are equal, choose the one with the lower 'price'. If you cannot find the exact product, please select a product from the inventory with the same key specifications and, preferably, a similar price. If you search carefully and still cannot find the requested product, return an empty string '' in the array. The returned array must have the same order and number of elements as the user's requested array. Below is the inventory list.";
+  "You will receive a list of products and their inventory information. Then, the user will send an array containing the names of the products they want to find. Your task is to search for products that exactly match the names requested by the user and return the exact 'productSKU' of those products in an array. If there are multiple products with the same name, select the product with the highest 'quantity' remaining, or, if quantities are equal, choose the one with the lower 'price'. If you cannot find the exact product, please select a product from the inventory with the same key specifications and, preferably, a similar price. If you search carefully and still cannot find the requested product, return an empty string '' in the array. The returned array must have the same order and number of elements as the user's requested array. Below is the inventory list." +
+  "\n-----\n" +
+  "Always return exact number of products as the user's requested array, do not make up any products or SKU.";
 
 const OpenRouter_Message_Prefix =
   "I am the user and I need to find these following products:";
@@ -461,14 +459,7 @@ async function handleSendMessageRequest(body, res) {
     console.log("[Opus_MW] Kết quả đã xử lý từ Chain 2:", content);
 
     // Nếu không có PC_Components hoặc mảng rỗng
-    if (
-      !content ||
-      (Array.isArray(content) && content.length === 0) ||
-      (typeof content === "object" &&
-        (!content.PC_Components ||
-          (Array.isArray(content.PC_Components) &&
-            content.PC_Components.length === 0)))
-    ) {
+    if (!content || (Array.isArray(content) && content.length === 0)) {
       res.write(
         JSON.stringify({
           type: "error",
@@ -504,6 +495,20 @@ async function handleSendMessageRequest(body, res) {
     console.log(
       "[Opus_MW] Xử lý Chunk 3 | PC_Components - Nay chỉ còn là phần content"
     );
+    console.log(
+      "[OPUS_DEBUG] Content từ Chunk 2:",
+      JSON.stringify(content, null, 2)
+    );
+    console.log("[OPUS_DEBUG] Type của content:", typeof content);
+    console.log("[OPUS_DEBUG] Array.isArray(content):", Array.isArray(content));
+    if (Array.isArray(content) && content.length > 0) {
+      console.log(
+        "[OPUS_DEBUG] Content[0]:",
+        JSON.stringify(content[0], null, 2)
+      );
+      console.log("[OPUS_DEBUG] Type của content[0]:", typeof content[0]);
+    }
+
     let keywords = [];
     let names = [];
     try {
@@ -551,12 +556,16 @@ async function handleSendMessageRequest(body, res) {
 
       // Xử lý dạng mới - mảng các object
       if (Array.isArray(productItems)) {
+        console.log("[OPUS_DEBUG] Đã vào nhánh Array.isArray(productItems)");
         // Kiểm tra xem có phải mảng các object hay không
         if (
           productItems.length > 0 &&
           typeof productItems[0] === "object" &&
           !Array.isArray(productItems[0])
         ) {
+          console.log(
+            "[OPUS_DEBUG] Đã vào nhánh 'mảng các object' - Gemini format"
+          );
           // Dạng mới: mảng các object
           keywords = productItems
             .map((item) => item.keyword || "")
@@ -565,6 +574,7 @@ async function handleSendMessageRequest(body, res) {
               if (typeof kw !== "string") return kw;
               return kw
                 .replace(/\bVGA\b/g, "Card màn hình")
+                .replace(/\bMB\b/g, "Mainboard")
                 .replace(/\bPSU\b/g, "Nguồn")
                 .replace(/\bAirCooler\b/g, "Tản khí")
                 .replace(/\bLiquidCooler\b/g, "Tản nước")
@@ -573,10 +583,19 @@ async function handleSendMessageRequest(body, res) {
                 .replace(/\bRAM\b/g, "RAM Desktop");
             });
 
+          console.log(
+            "[OPUS_DEBUG] Raw keywords từ productItems:",
+            productItems.map((item) => item.keyword || "")
+          );
           names = productItems.map((item) => item.name || "").filter(Boolean);
+          console.log(
+            "[OPUS_DEBUG] Raw names từ productItems:",
+            productItems.map((item) => item.name || "")
+          );
         }
         // Nếu là dạng cũ (mảng lồng mảng), chuyển đổi
         else if (productItems.length > 0 && Array.isArray(productItems[0])) {
+          console.log("[OPUS_DEBUG] Đã vào nhánh 'mảng lồng mảng' - format cũ");
           keywords = productItems
             .map((item) => (Array.isArray(item) ? item[4] : null))
             .filter(Boolean)
@@ -595,12 +614,53 @@ async function handleSendMessageRequest(body, res) {
           names = productItems
             .map((item) => (Array.isArray(item) ? item[1] : null))
             .filter(Boolean);
+        } else {
+          console.log(
+            "[OPUS_DEBUG] productItems là mảng nhưng không match format nào"
+          );
+          console.log("[OPUS_DEBUG] productItems.length:", productItems.length);
+          if (productItems.length > 0) {
+            console.log(
+              "[OPUS_DEBUG] typeof productItems[0]:",
+              typeof productItems[0]
+            );
+            console.log(
+              "[OPUS_DEBUG] Array.isArray(productItems[0]):",
+              Array.isArray(productItems[0])
+            );
+          }
         }
+      } else {
+        console.log("[OPUS_DEBUG] productItems KHÔNG phải là mảng");
       }
 
-      console.log("[Opus_MW] Đã xử lý productItems:", productItems);
-      console.log("[Opus_MW] Extracted keywords:", keywords);
-      console.log("[Opus_MW] Extracted names:", names);
+      console.log(
+        "[OPUS_DEBUG] Final productItems:",
+        JSON.stringify(productItems, null, 2)
+      );
+      console.log("[OPUS_DEBUG] Type của productItems:", typeof productItems);
+      console.log(
+        "[OPUS_DEBUG] Array.isArray(productItems):",
+        Array.isArray(productItems)
+      );
+      if (Array.isArray(productItems) && productItems.length > 0) {
+        console.log(
+          "[OPUS_DEBUG] productItems[0]:",
+          JSON.stringify(productItems[0], null, 2)
+        );
+        console.log(
+          "[OPUS_DEBUG] Type của productItems[0]:",
+          typeof productItems[0]
+        );
+        console.log(
+          "[OPUS_DEBUG] productItems[0].keyword:",
+          productItems[0].keyword
+        );
+        console.log("[OPUS_DEBUG] productItems[0].name:", productItems[0].name);
+      }
+
+      console.log("[OPUS_DEBUG] Extracted keywords:", keywords);
+      console.log("[OPUS_DEBUG] Extracted names:", names);
     } catch (e) {
       console.warn("[Opus_MW] Không thể parse PC_Components:", e.message);
     }
@@ -630,14 +690,11 @@ async function handleSendMessageRequest(body, res) {
       );
     }
 
-    // Gọi OpenRouter để lấy product ids
+    // Gọi Gemini để lấy product ids
     let openRouterResult = null;
-    if (
-      hacomResults.length > 0 &&
-      typeof opusRequestOpenRouter === "function"
-    ) {
+    if (hacomResults.length > 0 && typeof GeminiChunk3Builder === "function") {
       try {
-        let inventoryList = FilterHacomSearchResult(hacomResults);
+        let inventoryList = FilterHacomSearchResult(hacomResults, false);
         console.log(
           "[Opus_MW] Danh sách sản phẩm tìm thấy:",
           inventoryList.length
@@ -659,19 +716,19 @@ async function handleSendMessageRequest(body, res) {
           return;
         }
 
-        openRouterResult = await opusRequestOpenRouter(inventoryList, names);
+        openRouterResult = await GeminiChunk3Builder(inventoryList, names);
         console.log(
-          "[Opus_MW] openRouterResult:",
+          "[Opus_MW] GeminiChunk3Builder result:",
           openRouterResult.choices[0].message,
           openRouterResult.choices[0].message.content
         );
       } catch (err) {
         openRouterResult = { error: err?.message || err };
-        console.error("[Opus_MW] Lỗi khi gọi OpenRouter Chunk 3:", err);
+        console.error("[Opus_MW] Lỗi khi gọi GeminiChunk3Builder:", err);
       }
     } else {
       console.warn(
-        "[Opus_MW] Không có kết quả tìm kiếm từ Hacom hoặc hàm opusRequestOpenRouter không khả dụng"
+        "[Opus_MW] Không có kết quả tìm kiếm từ Hacom hoặc hàm GeminiChunk3Builder không khả dụng"
       );
       // Gửi kết quả trống
       res.write(
@@ -718,11 +775,16 @@ async function handleSendMessageRequest(body, res) {
           Array.isArray(openRouter_ParsedResult) &&
           openRouter_ParsedResult.length > 0
         ) {
-          hacomFinalResult = await Promise.all(
+          let RawHacomFinal = await Promise.all(
             openRouter_ParsedResult.map(searchHacom)
           );
+
+          hacomFinalResult = FilterHacomSearchResult(RawHacomFinal, true);
+          console.log("[Opus_MW] hacomFinalResult:", hacomFinalResult);
         } else {
-          console.warn("[Opus_MW] OpenRouter không trả về id sản phẩm nào");
+          console.warn(
+            "[Opus_MW] GeminiChunk3Builder không trả về id sản phẩm nào"
+          );
           hacomFinalResult = [];
         }
       } catch (e) {
@@ -730,7 +792,9 @@ async function handleSendMessageRequest(body, res) {
         hacomFinalResult = [];
       }
     } else {
-      console.warn("[Opus_MW] Không nhận được kết quả hợp lệ từ OpenRouter");
+      console.warn(
+        "[Opus_MW] Không nhận được kết quả hợp lệ từ GeminiChunk3Builder"
+      );
       hacomFinalResult = [];
     }
 
@@ -781,69 +845,227 @@ async function handleSendMessageRequest(body, res) {
 }
 
 async function searchHacom(pee) {
-  const params = new URLSearchParams({
-    action: "search",
-    action_type: "search",
-    q: pee,
-    limit: 5,
-  });
-  const url = `https://hacom.vn/ajax/get_json.php?${params.toString()}`;
-  const response = await fetch(url, {
-    method: "GET",
-    mode: "cors",
-    headers: {
-      Origin: "https://hacom.vn/",
+  const url = "https://apis-web.hacom.vn/api-client/api/v1/TblItemV/get-list";
+  const payload = {
+    isCount: false,
+    SearchModel: {
+      keySearch: pee,
+      skip: 0,
+      take: 3,
+      attIds: [],
     },
+  };
+
+  console.log(`[Opus_MW] searchHacom tìm kiếm: "${pee}"`);
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
   });
-  if (!response.ok) throw new Error("Network response was not ok");
-  return response.json();
+
+  if (!response.ok) {
+    console.error(`[Opus_MW] searchHacom lỗi HTTP: ${response.status}`);
+    throw new Error("Network response was not ok");
+  }
+
+  const result = await response.json();
+  console.log(`[Opus_MW] searchHacom response cho "${pee}":`, {
+    success: result.success,
+    httpStatusCode: result.httpStatusCode,
+    dataLength: result.data ? result.data.length : 0,
+    totalCount: result.totalCount,
+    // // Log 1 sản phẩm đầu tiên để xem structure
+    // firstItem: result.data && result.data.length > 0 ? result.data[0] : null,
+  });
+
+  return result;
 }
 
-async function opusRequestOpenRouter(inventoryList, userRequestlist) {
-  const url = "https://openrouter.ai/api/v1/chat/completions";
-  const payload = {
-    // model: "deepseek/deepseek-v3-base:free",
-    //model: "meta-llama/llama-4-scout:free",
-    model: "meta-llama/llama-4-maverick:free",
+// [DEPRECATED for Chunk 3] Hàm này đã được thay thế bởi GeminiChunk3Builder cho Chunk 3
+// Giữ lại để backward compatibility với các module khác
 
-    messages: [
-      {
-        role: "system",
-        content:
-          OpenRouter_Schema_System_Guide +
-          "\n" +
-          Opus_UpSale_Products +
-          "\n" +
-          (typeof inventoryList === "string"
-            ? inventoryList
-            : JSON.stringify(inventoryList)),
-      },
+// Hàm request Gemini cho chunk3 - tìm kiếm product SKU
+async function GeminiChunk3Builder(inventoryList, userRequestList) {
+  const model = "gemini-2.5-flash-lite-preview-06-17";
+  const api = "generateContent";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${api}?key=${GEMINI_API_KEY2}`;
+
+  // Chuẩn bị system content giống như OpenRouter
+  const systemContent =
+    OpenRouter_Schema_System_Guide +
+    "\n" +
+    Opus_UpSale_Products +
+    "\n" +
+    (typeof inventoryList === "string"
+      ? inventoryList
+      : JSON.stringify(inventoryList));
+
+  const userContent =
+    OpenRouter_Message_Prefix +
+    "\n" +
+    (typeof userRequestList === "string"
+      ? userRequestList
+      : JSON.stringify(userRequestList));
+
+  const payload = {
+    contents: [
       {
         role: "user",
-        content:
-          OpenRouter_Message_Prefix +
-          "\n" +
-          (typeof userRequestlist === "string"
-            ? userRequestlist
-            : JSON.stringify(userRequestlist)),
+        parts: [
+          {
+            text: userContent,
+          },
+        ],
       },
     ],
-    provider: {
-      order: ["chutes/bf16", "cchutes/fp8", "meta/fp8"],
+    generationConfig: {
+      thinkingConfig: {
+        thinkingBudget: 0,
+      },
+      responseMimeType: "application/json",
+      systemInstruction: [
+        {
+          text: systemContent,
+        },
+      ],
+      responseSchema: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "Product SKU",
+        },
+        description: "Array of product SKU(s) that you want to select",
+      },
     },
+  };
 
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "product_ids",
-        strict: true,
-        schema: {
-          type: "array",
-          items: {
-            type: "string",
-            description: "Product SKU",
+  try {
+    const startTime = Date.now();
+    console.log("[Opus_MW] Bắt đầu gọi Gemini Chunk 3...");
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    let latency = Date.now() - startTime;
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    const data = await res.json();
+    console.log(
+      "Hoàn thành get data Gemini Chunk 3",
+      `Độ trễ: ${latency}ms`,
+      data.candidates?.[0]?.content?.parts?.[0]?.text
+    );
+
+    // Xử lý response từ Gemini - trả về format tương tự OpenRouter
+    if (
+      data.candidates &&
+      data.candidates[0] &&
+      data.candidates[0].content &&
+      data.candidates[0].content.parts &&
+      data.candidates[0].content.parts[0] &&
+      data.candidates[0].content.parts[0].text
+    ) {
+      let content = data.candidates[0].content.parts[0].text;
+
+      // Gemini trả về JSON trực tiếp, parse luôn
+      try {
+        const jsonContent = JSON.parse(content);
+        console.log("[Opus_MW] Đã parse JSON từ Gemini Chunk 3 thành công");
+
+        // Format lại để tương thích với logic hiện tại
+        return {
+          choices: [
+            {
+              message: {
+                content: jsonContent,
+              },
+            },
+          ],
+        };
+      } catch (e) {
+        console.error("[Opus_MW] Lỗi parse JSON từ Gemini Chunk 3:", e.message);
+        console.error("[Opus_MW] Raw content:", content);
+        return { error: "Lỗi parse JSON từ Gemini Chunk 3: " + e.message };
+      }
+    } else {
+      console.error("[Opus_MW] Gemini Chunk 3 response không đúng format");
+      return { error: "Gemini Chunk 3 response không đúng format" };
+    }
+
+    latency = Date.now() - startTime;
+    console.log(
+      `[Opus_MW] Tổng thời gian xử lý GeminiChunk3Builder: ${latency}ms`
+    );
+  } catch (err) {
+    console.error("[Opus_MW] Lỗi khi gọi GeminiChunk3Builder:", err);
+    return { error: "Lỗi request GeminiChunk3Builder: " + err };
+  }
+}
+
+// Hàm request Gemini cho chain2 của Chunk 2
+async function GeminiChunk2Builder(inputData, systemContent) {
+  const model = "gemini-2.5-flash-lite-preview-06-17";
+  const api = "generateContent";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${api}?key=${GEMINI_API_KEY}`;
+
+  const payload = {
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text:
+              typeof inputData === "string"
+                ? inputData
+                : JSON.stringify(inputData),
           },
-          description: "Array of product SKU(s) that you want to select",
+        ],
+      },
+    ],
+    generationConfig: {
+      thinkingConfig: {
+        thinkingBudget: 0,
+      },
+      responseMimeType: "application/json",
+      systemInstruction: [
+        {
+          text: systemContent,
+        },
+      ],
+      responseSchema: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["type", "name", "quantity", "keyword"],
+          properties: {
+            type: {
+              type: "string",
+              description: "Loại của vật phẩm",
+            },
+            name: {
+              type: "string",
+              description: "Tên của vật phẩm",
+            },
+            quantity: {
+              type: "number",
+              description: "Số lượng của vật phẩm",
+            },
+            keyword: {
+              type: "string",
+              description: "Từ khóa liên quan đến vật phẩm",
+            },
+          },
         },
       },
     },
@@ -851,46 +1073,72 @@ async function opusRequestOpenRouter(inventoryList, userRequestlist) {
 
   try {
     const startTime = Date.now();
+    console.log("[Opus_MW] Bắt đầu gọi Gemini Chain 2...");
+
     const res = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: "Bearer " + OPENROUTER_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
+    let latency = Date.now() - startTime;
 
-    const latency = Date.now() - startTime;
-    console.log(`[Opus_MW] Độ trễ của opusRequestOpenRouter: ${latency}ms`);
-
-    // Xử lý parse JSON nếu cần
-    if (
-      data.choices &&
-      data.choices[0] &&
-      data.choices[0].message &&
-      data.choices[0].message.content
-    ) {
-      try {
-        let content = data.choices[0].message.content;
-        // Thử parse nếu là string
-        if (typeof content === "string") {
-          data.choices[0].message.content = JSON.parse(content);
-        }
-      } catch (e) {
-        console.warn(
-          "[Opus_MW] Không thể parse JSON từ opusRequestOpenRouter:",
-          e
-        );
-        // Giữ nguyên content nếu parse thất bại
-      }
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
     }
 
-    return data;
+    const data = await res.json();
+    console.log(
+      "Hoàn thành get data Gemini Chain 2",
+      `Độ trễ: ${latency}ms`,
+      data.candidates?.[0]?.content?.parts?.[0]?.text
+    );
+
+    // Xử lý response từ Gemini - trả về format tương tự OpenRouter
+    if (
+      data.candidates &&
+      data.candidates[0] &&
+      data.candidates[0].content &&
+      data.candidates[0].content.parts &&
+      data.candidates[0].content.parts[0] &&
+      data.candidates[0].content.parts[0].text
+    ) {
+      let content = data.candidates[0].content.parts[0].text;
+
+      // Gemini trả về JSON trực tiếp, parse luôn
+      try {
+        const jsonContent = JSON.parse(content);
+        console.log("[Opus_MW] Đã parse JSON từ Gemini Chain 2 thành công");
+
+        // Format lại để tương thích với logic hiện tại
+        return {
+          choices: [
+            {
+              message: {
+                content: jsonContent,
+              },
+            },
+          ],
+        };
+      } catch (e) {
+        console.error("[Opus_MW] Lỗi parse JSON từ Gemini Chain 2:", e.message);
+        console.error("[Opus_MW] Raw content:", content);
+        return { error: "Lỗi parse JSON từ Gemini Chain 2: " + e.message };
+      }
+    } else {
+      console.error("[Opus_MW] Gemini Chain 2 response không đúng format");
+      return { error: "Gemini Chain 2 response không đúng format" };
+    }
+
+    latency = Date.now() - startTime;
+    console.log(
+      `[Opus_MW] Tổng thời gian xử lý GeminiChunk2Builder: ${latency}ms`
+    );
   } catch (err) {
-    console.error("[Opus_MW] Lỗi request OpenRouter:", err);
-    return { error: "Lỗi request OpenRouter: " + err };
+    console.error("[Opus_MW] Lỗi khi gọi GeminiChunk2Builder:", err);
+    return { error: "Lỗi request GeminiChunk2Builder: " + err };
   }
 }
 
@@ -900,12 +1148,20 @@ async function OpenRouterChunk2Builder(
   systemContent,
   chainPhase = 1
 ) {
-  // console.log("[Opus_MW] Bắt đầu gọi OpenRouterChunk2Builder...");
+  // Với chainPhase === 2, sử dụng Gemini thay vì OpenRouter
+  if (chainPhase === 2) {
+    console.log("[Opus_MW] Chain 2 - Sử dụng Gemini thay vì OpenRouter");
+    return await GeminiChunk2Builder(inputData, systemContent);
+  }
+
+  // Với chainPhase === 1, giữ nguyên logic OpenRouter
+  console.log("[Opus_MW] Chain 1 - Sử dụng OpenRouter");
   const url = "https://openrouter.ai/api/v1/chat/completions";
 
-  // Cấu hình cơ bản cho Chain 1 (Phi-4)
+  // Cấu hình cho Chain 1 (DeepSeek)
   const chain1Config = {
-    model: "deepseek/deepseek-r1-distill-llama-70b:free",
+    // model: "deepseek/deepseek-r1-distill-llama-70b:free",
+    model: "deepseek/deepseek-r1-0528-qwen3-8b:free",
     // model: "tngtech/deepseek-r1t-chimera:free",
     max_tokens: 5000,
     reasoning: {
@@ -916,18 +1172,7 @@ async function OpenRouterChunk2Builder(
     },
   };
 
-  // Cấu hình cơ bản cho Chain 2 (Llama-4) - Không dùng schema, dùng plain text
-  const chain2Config = {
-    model: "meta-llama/llama-4-maverick:free",
-    // model: "meta-llama/llama-4-scout:free",
-    // Bỏ response_format để AI trả về plain text
-    provider: {
-      order: ["chutes/bf16", "chutes/fp8", "meta/fp8"],
-    },
-  };
-
-  // Chọn cấu hình dựa trên chain phase
-  let selectedConfig = chainPhase === 2 ? chain2Config : chain1Config;
+  let selectedConfig = chain1Config;
 
   let payload = {
     messages: [
@@ -961,7 +1206,7 @@ async function OpenRouterChunk2Builder(
     let res = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: "Bearer " + OPENROUTER_API_KEY,
+        Authorization: "Bearer " + OPENROUTER_API_KEY2,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
@@ -977,7 +1222,7 @@ async function OpenRouterChunk2Builder(
       data.choices?.[0]?.message?.content
     );
 
-    // Xử lý kết quả trả về, đặc biệt cho chainPhase 2
+    // Xử lý kết quả trả về cho Chain 1 (chỉ còn xử lý Chain 1 vì Chain 2 đã chuyển sang Gemini)
     if (
       data.choices &&
       data.choices[0] &&
@@ -986,95 +1231,88 @@ async function OpenRouterChunk2Builder(
     ) {
       let content = data.choices[0].message.content;
 
-      // Với chainPhase 2, trích xuất JSON từ thẻ <PC_Components>
-      if (chainPhase === 2) {
-        console.log("[Opus_MW] Xử lý nội dung chainPhase 2");
-        console.log("[Opus_MW] Raw content Chain 2:", content);
-
-        // Thử trích xuất JSON từ thẻ <PC_Components>
-        const extractedJSON = extractJSONFromPCComponentsTag(content);
-
-        if (extractedJSON) {
-          // Thành công trích xuất JSON từ PC_Components tag
-          data.choices[0].message.content = extractedJSON;
-          console.log(
-            "[Opus_MW] Đã trích xuất JSON từ PC_Components tag Chain 2 thành công:",
-            JSON.stringify(extractedJSON).substring(0, 100) + "..."
-          );
-        } else {
-          // Fallback: Thử trích xuất từ code block nếu có
-          const codeBlockJSON = extractJSONFromCodeBlock(content);
-          if (codeBlockJSON) {
-            data.choices[0].message.content = codeBlockJSON;
-            console.log(
-              "[Opus_MW] Đã trích xuất JSON từ code block Chain 2 (fallback)"
-            );
-          } else {
-            // Fallback cuối: Thử parse trực tiếp
-            try {
-              const directParsed = JSON.parse(content);
-              data.choices[0].message.content = directParsed;
-              console.log(
-                "[Opus_MW] Đã parse trực tiếp JSON Chain 2 thành công"
-              );
-            } catch (e) {
-              console.warn(
-                "[Opus_MW] Không thể parse content Chain 2 bằng mọi cách:",
-                e.message,
-                "\nContent:",
-                content.substring(0, 200)
-              );
-
-              // Giữ nguyên content dạng string để xử lý ở bước tiếp theo
-            }
-          }
-        }
-      }
-      // Với chainPhase 1 hoặc các trường hợp khác, thử parse nếu có thể
-      else {
-        try {
-          const jsonContent = JSON.parse(content);
-          data.choices[0].message.content = jsonContent;
-          console.log("[Opus_MW] Đã xử lý content Chain 1 thành công");
-        } catch (e) {
-          // Không có vấn đề nếu không parse được - chain 1 có thể trả về text
-          console.log(
-            "[Opus_MW] Chain 1 trả về nội dung không phải JSON:",
-            content.substring(0, 100) + "..."
-          );
-        }
+      // Với Chain 1, thử parse nếu có thể
+      try {
+        const jsonContent = JSON.parse(content);
+        data.choices[0].message.content = jsonContent;
+        console.log("[Opus_MW] Đã xử lý content Chain 1 thành công");
+      } catch (e) {
+        // Không có vấn đề nếu không parse được - chain 1 có thể trả về text
+        console.log(
+          "[Opus_MW] Chain 1 trả về nội dung không phải JSON:",
+          content.substring(0, 100) + "..."
+        );
       }
     }
 
     latency = Date.now() - startTime;
     console.log(
-      `[Opus_MW] Tổng thời gian xử lý OpenRouterChunk2Builder: ${latency}ms`
+      `[Opus_MW] Tổng thời gian xử lý OpenRouterChunk2Builder (Chain 1): ${latency}ms`
     );
     return data;
   } catch (err) {
-    console.error("[Opus_MW] Lỗi khi gọi OpenRouterChunk2Builder:", err);
-    return { error: "Lỗi request OpenRouterChunk2Builder: " + err };
+    console.error(
+      "[Opus_MW] Lỗi khi gọi OpenRouterChunk2Builder (Chain 1):",
+      err
+    );
+    return { error: "Lỗi request OpenRouterChunk2Builder (Chain 1): " + err };
   }
 }
 
-// Lọc dữ liệu Hacom, chỉ giữ các trường productSKU, productName, price, quantity
-function FilterHacomSearchResult(rawData) {
-  if (!Array.isArray(rawData)) return [];
-  return rawData
-    .filter(Array.isArray)
-    .flat()
-    .filter(
-      (item) =>
-        item &&
-        typeof item === "object" &&
-        (item.productName || item.productSKU)
-    )
-    .map((item) => ({
-      productSKU: item.productSKU || "",
-      productName: item.productName || "",
-      price: item.price || "",
-      quantity: item.quantity || "",
-    }));
+// Lọc dữ liệu Hacom từ API mới, chỉ giữ các trường itemName và sku
+function FilterHacomSearchResult(rawData, requireImage) {
+  // console.log("[Opus_MW] FilterHacomSearchResult nhận rawData:", rawData);
+
+  if (!Array.isArray(rawData)) {
+    console.warn("[Opus_MW] rawData không phải là mảng:", typeof rawData);
+    return [];
+  }
+
+  let allProducts = [];
+
+  // Duyệt qua từng response từ các search calls
+  rawData.forEach((response, index) => {
+    // console.log(`[Opus_MW] Xử lý response ${index}:`, response);
+
+    if (
+      response &&
+      typeof response === "object" &&
+      response.success &&
+      Array.isArray(response.data)
+    ) {
+      console.log(
+        `[Opus_MW] Response ${index} có ${response.data.length} sản phẩm`
+      );
+
+      // Lấy từng sản phẩm từ response.data và chỉ giữ itemName và sku
+      const products = response.data
+        .filter(
+          (item) =>
+            item && typeof item === "object" && (item.itemName || item.sku)
+        )
+        .map((item) => ({
+          productSKU: item.sku || "",
+          productName: item.itemName || "",
+          price: item.unitSellingPrice || "",
+          imageURL: requireImage ? item.primaryImage || "" : "",
+        }));
+
+      allProducts = allProducts.concat(products);
+      console.log(
+        `[Opus_MW] Đã thêm ${products.length} sản phẩm từ response ${index}`
+      );
+    } else {
+      console.warn(
+        `[Opus_MW] Response ${index} không hợp lệ hoặc không có data:`,
+        response
+      );
+    }
+  });
+
+  console.log(
+    `[Opus_MW] Tổng cộng có ${allProducts.length} sản phẩm sau khi filter`
+  );
+  return allProducts;
 }
 
 function generateUserID(fingerprint, timestamp) {
@@ -1226,7 +1464,7 @@ async function opusRequestOpenRouter_Chunk1(chatLog) {
 
     messages: messages,
     provider: {
-      order: ["chutes/bf16", "chutes/fp8", "meta/fp8"],
+      order: ["chutes/fp8", "meta/fp8", "chutes/bf16"],
       //   sort: "throughput",
     },
     response_format: {
@@ -1253,11 +1491,12 @@ async function opusRequestOpenRouter_Chunk1(chatLog) {
 
   // Gọi OpenRouter API
   const url = "https://openrouter.ai/api/v1/chat/completions";
+  let res = null;
   try {
     console.log("[Opus_MW] Gửi request Chunk 1 tới OpenRouter...");
     const startTime = Date.now(); // Đo thời gian xử lý
 
-    const res = await fetch(url, {
+    res = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: "Bearer " + OPENROUTER_API_KEY,
@@ -1271,12 +1510,13 @@ async function opusRequestOpenRouter_Chunk1(chatLog) {
     const data = await res.json(); // Đã sửa từ res.json() thành await res.json()
     console.log(
       `[Opus_MW] Độ trễ của OpenRouter Chunk 1-Bước1: ${latency}ms`,
-      data.choices[0].message.content
+      data.choices?.[0]?.message?.content,
+      data
     );
 
     return data;
   } catch (err) {
-    console.error("[Opus_MW] Lỗi khi gọi OpenRouter Chunk 1:", err);
+    console.error("[Opus_MW] Lỗi khi gọi OpenRouter Chunk 1:", err, res);
     return { error: "Lỗi request OpenRouter Chunk 1: " + err };
   }
 }

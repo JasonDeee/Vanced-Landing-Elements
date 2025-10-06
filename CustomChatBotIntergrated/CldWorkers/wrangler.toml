@@ -1,0 +1,29 @@
+# Cloudflare Workers configuration
+name = "vanced-support-chatbot"
+main = "New_worker.js"
+compatibility_date = "2024-01-15"
+
+# Environment variables
+[env.production.vars]
+# Thêm GEMINI_API_1 vào Cloudflare Dashboard > Workers > Settings > Environment Variables
+
+# Development environment
+[env.development]
+vars = { }
+
+# Build configuration
+[build]
+command = ""
+
+# Routes (nếu cần custom domain)
+# routes = [
+#   { pattern = "chat.yourdomain.com/*", zone_name = "yourdomain.com" }
+# ]
+
+# KV namespaces (cho future chat history storage)
+# kv_namespaces = [
+#   { binding = "CHAT_HISTORY", id = "your-kv-namespace-id", preview_id = "your-preview-kv-namespace-id" }
+# ]
+
+# Compatibility flags
+compatibility_flags = ["nodejs_compat"]
