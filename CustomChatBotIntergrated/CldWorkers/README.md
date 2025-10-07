@@ -2,7 +2,7 @@
 
 ## Mô tả
 
-Chatbot customer support đơn giản sử dụng Cloudflare Workers và Gemini Flash Lite.
+Chatbot customer support đơn giản sử dụng Cloudflare Workers và OpenRouter API.
 
 ## Cấu trúc file
 
@@ -27,11 +27,11 @@ wrangler login
 
 ### 3. Cấu hình Environment Variables
 
-Thêm GEMINI_API_1 vào Cloudflare Dashboard:
+Thêm OPENROUTER_API_KEY vào Cloudflare Dashboard:
 
 1. Vào Workers & Pages > vanced-support-chatbot
 2. Settings > Environment Variables
-3. Thêm: `GEMINI_API_1` = `your-gemini-api-key`
+3. Thêm: `OPENROUTER_API_KEY` = `your-openrouter-api-key`
 
 ### 4. Deploy
 
@@ -87,10 +87,10 @@ Health check endpoint
 
 ## Cấu hình
 
-### Gemini API
+### OpenRouter API
 
-- Model: `gemini-flash-lite-latest`
-- API Key: Lưu trong environment variable `GEMINI_API_1`
+- Model: `openai/gpt-oss-20b:free`
+- API Key: Lưu trong environment variable `OPENROUTER_API_KEY`
 
 ### CORS
 
@@ -116,7 +116,7 @@ Xem trong Cloudflare Dashboard > Analytics
 
 1. **API Key không hợp lệ**: Kiểm tra environment variable
 2. **CORS errors**: Đảm bảo preflight requests được xử lý
-3. **Rate limiting**: Gemini API có giới hạn requests
+3. **Rate limiting**: OpenRouter API có giới hạn requests
 
 ### Debug
 
@@ -147,11 +147,11 @@ Chỉnh sửa `Data.js` > `TUNED_DATA` và deploy lại.
 - API keys lưu trong environment variables
 - Validate input data
 - Rate limiting (implement nếu cần)
-- Content filtering với Gemini safety settings
+- Content filtering với OpenRouter safety settings
 
 ### Environment Variables
 
-- `GEMINI_API_1`: Gemini API key (required)
+- `OPENROUTER_API_KEY`: OpenRouter API key (required)
 - Các biến khác sẽ được thêm sau
 
 ## Future Enhancements
