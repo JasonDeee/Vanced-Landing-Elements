@@ -3,6 +3,27 @@
  * Tích hợp với MachineID và Rate Limiting System
  */
 
+// ====== DEBUG CONFIGURATION ======
+const DeBug_IsActive = true; // Set to false to disable debug logging
+
+/**
+ * Debug logging function for Frontend
+ * @param {string} message - Debug message
+ * @param {any} data - Optional data to log
+ */
+function debugLog(message, data = null) {
+  if (!DeBug_IsActive) return;
+
+  const timestamp = new Date().toISOString();
+  const logMessage = `[FRONTEND-DEBUG ${timestamp}] ${message}`;
+
+  if (data !== null) {
+    console.log(`${logMessage}`, data);
+  } else {
+    console.log(logMessage);
+  }
+}
+
 // Cấu hình
 const WORKERS_ENDPOINT = "https://vanced-chatbot.caocv-work.workers.dev/"; // Cập nhật URL này
 let chatHistory = [];
@@ -53,14 +74,23 @@ async function initializeChat() {
     }
 
     const data = await response.json();
+    debugLog("InitChat response from Workers", {
+      status: data.status,
+      userType: data.userType,
+      rpdRemaining: data.rpdRemaining,
+      chatHistoryLength: data.chatHistory?.length,
+      hasTimestamp: !!data.timestamp,
+    });
 
     // Xử lý response
     if (data.status === "banned") {
+      debugLog("User banned during initialization", { reason: data.reason });
       handleBannedUser(data.message);
       return;
     }
 
     if (data.status === "error") {
+      debugLog("Error during initialization", { error: data.message });
       throw new Error(data.message);
     }
 
@@ -187,24 +217,36 @@ async function handleSendMessage() {
     }
 
     const data = await response.json();
+    debugLog("SendMessage response from Workers", {
+      status: data.status,
+      responseLength: data.response?.length,
+      needsHumanSupport: data.needsHumanSupport,
+      rpdRemaining: data.rpdRemaining,
+      hasTimestamp: !!data.timestamp,
+      error: data.error,
+    });
 
     // Xử lý các loại response khác nhau
     if (data.status === "banned") {
+      debugLog("User banned during message send", { reason: data.reason });
       handleBannedUser(data.message);
       return;
     }
 
     if (data.status === "rate_limited_daily") {
+      debugLog("Daily rate limit hit", { message: data.message });
       showRateLimitMessage(data.message);
       return;
     }
 
     if (data.status === "rate_limited_minute") {
+      debugLog("Minute rate limit hit", { message: data.message });
       showRateLimitMessage(data.message);
       return;
     }
 
     if (data.status === "error") {
+      debugLog("Error during message send", { error: data.message });
       throw new Error(data.message);
     }
 

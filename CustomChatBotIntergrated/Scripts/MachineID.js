@@ -38,7 +38,6 @@ function generateBrowserFingerprint() {
     plugins: getPluginsList(),
   };
 
-  // Honeypot fields - Trông như real data nhưng là fake
   const honeypotFields = {
     // Fake system info (nhưng consistent)
     systemMemory: generateConsistentFakeValue("mem", 4, 32), // GB

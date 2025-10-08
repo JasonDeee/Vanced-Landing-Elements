@@ -12,6 +12,27 @@ import { checkBanStatus, getBanListStats } from "./BanList.js";
  * Sử dụng OpenRouter để trả lời câu hỏi khách hàng
  */
 
+// ====== DEBUG CONFIGURATION ======
+const DeBug_IsActive = true; // Set to false to disable debug logging
+
+/**
+ * Debug logging function for Workers
+ * @param {string} message - Debug message
+ * @param {any} data - Optional data to log
+ */
+function debugLog(message, data = null) {
+  if (!DeBug_IsActive) return;
+
+  const timestamp = new Date().toISOString();
+  let logMessage = `[WORKERS-DEBUG ${timestamp}] ${message}`;
+
+  if (data !== null) {
+    console.log(`${logMessage}`, data);
+  } else {
+    console.log(logMessage);
+  }
+}
+
 // Cấu hình OpenRouter API
 let OPENROUTER_API_KEY;
 const OPENROUTER_MODEL = "openai/gpt-oss-20b:free";
@@ -253,55 +274,74 @@ async function handleSendMessage(body, clientIP, env) {
       },
     ];
 
-    // Gọi OpenRouter API
+    // Gọi OpenRouter API với structured output
     const openRouterResponse = await callOpenRouterAPI(messages, env);
+    debugLog("OpenRouter API Response", {
+      hasChoices: !!openRouterResponse.choices,
+      choicesLength: openRouterResponse.choices?.length,
+      hasContent: !!openRouterResponse.choices?.[0]?.message?.content,
+      usage: openRouterResponse.usage,
+      model: openRouterResponse.model,
+    });
 
-    // Xử lý response
-    const botResponse =
-      openRouterResponse.choices?.[0]?.message?.content ||
-      "Xin lỗi, tôi không thể trả lời câu hỏi này lúc này.";
+    // Validate và parse structured response
+    const rawContent = openRouterResponse.choices?.[0]?.message?.content;
+    debugLog("Raw content from model", {
+      contentLength: rawContent?.length,
+      contentPreview: rawContent,
+    });
 
-    // Kiểm tra xem có cần chuyển sang human support không
-    const needsHumanSupport = botResponse.includes("HUMAN_SUPPORT_NEEDED");
+    const validation = validateStructuredResponse(rawContent);
+    debugLog("Structured response validation", {
+      isValid: validation.isValid,
+      error: validation.error,
+      hasResponseMessage: !!validation.data?.responseMessage,
+      isRequestForRealPerson: validation.data?.isRequestForRealPerson,
+      hasSummerize: !!validation.data?.Summerize,
+    });
 
-    // Cập nhật conversation
+    if (!validation.isValid) {
+      console.error("Invalid structured response:", validation.error);
+      // Fallback to simple response
+      return {
+        status: "success",
+        response:
+          rawContent || "Xin lỗi, tôi không thể trả lời câu hỏi này lúc này.",
+        needsHumanSupport: false,
+        rpdRemaining: validationResponse.rpdRemaining,
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    const structuredData = validation.data;
+
+    // Cập nhật conversation với structured response
     const newConversation = [
       ...currentConversation,
       { role: "user", content: message },
-      {
-        role: "assistant",
-        content: botResponse.replace("HUMAN_SUPPORT_NEEDED", "").trim(),
-      },
+      { role: "assistant", content: structuredData.responseMessage },
     ];
 
-    // Cập nhật chat history trong Spreadsheet
-    await callAppsScript(
-      "updateHistory",
-      {
-        machineId: machineId,
-        conversation: JSON.stringify(newConversation),
-      },
-      env
-    );
-
-    // Đánh dấu human support nếu cần
-    if (needsHumanSupport) {
-      await callAppsScript(
-        "markHumanSupport",
-        {
-          machineId: machineId,
-        },
-        env
-      );
-    }
-
-    return {
+    // Chuẩn bị response để trả về client ngay lập tức
+    const finalResponse = {
       status: "success",
-      response: botResponse.replace("HUMAN_SUPPORT_NEEDED", "").trim(),
-      needsHumanSupport,
+      response: structuredData.responseMessage,
+      needsHumanSupport: structuredData.isRequestForRealPerson,
       rpdRemaining: validationResponse.rpdRemaining,
       timestamp: new Date().toISOString(),
     };
+
+    debugLog("Final response to client", {
+      status: finalResponse.status,
+      responseLength: finalResponse.response?.length,
+      needsHumanSupport: finalResponse.needsHumanSupport,
+      rpdRemaining: finalResponse.rpdRemaining,
+    });
+
+    // Cập nhật Spreadsheet bất đồng bộ (không chờ kết quả)
+    updateSpreadsheetAsync(machineId, newConversation, structuredData, env);
+
+    return finalResponse;
   } catch (error) {
     console.error("Error in handleSendMessage:", error);
     return {
@@ -313,7 +353,7 @@ async function handleSendMessage(body, clientIP, env) {
 }
 
 /**
- * Gọi OpenRouter API
+ * Gọi OpenRouter API với structured output
  */
 async function callOpenRouterAPI(messages, env) {
   const apiKey = env.OPENROUTER_API_KEY || OPENROUTER_API_KEY;
@@ -328,6 +368,35 @@ async function callOpenRouterAPI(messages, env) {
     temperature: 0.7,
     max_tokens: 1024,
     top_p: 0.95,
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "customer_support_response",
+        strict: true,
+        schema: {
+          type: "object",
+          properties: {
+            responseMessage: {
+              type: "string",
+              description:
+                "Response message to the user. Do not emty this field",
+            },
+            isRequestForRealPerson: {
+              type: "boolean",
+              description:
+                "Whether the user is requesting to speak with a real person",
+            },
+            Summerize: {
+              type: "string",
+              description:
+                "Summary of the entire conversation, highlighting special info like Phone Number, Name, Address, Career if provided",
+            },
+          },
+          required: ["responseMessage", "isRequestForRealPerson", "Summerize"],
+          additionalProperties: false,
+        },
+      },
+    },
   };
 
   const response = await fetch(OPENROUTER_API_URL, {
@@ -345,6 +414,48 @@ async function callOpenRouterAPI(messages, env) {
   }
 
   return await response.json();
+}
+
+/**
+ * Validate structured response từ OpenRouter
+ */
+function validateStructuredResponse(responseContent) {
+  try {
+    // Parse JSON nếu là string
+    const parsed =
+      typeof responseContent === "string"
+        ? JSON.parse(responseContent)
+        : responseContent;
+
+    // Validate required fields
+    if (!parsed.responseMessage || typeof parsed.responseMessage !== "string") {
+      throw new Error("Missing or invalid responseMessage");
+    }
+
+    if (typeof parsed.isRequestForRealPerson !== "boolean") {
+      throw new Error("Missing or invalid isRequestForRealPerson");
+    }
+
+    // Summerize is now required
+    if (!parsed.Summerize || typeof parsed.Summerize !== "string") {
+      throw new Error("Missing or invalid Summerize field");
+    }
+
+    return {
+      isValid: true,
+      data: {
+        responseMessage: parsed.responseMessage,
+        isRequestForRealPerson: parsed.isRequestForRealPerson,
+        Summerize: parsed.Summerize,
+      },
+    };
+  } catch (error) {
+    return {
+      isValid: false,
+      error: error.message,
+      data: null,
+    };
+  }
 }
 
 /**
@@ -383,6 +494,8 @@ async function callAppsScript(action, params, env) {
     url.searchParams.append(key, value);
   }
 
+  debugLog("Calling Apps Script", { action, params, url: url.toString() });
+
   const response = await fetch(url.toString(), {
     method: "GET",
     headers: {
@@ -392,20 +505,93 @@ async function callAppsScript(action, params, env) {
 
   if (!response.ok) {
     const errorText = await response.text();
+    debugLog("Apps Script API Error", {
+      status: response.status,
+      errorText,
+      action,
+    });
     throw new Error(`Apps Script API error: ${response.status} - ${errorText}`);
   }
 
-  return await response.json();
+  const result = await response.json();
+  debugLog("Apps Script Response", {
+    action,
+    status: result.status,
+    responseKeys: Object.keys(result),
+    hasData: !!result.data,
+  });
+
+  return result;
 }
 
 /**
- * Utility function để log requests (cho debugging)
+ * Cập nhật Spreadsheet bất đồng bộ - không chờ kết quả
+ * @param {string} machineId - MachineID
+ * @param {Array} newConversation - Conversation mới
+ * @param {Object} structuredData - Dữ liệu từ model
+ * @param {Object} env - Environment variables
  */
-function logRequest(request, response) {
-  console.log({
-    timestamp: new Date().toISOString(),
-    method: request.method,
-    url: request.url,
-    status: response?.status || "unknown",
-  });
+async function updateSpreadsheetAsync(
+  machineId,
+  newConversation,
+  structuredData,
+  env
+) {
+  try {
+    debugLog("Starting async Spreadsheet update", {
+      machineId,
+      conversationLength: newConversation.length,
+      hasSummerize: !!structuredData.Summerize,
+      needsHumanSupport: structuredData.isRequestForRealPerson,
+    });
+
+    // Chuẩn bị batch actions
+    const actions = [
+      {
+        type: "updateHistory",
+        data: {
+          conversation: JSON.stringify(newConversation),
+        },
+      },
+      {
+        type: "updateSummerize",
+        data: {
+          summerize: structuredData.Summerize || "",
+        },
+      },
+    ];
+
+    // Thêm human support action nếu cần
+    if (structuredData.isRequestForRealPerson) {
+      actions.push({
+        type: "markHumanSupport",
+        data: {},
+      });
+    }
+
+    // Gọi batch update
+    const batchResult = await callAppsScript(
+      "batchUpdate",
+      {
+        machineId: machineId,
+        actions: JSON.stringify(actions),
+      },
+      env
+    );
+
+    debugLog("Async Spreadsheet update completed", {
+      machineId,
+      status: batchResult.status,
+      processedActions: batchResult.processedActions,
+      hasErrors: batchResult.status !== "success",
+    });
+  } catch (error) {
+    // Chỉ log lỗi, không throw để không ảnh hưởng response đã trả về client
+    debugLog("Error in async Spreadsheet update", {
+      machineId,
+      error: error.message,
+      stack: error.stack,
+    });
+    console.error("Async Spreadsheet update failed:", error);
+  }
 }

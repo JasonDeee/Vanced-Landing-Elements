@@ -6,6 +6,27 @@
  * Module 2: Rate Limiting & Session Validation
  */
 
+// ====== DEBUG CONFIGURATION ======
+const DeBug_IsActive = true; // Set to false to disable debug logging
+
+/**
+ * Debug logging function
+ * @param {string} message - Debug message
+ * @param {any} data - Optional data to log
+ */
+function debugLog(message, data = null) {
+  if (!DeBug_IsActive) return;
+
+  const timestamp = new Date().toISOString();
+  const logMessage = `[DEBUG ${timestamp}] ${message}`;
+
+  if (data !== null) {
+    Logger.log(`${logMessage} | Data: ${JSON.stringify(data)}`);
+  } else {
+    Logger.log(logMessage);
+  }
+}
+
 // ====== CONSTANTS ======
 const RPD_LIMIT = 15; // Messages per day
 const RPM_LIMIT = 1; // Messages per minute (boolean flag)
@@ -76,7 +97,7 @@ function getOrCreateMonthSheet(monthName) {
     // Tạo sheet mới nếu chưa có
     sheet = spreadsheet.insertSheet(monthName);
 
-    // Tạo header
+    // Tạo header với cột Summerize mới
     const headers = [
       "MachineID",
       "IP",
@@ -85,6 +106,7 @@ function getOrCreateMonthSheet(monthName) {
       "RPM",
       "RPD",
       "LastRequestTimeStamp",
+      "Summerize",
     ];
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
 
@@ -127,14 +149,19 @@ function findMachineIdRow(sheet, machineId) {
  * @returns {Object} - Response object
  */
 function initializeChatSession(machineId, userIP) {
+  debugLog("initializeChatSession called", { machineId, userIP });
+
   try {
     const monthSheet = getCurrentMonthSheet();
+    debugLog("Current month sheet", monthSheet);
+
     const sheet = getOrCreateMonthSheet(monthSheet);
     const row = findMachineIdRow(sheet, machineId);
+    debugLog("Found machine row", { row, machineId });
 
     if (row > 0) {
       // User đã tồn tại - lấy chat history
-      const data = sheet.getRange(row, 1, 1, 7).getValues()[0];
+      const data = sheet.getRange(row, 1, 1, 8).getValues()[0];
       const [
         ,
         ,
@@ -143,6 +170,7 @@ function initializeChatSession(machineId, userIP) {
         rpm,
         rpd,
         lastRequestTimeStamp,
+        summerize,
       ] = data;
 
       let chatHistory = [];
@@ -177,9 +205,10 @@ function initializeChatSession(machineId, userIP) {
         false, // RPM
         RPD_LIMIT, // RPD
         currentTime, // LastRequestTimeStamp
+        "", // Summerize (empty initially)
       ];
 
-      sheet.getRange(newRow, 1, 1, 7).setValues([newData]);
+      sheet.getRange(newRow, 1, 1, 8).setValues([newData]);
 
       Logger.log(`New user created: ${machineId}`);
 
@@ -254,6 +283,31 @@ function markRequestedHumanSupport(machineId) {
   }
 }
 
+/**
+ * Cập nhật Summerize cho MachineID
+ * @param {string} machineId - MachineID
+ * @param {string} summerize - Nội dung summary
+ * @returns {boolean} - Success status
+ */
+function updateSummerize(machineId, summerize) {
+  try {
+    const monthSheet = getCurrentMonthSheet();
+    const sheet = getOrCreateMonthSheet(monthSheet);
+    const row = findMachineIdRow(sheet, machineId);
+
+    if (row > 0) {
+      sheet.getRange(row, 8).setValue(summerize || ""); // Column H: Summerize
+      Logger.log(`Updated summerize for: ${machineId}`);
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    Logger.log(`Error updating summerize: ${error.message}`);
+    return false;
+  }
+}
+
 // ====== MODULE 2: RATE LIMITING & SESSION VALIDATION ======
 
 /**
@@ -276,8 +330,8 @@ function validateChatRequest(machineId, message) {
     }
 
     // Lấy dữ liệu hiện tại
-    const data = sheet.getRange(row, 1, 1, 7).getValues()[0];
-    let [, , conversation, , rpm, rpd, lastRequestTimeStamp] = data;
+    const data = sheet.getRange(row, 1, 1, 8).getValues()[0];
+    let [, , conversation, , rpm, rpd, lastRequestTimeStamp, summerize] = data;
 
     // Reset RPD và RPM nếu là ngày mới
     if (isYesterday(lastRequestTimeStamp)) {
@@ -430,6 +484,7 @@ function resetRPMForMachine(e) {
 function doGet(e) {
   const params = e.parameter;
   const action = params.action;
+  debugLog("Apps Script API Request", { action, params });
 
   let response = {};
 
@@ -454,17 +509,119 @@ function doGet(e) {
         response = { status: marked ? "success" : "error" };
         break;
 
+      case "updateSummerize":
+        const summerizeUpdated = updateSummerize(
+          params.machineId,
+          params.summerize
+        );
+        response = { status: summerizeUpdated ? "success" : "error" };
+        break;
+
+      case "batchUpdate":
+        response = handleBatchUpdate(params);
+        break;
+
       default:
         response = { status: "error", message: "Invalid action" };
     }
   } catch (error) {
-    Logger.log(`API Error: ${error.message}`);
+    debugLog("Apps Script API Error", { error: error.message, action });
     response = { status: "error", message: error.message };
   }
 
+  debugLog("Apps Script API Response", {
+    action,
+    responseStatus: response.status,
+    responseKeys: Object.keys(response),
+  });
   return ContentService.createTextOutput(JSON.stringify(response)).setMimeType(
     ContentService.MimeType.JSON
   );
+}
+
+/**
+ * Xử lý batch update - gộp nhiều actions thành 1 lần gọi
+ * @param {Object} params - Parameters chứa actions array
+ * @returns {Object} - Batch response
+ */
+function handleBatchUpdate(params) {
+  debugLog("handleBatchUpdate called", { params });
+
+  try {
+    const actions = JSON.parse(params.actions || "[]");
+    const machineId = params.machineId;
+
+    if (!machineId) {
+      return {
+        status: "error",
+        message: "MachineID is required for batch update",
+      };
+    }
+
+    const results = {};
+    let hasError = false;
+
+    // Xử lý từng action trong batch
+    for (const action of actions) {
+      debugLog("Processing batch action", { type: action.type, machineId });
+
+      switch (action.type) {
+        case "updateHistory":
+          const historySuccess = updateChatHistory(
+            machineId,
+            JSON.parse(action.data.conversation)
+          );
+          results.updateHistory = { success: historySuccess };
+          if (!historySuccess) hasError = true;
+          break;
+
+        case "updateSummerize":
+          const summerizeSuccess = updateSummerize(
+            machineId,
+            action.data.summerize
+          );
+          results.updateSummerize = { success: summerizeSuccess };
+          if (!summerizeSuccess) hasError = true;
+          break;
+
+        case "markHumanSupport":
+          const humanSupportSuccess = markRequestedHumanSupport(machineId);
+          results.markHumanSupport = { success: humanSupportSuccess };
+          if (!humanSupportSuccess) hasError = true;
+          break;
+
+        default:
+          results[action.type] = {
+            success: false,
+            error: "Unknown action type",
+          };
+          hasError = true;
+      }
+    }
+
+    debugLog("Batch update completed", {
+      machineId,
+      actionsCount: actions.length,
+      hasError,
+      results,
+    });
+
+    return {
+      status: hasError ? "partial_success" : "success",
+      message: hasError
+        ? "Some actions failed"
+        : "All actions completed successfully",
+      results: results,
+      processedActions: actions.length,
+    };
+  } catch (error) {
+    debugLog("Error in handleBatchUpdate", { error: error.message, params });
+    return {
+      status: "error",
+      message: "Batch update failed",
+      error: error.message,
+    };
+  }
 }
 
 /**
