@@ -46,18 +46,9 @@ let APPS_SCRIPT_URL;
  * Main handler cho Cloudflare Workers
  */
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     OPENROUTER_API_KEY = env.OPENROUTER_API_KEY; // Từ environment variables
     APPS_SCRIPT_URL = env.APPS_SCRIPT_URL; // URL của Google Apps Script
-
-    // Debug Workers runtime context
-    debugLog("Workers runtime context", {
-      hasEnv: !!env,
-      hasCtx: !!ctx,
-      ctxKeys: ctx ? Object.keys(ctx) : [],
-      hasWaitUntil: ctx ? typeof ctx.waitUntil === "function" : false,
-      requestMethod: request.method,
-    });
 
     // CORS headers
     const allowedOrigins = [
@@ -116,11 +107,11 @@ export default {
             response = await handleInitChat(body, clientIP, env);
             break;
           case "sendMessage":
-            response = await handleSendMessage(body, clientIP, env, ctx);
+            response = await handleSendMessage(body, clientIP, env);
             break;
           default:
             // Backward compatibility - treat as sendMessage
-            response = await handleSendMessage(body, clientIP, env, ctx);
+            response = await handleSendMessage(body, clientIP, env);
         }
 
         return new Response(JSON.stringify(response), {
@@ -211,7 +202,7 @@ async function handleInitChat(body, clientIP, env) {
 /**
  * Xử lý gửi tin nhắn - Giai đoạn 2 (OnSubmit)
  */
-async function handleSendMessage(body, clientIP, env, ctx) {
+async function handleSendMessage(body, clientIP, env) {
   const { message, machineId, chatHistory = [] } = body;
 
   if (!message || typeof message !== "string") {
@@ -348,45 +339,8 @@ async function handleSendMessage(body, clientIP, env, ctx) {
       rpdRemaining: finalResponse.rpdRemaining,
     });
 
-    // Đảm bảo async task hoàn thành với waitUntil
-    if (ctx && ctx.waitUntil) {
-      debugLog("Using ctx.waitUntil for async Spreadsheet update", {
-        machineId,
-        hasWaitUntil: typeof ctx.waitUntil === "function",
-      });
-
-      // Tạo promise với error handling
-      const asyncUpdatePromise = updateSpreadsheetAsync(
-        machineId,
-        newConversation,
-        structuredData,
-        env
-      ).catch((error) => {
-        debugLog("Async update error caught in waitUntil", {
-          machineId,
-          error: error.message,
-        });
-        // Không throw để không crash Workers
-        return { status: "error", error: error.message };
-      });
-
-      ctx.waitUntil(asyncUpdatePromise);
-      debugLog("ctx.waitUntil called successfully", { machineId });
-    } else {
-      debugLog("ctx.waitUntil not available, falling back to direct call", {
-        hasCtx: !!ctx,
-        ctxType: typeof ctx,
-        hasWaitUntil: ctx ? typeof ctx.waitUntil : "no ctx",
-      });
-
-      // Fallback: chờ update hoàn thành (đồng bộ)
-      await updateSpreadsheetAsync(
-        machineId,
-        newConversation,
-        structuredData,
-        env
-      );
-    }
+    // Cập nhật Spreadsheet bất đồng bộ (không chờ kết quả)
+    updateSpreadsheetAsync(machineId, newConversation, structuredData, env);
 
     return finalResponse;
   } catch (error) {
@@ -583,14 +537,13 @@ async function callAppsScriptPost(data, env) {
     throw new Error("Apps Script URL not configured");
   }
 
-  debugLog("Calling Apps Script POST", {
-    action: data.action,
-    machineId: data.machineId,
-    conversationLength: data.conversation?.length,
-    hasSummerize: !!data.summerize,
-  });
-
   try {
+    debugLog("Calling Apps Script POST", {
+      action: data.action,
+      machineId: data.machineId,
+      conversationLength: data.conversation?.length,
+      hasSummerize: !!data.summerize,
+    });
     const response = await fetch(appsScriptUrl, {
       method: "POST",
       headers: {
@@ -655,24 +608,16 @@ async function updateSpreadsheetAsync(
   structuredData,
   env
 ) {
-  const startTime = Date.now();
-
   try {
     debugLog("Starting async Spreadsheet update", {
       machineId,
       conversationLength: newConversation.length,
       hasSummerize: !!structuredData.Summerize,
       needsHumanSupport: structuredData.isRequestForRealPerson,
-      timestamp: new Date().toISOString(),
     });
 
-    // Timeout protection - Apps Script có thể mất 5-10 giây
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Spreadsheet update timeout")), 15000);
-    });
-
-    // Gọi update với POST method
-    const updatePromise = callAppsScriptPost(
+    // Gọi update với POST method (fire-and-forget)
+    const batchResult = await callAppsScriptPost(
       {
         action: "updateAll",
         machineId: machineId,
@@ -683,39 +628,19 @@ async function updateSpreadsheetAsync(
       env
     );
 
-    // Race giữa update và timeout
-    const batchResult = await Promise.race([updatePromise, timeoutPromise]);
-
-    const duration = Date.now() - startTime;
     debugLog("Async Spreadsheet update completed", {
       machineId,
       status: batchResult.status,
       results: batchResult.results,
       hasErrors: batchResult.status !== "success",
-      duration: `${duration}ms`,
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    const duration = Date.now() - startTime;
-
     // Chỉ log lỗi, không throw để không ảnh hưởng response đã trả về client
     debugLog("Error in async Spreadsheet update", {
       machineId,
       error: error.message,
-      errorType: error.name,
-      duration: `${duration}ms`,
-      timestamp: new Date().toISOString(),
-      isTimeout: error.message.includes("timeout"),
+      stack: error.stack,
     });
-
     console.error("Async Spreadsheet update failed:", error);
-
-    // Return error object để có thể track trong waitUntil
-    return {
-      status: "error",
-      error: error.message,
-      duration,
-      machineId,
-    };
   }
 }

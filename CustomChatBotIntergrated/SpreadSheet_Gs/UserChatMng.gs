@@ -21,7 +21,9 @@ function debugLog(message, data = null) {
   const logMessage = `[DEBUG ${timestamp}] ${message}`;
 
   if (data !== null) {
+    // Dùng cả logger của gs và Console cơ bản
     Logger.log(`${logMessage} | Data: ${JSON.stringify(data)}`);
+    console.log(`${logMessage} | Data: ${JSON.stringify(data)}`);
   } else {
     Logger.log(logMessage);
   }
@@ -521,6 +523,10 @@ function doGet(e) {
         response = handleBatchUpdate(params);
         break;
 
+      case "updateAll":
+        response = handleUpdateAll(params);
+        break;
+
       default:
         response = { status: "error", message: "Invalid action" };
     }
@@ -625,8 +631,139 @@ function handleBatchUpdate(params) {
 }
 
 /**
- * POST endpoint (nếu cần)
+ * Xử lý update tất cả - phiên bản đơn giản hóa
+ * @param {Object} params - Parameters với các fields riêng biệt
+ * @returns {Object} - Update response
+ */
+function handleUpdateAll(params) {
+  debugLog("handleUpdateAll called", {
+    machineId: params.machineId,
+    hasConversation: !!params.conversation,
+    hasSummerize: !!params.summerize,
+    needsHumanSupport: params.needsHumanSupport,
+  });
+
+  try {
+    const machineId = params.machineId;
+    const conversation = params.conversation;
+    const summerize = params.summerize;
+    const needsHumanSupport =
+      params.needsHumanSupport === true || params.needsHumanSupport === "true";
+
+    if (!machineId) {
+      return { status: "error", message: "MachineID is required" };
+    }
+
+    const results = {};
+    let hasError = false;
+
+    // 1. Cập nhật conversation
+    if (conversation) {
+      debugLog("Updating conversation", { machineId });
+      const conversationArray = JSON.parse(conversation);
+      const historySuccess = updateChatHistory(machineId, conversationArray);
+      results.updateHistory = { success: historySuccess };
+      if (!historySuccess) hasError = true;
+    }
+
+    // 2. Cập nhật summerize
+    if (summerize) {
+      debugLog("Updating summerize", {
+        machineId,
+        summerizeLength: summerize.length,
+      });
+      const summerizeSuccess = updateSummerize(machineId, summerize);
+      results.updateSummerize = { success: summerizeSuccess };
+      if (!summerizeSuccess) hasError = true;
+    }
+
+    // 3. Đánh dấu human support nếu cần
+    if (needsHumanSupport) {
+      debugLog("Marking human support", { machineId });
+      const humanSupportSuccess = markRequestedHumanSupport(machineId);
+      results.markHumanSupport = { success: humanSupportSuccess };
+      if (!humanSupportSuccess) hasError = true;
+    }
+
+    debugLog("UpdateAll completed", {
+      machineId,
+      hasError,
+      results,
+      updatedConversation: !!conversation,
+      updatedSummerize: !!summerize,
+      markedHumanSupport: needsHumanSupport,
+    });
+
+    return {
+      status: hasError ? "partial_success" : "success",
+      message: hasError
+        ? "Some updates failed"
+        : "All updates completed successfully",
+      results: results,
+    };
+  } catch (error) {
+    debugLog("Error in handleUpdateAll", { error: error.message, params });
+    return {
+      status: "error",
+      message: "Update failed",
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * POST endpoint - xử lý batch updates
  */
 function doPost(e) {
-  return doGet(e);
+  debugLog("doPost called", {
+    hasPostData: !!e.postData,
+    contentType: e.postData?.type,
+    dataLength: e.postData?.contents?.length,
+  });
+
+  try {
+    // Parse JSON từ POST body
+    const postData = JSON.parse(e.postData.contents);
+    const action = postData.action;
+
+    debugLog("POST data parsed", {
+      action,
+      machineId: postData.machineId,
+      hasConversation: !!postData.conversation,
+      hasSummerize: !!postData.summerize,
+    });
+
+    let response = {};
+
+    switch (action) {
+      case "updateAll":
+        response = handleUpdateAll(postData);
+        break;
+
+      default:
+        response = { status: "error", message: "Invalid POST action" };
+    }
+
+    debugLog("POST response prepared", {
+      action,
+      responseStatus: response.status,
+      responseKeys: Object.keys(response),
+    });
+
+    return ContentService.createTextOutput(
+      JSON.stringify(response)
+    ).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    debugLog("POST error", { error: error.message });
+
+    const errorResponse = {
+      status: "error",
+      message: "POST processing failed",
+      error: error.message,
+    };
+
+    return ContentService.createTextOutput(
+      JSON.stringify(errorResponse)
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
 }

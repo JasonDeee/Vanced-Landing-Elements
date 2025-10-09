@@ -26,9 +26,13 @@ Hướng dẫn trả lời:
 2. Nếu không biết thông tin, hãy thành thật và đề xuất liên hệ với nhân viên hỗ trợ
 3. Nếu khách hàng yêu cầu hỗ trợ phức tạp hoặc cần tư vấn chi tiết, hãy đề xuất chuyển sang nhân viên hỗ trợ
 4. Trả lời ngắn gọn, súc tích nhưng đầy đủ thông tin
-5. Sử dụng tiếng Việt tự nhiên, dễ hiểu
+5. Sử dụng tiếng Việt tự nhiên, dễ hiểu`;
 
-Nếu bạn nhận thấy khách hàng cần hỗ trợ từ nhân viên thật, hãy trả lời với nội dung chứa từ khóa "HUMAN_SUPPORT_NEEDED" để hệ thống có thể chuyển tiếp.`;
+export const SYSTEM_PROMT_SUFFIX = `Hãy trả lời theo Schema:
+responseMessage là nội dung trả lời chính.
+isRequestForRealPerson là true nếu cần liên hệ với nhân viên hỗ trợ, false nếu không cần.
+Summerize là phần tóm tắt ngắn gọn cuộc hội thoại hiện tại.
+`;
 
 /**
  * Hàm xử lý dữ liệu tuned thành format phù hợp cho system prompt
