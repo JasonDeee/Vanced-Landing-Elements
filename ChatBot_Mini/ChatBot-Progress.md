@@ -42,11 +42,19 @@ Frontend (Chat UI) → Cloudflare Workers → OpenRouter API → Google Spreadsh
 
 - `SpreadSheet_Gs/UserChatMng.gs` - Quan ly chat history va rate limiting
 
-### 4. API Configuration
+### 4. Human Support (P2P System)
+
+- `Human_Support/client-p2p.js` - Client P2P logic
+- `Human_Support/admin-dashboard.js` - Admin UI + P2P logic
+- `Human_Support/admin.html` - Admin interface (Messenger-style)
+- `Human_Support/p2p-utils.js` - Shared utilities
+
+### 5. API Configuration
 
 - Model: `openai/gpt-oss-20b:free`
 - OpenRouter API Key: `process.env.OPENROUTER_API_KEY`
 - Apps Script URL: `process.env.APPS_SCRIPT_URL`
+- PeerJS: Public signaling server
 
 ## PROGRESS CHECKLIST
 
@@ -94,14 +102,16 @@ Frontend (Chat UI) → Cloudflare Workers → OpenRouter API → Google Spreadsh
 - [x] Error handling va timeout protection
 - [x] POST method cho large data transfers
 
-### Phase 6: Advanced Features 🚧
+### Phase 6: Human Support P2P System 🚧
 
 - [x] Human support flow detection
-- [ ] **🎯 TIEP THEO: Chuyen huong gap tu van vien**
-- [ ] Enhanced contact form
-- [ ] Email/SMS notification system
-- [ ] Real-time support redirect
-- [ ] Chat history UI improvements
+- [x] **P2P Architecture Design & Planning**
+- [ ] **🎯 ĐANG LÀM: Client P2P Implementation**
+- [ ] Admin Dashboard UI (Messenger-style)
+- [ ] P2P Connection Management
+- [ ] Chat History Management (Admin responsibility)
+- [ ] Timeout & Warning Systems
+- [ ] Email notification system
 
 ### Phase 7: Testing & Polish
 
@@ -138,9 +148,11 @@ User Message → Workers → Gemini (voi tuned data) → Response
 
 ### Dang lam (Phase 6):
 
-- 🎯 **Chuyen huong gap tu van vien** - Muc tieu chinh tiep theo
-- � Enhanmced contact form design
-- � TReal-time support redirect logic
+- 🎯 **P2P Human Support System** - Muc tieu chinh tiep theo
+- ✅ Architecture & Technical Design completed
+- 🚧 Client P2P logic implementation
+- 📝 Admin Dashboard UI (Messenger-style)
+- 📝 Connection management & timeout systems
 
 ### Can lam tiep (Phase 7):
 
@@ -148,38 +160,59 @@ User Message → Workers → Gemini (voi tuned data) → Response
 - 📝 UI/UX improvements
 - 📝 Mobile optimization
 
-## NEXT STEPS - Chuyen huong gap tu van vien 🎯
+## NEXT STEPS - P2P Human Support System 🎯
 
 ### Muc tieu:
 
 Khi AI detect user muon gap tu van vien that, system se:
 
-1. Hien thi UI options cho user
-2. Thu thap thong tin lien he
-3. Chuyen huong den form/email/phone
-4. Luu request vao Spreadsheet
+1. Khoi tao P2P connection voi custom PeerID
+2. Hien thi waiting UI (3 phut timeout)
+3. Admin dashboard de quan ly clients
+4. P2P chat truc tiep giua client va admin
+5. Admin luu chat history len Spreadsheet
 
 ### Tasks can lam:
 
-1. **Design UI cho human support request**
-   - Tao contact form modal
-   - Thu thap: Ten, Email, Phone, Noi dung
-2. **Implement redirect logic**
-   - Email redirect: mailto: link
-   - Phone redirect: tel: link
-   - Form submission handling
-3. **Update Spreadsheet tracking**
-   - Log human support requests
-   - Track contact information
-4. **Notification system** (optional)
-   - Email notification cho admin
-   - SMS notification
+1. **Client P2P Implementation** 🚧
+
+   - Tich hop PeerJS voi custom PeerID format
+   - Waiting UI voi 3 phut timeout
+   - P2P chat interface
+   - Connection error handling
+
+2. **Admin Dashboard** 📝
+
+   - Messenger-style full-screen UI
+   - Client list voi search & refresh
+   - Warning system cho abandoned connections
+   - P2P connection management
+
+3. **Backend Updates** 📝
+
+   - Spreadsheet schema update (cot I format)
+   - Email notification system
+   - Abandoned connection checker (25 phut)
+   - Chat history management
+
+4. **Connection Management** 📝
+   - Timeout systems (3 phut client, 25 phut warning)
+   - Status tracking (waiting|connected|closed|warn)
+   - Admin responsibility cho chat history
 
 ### Implementation Plan:
 
 ```
-User request human → Show contact form → Collect info → Redirect + Log
+User request → Generate PeerID → Wait for admin → P2P Chat → Admin saves history
 ```
+
+### Technical Specifications:
+
+- **PeerID Format:** `vanced_{machineId}_{timestamp}`
+- **Client Timeout:** 3 minutes waiting
+- **Admin Warning:** 25 minutes abandoned connection
+- **UI Style:** Messenger-like full screen
+- **Chat History:** Admin responsibility via Spreadsheet API
 
 ## Technical Notes
 
@@ -188,8 +221,12 @@ User request human → Show contact form → Collect info → Redirect + Log
 - ✅ Rate limiting: 15 msg/day, 1 msg/minute
 - ✅ MachineID fingerprinting cho user tracking
 - ✅ Async updates voi ctx.waitUntil() cho performance
-- 🎯 Human support redirect can implement tiep theo
-- Focus vao simplicity va reliability
+- ✅ P2P Architecture design completed
+- 🎯 P2P Human Support system implementation
+- Focus vao P2P direct connection va admin responsibility
+- Custom PeerID format: `vanced_{machineId}_{timestamp}`
+- Admin dashboard: Messenger-style UI
+- Connection management: 3min timeout + 25min warning system
 
 ## Debug Status
 

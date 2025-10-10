@@ -1,0 +1,379 @@
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+
+:root {
+  --MainColor: #0c1136;
+  --AccentColor: #e72166;
+  --WhiteColor: #fff;
+  --GrayColor: #e9e7e7;
+  --DeepGrayColor: #c9c7c7;
+  --SecondAccentColor: #ffe9f1;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Lexend", sans-serif;
+}
+
+body {
+  background-color: var(--WhiteColor);
+  color: var(--MainColor);
+  height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Main content area */
+.main-content {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--WhiteColor);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-section {
+  text-align: center;
+  padding: 2rem;
+}
+
+.hero-section h1 {
+  font-size: 3rem;
+  color: var(--MainColor);
+  margin-bottom: 1rem;
+}
+
+.hero-section p {
+  font-size: 1.2rem;
+  color: var(--MainColor);
+  opacity: 0.8;
+}
+
+/* Chat Container - Fixed ở góc dưới phải */
+.OpusAgent_Containter {
+  position: fixed;
+  right: 2rem;
+  bottom: 2rem;
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  * {
+    transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    color: var(--MainColor);
+    margin-bottom: 0.5rem;
+  }
+
+  .CreditInfo {
+    color: var(--MainColor);
+    font-size: 0.8rem;
+    font-weight: 300;
+    opacity: 0.7;
+    margin-bottom: 1rem;
+
+    strong {
+      font-weight: 600;
+    }
+  }
+
+  .OpusAgent_ChatInterface {
+    width: 400px;
+    height: 600px;
+    min-width: 350px;
+    max-width: 450px;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+
+    border: solid 2px var(--MainColor);
+    box-shadow: 8px 8px 0px var(--MainColor);
+    background-color: var(--WhiteColor);
+
+    #Vx_chatMessages {
+      flex: auto;
+
+      &::after {
+        content: "Đang tải...";
+        display: block;
+        background-color: var(--AccentColor);
+        width: 5%;
+        padding-left: 32px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        opacity: 0;
+        white-space: nowrap;
+        letter-spacing: 8px;
+        pointer-events: none;
+        height: auto;
+        max-height: 0;
+        justify-content: center;
+        transition: none;
+        color: var(--WhiteColor);
+      }
+
+      &.AwaitingResponse {
+        &::after {
+          opacity: 1;
+          width: 32%;
+          letter-spacing: 0;
+          padding: 8px 16px;
+          max-height: 48px;
+          transition: all 0.66s 0.3s cubic-bezier(0.25, 0, 0, 1);
+        }
+      }
+
+      .Vx_message {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        border-radius: 8px;
+        max-width: 85%;
+        word-wrap: break-word;
+
+        &.Vx_user-message {
+          background-color: var(--AccentColor);
+          color: var(--WhiteColor);
+          margin-left: auto;
+          text-align: right;
+        }
+
+        &.Vx_bot-message {
+          background-color: var(--GrayColor);
+          color: var(--MainColor);
+          margin-right: auto;
+        }
+      }
+    }
+
+    #Vx_chatContainer {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+
+      .Vx_ChatBotHeader {
+        padding: 1rem;
+        border-bottom: 1px solid var(--GrayColor);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .Vx_ChatBotLogo img {
+          width: 32px;
+          height: 32px;
+        }
+
+        .Vx_ChatBotTitle {
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--MainColor);
+
+          span {
+            font-weight: 300;
+            font-size: 0.8rem;
+            opacity: 0.7;
+          }
+        }
+
+        #AdditionInfo {
+          margin-left: auto;
+          width: 20px;
+          height: 20px;
+          opacity: 0.5;
+
+          svg {
+            fill: var(--MainColor);
+          }
+        }
+      }
+
+      #Vx_chatMessages {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+
+        &::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background-color: var(--GrayColor);
+          border-radius: 2px;
+        }
+      }
+
+      .Vx_chat-input {
+        border-top: 1px solid var(--GrayColor);
+
+        .Vx_Recommendation_Question {
+          padding: 0.5rem 1rem;
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+
+          p {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            background-color: var(--GrayColor);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background-color: var(--AccentColor);
+              color: var(--WhiteColor);
+            }
+          }
+        }
+
+        .Vx_Input_Area {
+          display: flex;
+          padding: 1rem;
+          gap: 0.5rem;
+
+          #Vx_messageInput {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--GrayColor);
+            border-radius: 4px;
+            outline: none;
+            font-family: inherit;
+
+            &:focus {
+              border-color: var(--AccentColor);
+            }
+          }
+
+          #Vx_sendButton {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--AccentColor);
+            color: var(--WhiteColor);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background-color: #d91a5b;
+              transform: translateY(-1px);
+            }
+
+            &:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+              transform: none;
+            }
+          }
+        }
+      }
+
+      /* Human Support UI */
+      .OpusPC_RequestForRealAssist_Message {
+        margin: 1rem;
+        padding: 1rem;
+        border: 1px solid var(--AccentColor);
+        border-radius: 8px;
+        background-color: var(--SecondAccentColor);
+
+        .OpusPC_RequestForRealAssist_Message__Contents {
+          margin-bottom: 1rem;
+
+          h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--MainColor);
+            margin-bottom: 0.5rem;
+            text-transform: none;
+          }
+
+          p {
+            font-size: 0.9rem;
+            color: var(--MainColor);
+            opacity: 0.8;
+          }
+        }
+
+        .OpusPC_Slot_Footer {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+
+          button {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.3s ease;
+
+            &.Opus_RequestForRealAssist_Button {
+              background-color: var(--AccentColor);
+              color: var(--WhiteColor);
+
+              &:hover {
+                background-color: #d91a5b;
+              }
+            }
+
+            &.Opus_StayWithOpus_Button {
+              background-color: var(--WhiteColor);
+              color: var(--MainColor);
+              border: 1px solid var(--MainColor);
+
+              &:hover {
+                background-color: var(--MainColor);
+                color: var(--WhiteColor);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .OpusAgent_Containter {
+    right: 1rem;
+    bottom: 1rem;
+
+    .OpusAgent_ChatInterface {
+      width: 350px;
+      height: 500px;
+    }
+  }
+
+  .hero-section h1 {
+    font-size: 2rem;
+  }
+
+  .hero-section p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .OpusAgent_Containter {
+    right: 0.5rem;
+    bottom: 0.5rem;
+
+    .OpusAgent_ChatInterface {
+      width: 320px;
+      height: 450px;
+    }
+  }
+}

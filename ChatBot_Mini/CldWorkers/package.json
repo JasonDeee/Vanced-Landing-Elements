@@ -1,0 +1,29 @@
+{
+  "name": "vanced-support-chatbot",
+  "version": "1.0.0",
+  "description": "Customer support chatbot using Cloudflare Workers and Gemini Flash Lite",
+  "main": "New_worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env development",
+    "deploy:prod": "wrangler deploy --env production",
+    "tail": "wrangler tail",
+    "test": "wrangler dev --local"
+  },
+  "keywords": [
+    "chatbot",
+    "customer-support",
+    "cloudflare-workers",
+    "gemini",
+    "ai"
+  ],
+  "author": "Vanced Agency",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

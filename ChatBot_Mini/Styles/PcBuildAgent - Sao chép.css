@@ -1,0 +1,815 @@
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+:root {
+  --MainColor: var(--text-color, #0c1136);
+  --AccentColor: var(--accent-color, #e72166);
+  --WhiteColor: var(--white-color, #fff);
+  --GrayColor: var(--gray-color, #e9e7e7);
+  --SecondAccentColor: var(--second-accent-color, #ffe9f1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Lexend", sans-serif;
+}
+
+body {
+  background-color: var(--white-color);
+  color: var(--WhiteColor);
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.OpusAgent_Containter {
+  width: 38vw;
+  background-image: url(https://images.pexels.com/photos/7858767/pexels-photo-7858767.jpeg);
+  background-size: cover;
+  background-position: center center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100%;
+}
+.OpusAgent_Containter h2 {
+  font-size: 2.4rem;
+  text-transform: uppercase;
+}
+
+.pc-builder {
+  width: 62vw;
+  background-color: var(--WhiteColor);
+  padding: 2rem 4rem;
+  padding-bottom: 0;
+  color: var(--MainColor);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+@media only screen and (max-width: 1440px) {
+  .pc-builder {
+    max-height: 100vh;
+  }
+}
+.pc-builder__header {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: solid 1px var(--MainColor);
+}
+.pc-builder__header h1 {
+  font-size: 1.5rem;
+  line-height: 1.7rem;
+}
+.pc-builder__header h1 span {
+  font-weight: 300;
+  font-size: 1rem;
+}
+.pc-builder__header p {
+  color: var(--MainColor);
+  font-size: 0.8rem;
+}
+.pc-builder__HolderSlots {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.pc-builder__HolderSlots .slot {
+  padding: 12px 32px;
+  border: solid 1px var(--MainColor);
+  font-weight: 600;
+  box-shadow: 0px 0px 0px var(--MainColor);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  cursor: pointer;
+  position: relative;
+}
+.pc-builder__HolderSlots .slot::after {
+  content: "";
+  display: inline-block;
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+.pc-builder__HolderSlots .slot--active {
+  background-color: var(--AccentColor);
+  color: var(--WhiteColor);
+  padding: 12px 42px;
+}
+.pc-builder__HolderSlots .slot:hover {
+  box-shadow: 4px 4px 0px var(--MainColor);
+  transform: translate(-4px, -4px);
+}
+.pc-builder__HolderSlots .slot:hover::after {
+  transform: translate(4px, 4px);
+}
+.pc-builder__components {
+  display: flex;
+  flex-direction: column;
+  margin: -2rem;
+  margin-bottom: 2rem;
+}
+@media only screen and (min-width: 1440px) {
+  .pc-builder__components {
+    overflow-y: scroll;
+    overflow-x: visible;
+  }
+}
+.pc-builder__components::-webkit-scrollbar {
+  display: none;
+}
+.pc-builder__components .component-row {
+  display: flex;
+  align-items: center;
+  padding: 1rem 0;
+  margin: 1rem 2rem 0;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  border-bottom-color: var(--MainColor);
+  background: var(--WhiteColor);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  box-shadow: 0px 0px 0px var(--MainColor);
+  position: relative;
+}
+.pc-builder__components .component-row::after {
+  content: "";
+  display: inline-block;
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+.pc-builder__components .component-row:hover {
+  border-color: var(--MainColor);
+  transform: translate(-4px, -4px);
+  box-shadow: 4px 4px 0px var(--MainColor);
+  padding: 1rem;
+  margin: 1rem;
+  margin-bottom: 0;
+}
+.pc-builder__components .component-row:hover::after {
+  transform: translate(4px, 4px);
+}
+.pc-builder__components .component-row:hover .ProductControl .Change button {
+  width: 24px !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+.pc-builder__components .component-row__label {
+  width: 150px;
+  font-weight: 600;
+}
+.pc-builder__components .component-row__content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.pc-builder__components .component-row__content .product-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: solid var(--GrayColor);
+  border-width: 0 0 0 1px;
+  width: 100%;
+}
+.pc-builder__components .component-row__content .product-card img {
+  width: 80px;
+  height: 80px;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+.pc-builder__components .component-row__content .product-card__info {
+  flex: 1;
+  max-width: 62%;
+}
+.pc-builder__components .component-row__content .product-card__info h3 {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+  justify-content: flex-start;
+  align-items: center;
+  min-width: 496px;
+}
+@media screen and (max-width: 1440px) {
+  .pc-builder__components .component-row__content .product-card__info h3 {
+    flex-direction: column;
+    align-items: start;
+    min-width: 212px;
+  }
+}
+.pc-builder__components .component-row__content .product-card__info .warranty,
+.pc-builder__components .component-row__content .product-card__info .stock {
+  font-size: 0.8rem;
+  color: var(--MainColor);
+  opacity: 0.7;
+}
+.pc-builder__components .component-row__content .product-card__price {
+  color: var(--MainColor);
+  font-weight: 600;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: stretch;
+}
+.pc-builder__components .component-row__content .product-card__price p {
+  text-align: center;
+}
+.pc-builder__components .component-row__content .product-card__price span {
+  color: var(--MainColor);
+  font-size: 0.8rem;
+  font-weight: 300;
+  text-align: center;
+}
+.pc-builder__components .component-row__content .product-card__price .Qualtity {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: stretch;
+  border: 1px solid var(--MainColor);
+}
+.pc-builder__components .component-row__content .product-card__price .Qualtity p {
+  color: var(--MainColor);
+  font-size: 0.8rem;
+  font-weight: 600;
+  width: auto;
+  flex: auto;
+  text-align: center;
+  border: solid var(--MainColor);
+  border-width: 0px 1px 0px 1px;
+  min-width: 2rem;
+  justify-content: center;
+  align-content: center;
+}
+.pc-builder__components .component-row__content .product-card__price .Qualtity .Decrease button,
+.pc-builder__components .component-row__content .product-card__price .Qualtity .Increase button {
+  all: unset;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--MainColor);
+  line-height: 1rem;
+  font-size: 1rem;
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+.pc-builder__components .component-row__content .product-card__price .Qualtity .Decrease button:hover,
+.pc-builder__components .component-row__content .product-card__price .Qualtity .Increase button:hover {
+  background-color: var(--AccentColor);
+  color: var(--WhiteColor);
+  font-size: 1.2rem;
+}
+.pc-builder__components .component-row__content .product-card__total {
+  color: var(--AccentColor);
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+}
+.pc-builder__components .component-row__content .product-card .ProductControl {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+.pc-builder__components .component-row__content .product-card .ProductControl .Change button,
+.pc-builder__components .component-row__content .product-card .ProductControl .Remove button {
+  all: unset;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  color: var(--WhiteColor);
+  background-size: contain;
+  background-position: center center;
+  background-repeat: no-repeat;
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+.pc-builder__components .component-row__content .product-card .ProductControl .Change button {
+  width: 0px;
+  opacity: 0;
+  pointer-events: none;
+}
+.pc-builder__components .component-row__content .add-button {
+  background-color: var(--AccentColor);
+  color: var(--WhiteColor);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+.pc-builder__components .component-row.selected__label {
+  display: none;
+}
+.pc-builder__components .component-row.selected .add-button {
+  display: none;
+}
+.pc-builder__components .component-row:not(.selected) .product-card {
+  display: none;
+}
+.pc-builder__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 4rem;
+  margin: 0 -4rem;
+  border-top: 1px solid var(--GrayColor);
+  background-color: var(--GrayColor);
+  justify-content: space-between;
+  align-items: end;
+}
+.pc-builder__footer .promotions {
+  display: flex;
+  gap: 6px;
+  flex-direction: column;
+  max-width: 62%;
+}
+@media only screen and (min-width: 1440px) {
+  .pc-builder__footer .promotions {
+    flex-direction: row;
+    max-width: 72%;
+  }
+}
+.pc-builder__footer .promotions .promo-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--MainColor);
+  box-shadow: 0px 0px 0px var(--MainColor);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  background-color: var(--WhiteColor);
+  position: relative;
+  cursor: pointer;
+}
+.pc-builder__footer .promotions .promo-option::after {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 32px;
+  background: var(--GrayColor);
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 2px solid transparent;
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  box-shadow: 0px 0px 0px 2px transparent;
+}
+.pc-builder__footer .promotions .promo-option div {
+  font-size: 0.8rem;
+}
+.pc-builder__footer .promotions .promo-option.selected {
+  border-color: var(--AccentColor);
+  background-color: var(--SecondAccentColor);
+}
+.pc-builder__footer .promotions .promo-option.selected::after {
+  border-color: var(--WhiteColor);
+  background: var(--AccentColor);
+  box-shadow: 0px 0px 0px 1px var(--AccentColor);
+}
+.pc-builder__footer .promotions .promo-option h1 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.pc-builder__footer .promotions .promo-option:hover {
+  box-shadow: 4px 4px 0px var(--MainColor);
+  transform: translate(-4px, -4px);
+}
+.pc-builder__footer .promotions .promo-option img {
+  width: 40px;
+  height: 40px;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+.pc-builder__footer .promotions .promo-option__info {
+  font-size: 0.8rem;
+}
+.pc-builder__footer .total-price {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: end;
+  justify-content: end;
+}
+.pc-builder__footer .total-price h2 {
+  font-size: 0.8rem;
+  font-weight: 300;
+}
+.pc-builder__footer .total-price .original-price {
+  text-decoration: line-through;
+  color: #666;
+  font-size: 1.2rem;
+}
+.pc-builder__footer .total-price .final-price {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--AccentColor);
+}
+.pc-builder_ComponentsSelector {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.337254902);
+  -webkit-backdrop-filter: blur(16px);
+          backdrop-filter: blur(16px);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+.pc-builder_ComponentsSelector * {
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+.pc-builder_ComponentsSelector .SelectorContainer {
+  width: 62vw;
+  min-width: 1024px;
+  height: 90vh;
+  background: var(--WhiteColor);
+  box-shadow: 8px 8px 0px var(--MainColor);
+  border: solid 2px var(--MainColor);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation {
+  width: 100%;
+  height: 60px;
+  background: var(--MainColor);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation .SelectorNavigation__title {
+  width: 256px;
+  max-width: 256px;
+  padding-left: 8px;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation .SelectorNavigation__Search {
+  width: 32vw;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation .SelectorNavigation__Search input {
+  border: none;
+  outline: none;
+  background: var(--WhiteColor);
+  flex: auto;
+  height: 40px;
+  padding: 8px;
+  color: var(--MainColor);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation .SelectorNavigation__Search #SelectorNavigation__Search__Button {
+  all: unset;
+  width: 76px;
+  height: 40px;
+  background: var(--AccentColor);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation .SelectorNavigation__close {
+  all: unset;
+  width: 48px;
+  height: 48px;
+  margin-left: auto;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+  cursor: pointer;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain {
+  width: 100%;
+  height: calc(100% - 60px);
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  position: relative;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters {
+  width: 256px;
+  min-width: 256px;
+  height: 100%;
+  border-right: solid 1px var(--MainColor);
+  padding: 8px;
+  padding-bottom: 64px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters::-webkit-scrollbar {
+  width: 4px;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters::-webkit-scrollbar-thumb {
+  background-color: var(--GrayColor);
+  border-radius: 2px;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter {
+  border-bottom: solid 1px var(--MainColor);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  color: var(--MainColor);
+  flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: start;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter fieldset {
+  all: unset;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter fieldset input {
+  all: unset;
+  min-width: 12px;
+  min-height: 12px;
+  border-radius: 16px;
+  border: solid 2px var(--MainColor);
+  background-color: var(--WhiteColor);
+  box-shadow: 0px 0px 0px var(--MainColor);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  cursor: pointer;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter fieldset input:checked {
+  background-color: var(--AccentColor);
+  border: solid 2px var(--WhiteColor);
+  box-shadow: 0px 0px 0px 2px var(--AccentColor);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter fieldset label {
+  font-size: 0.8rem;
+  font-weight: 400;
+  display: block;
+  flex: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 78px;
+  justify-content: start;
+  margin: 0;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer {
+  flex: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  max-height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-bottom: 16px;
+  padding-top: 8px;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer::-webkit-scrollbar {
+  width: 4px;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer::-webkit-scrollbar-thumb {
+  background-color: var(--GrayColor);
+  border-radius: 2px;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display {
+  width: -webkit-fill-available;
+  max-width: 100%;
+  padding: 8px;
+  margin: 0 8px;
+  background: var(--WhiteColor);
+  border: solid 1px transparent;
+  border-bottom-color: var(--MainColor);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+  box-shadow: 0px 0px 0px 0px var(--MainColor);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display::after {
+  content: "";
+  display: inline-block;
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display:hover {
+  box-shadow: 4px 4px 0px var(--MainColor);
+  transform: translate(-4px, -4px);
+  border-color: var(--MainColor);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display:hover::after {
+  transform: translate(4px, 4px);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info {
+  height: 100%;
+  max-width: 84%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  position: relative;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info img {
+  height: 128px;
+  width: 128px;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--MainColor);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info h3 .warranty {
+  margin-top: 8px;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info h3 .warranty,
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info h3 .stock {
+  font-size: 0.8rem;
+  font-weight: 300;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info h3 .product-card__price {
+  color: var(--AccentColor);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .productSelectButton {
+  all: unset;
+  cursor: pointer;
+  width: 96px;
+  height: 48px;
+  margin-right: 8px;
+  background-color: var(--AccentColor);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Filter_Updater,
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  height: 60px;
+  background-color: var(--GrayColor);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Filter_Updater {
+  bottom: 0;
+  left: 0;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px;
+  width: 256px;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Filter_Updater button {
+  all: unset;
+  cursor: pointer;
+  padding: 8px 16px;
+  color: var(--WhiteColor);
+  background-color: var(--AccentColor);
+  font-size: 0.8rem;
+  font-weight: 400;
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  box-shadow: 0px 0px 0px var(--MainColor);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Filter_Updater button:hover {
+  box-shadow: 4px 4px 0px var(--MainColor);
+  transform: translate(-4px, -4px);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller {
+  bottom: 0;
+  right: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  width: calc(100% - 256px);
+  gap: 4px;
+  color: var(--MainColor);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller button {
+  all: unset;
+  cursor: pointer;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller button.Control {
+  height: 48px;
+  width: 48px;
+  background-image: url(../Assets/ArrowToRight.svg);
+  background-size: 20px 20px;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller #Prev {
+  transform: rotate(180deg);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller button:not(.Control) {
+  padding: 8px 16px;
+  color: var(--MainColor);
+  font-size: 0.8rem;
+  font-weight: 400;
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+.pc-builder_ComponentsSelector .SelectorContainer .ComopentLoading_Icon {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+.pc-builder_ComponentsSelector.hidden .SelectorContainer {
+  transform: translateY(20vh) scale(0.78);
+}
+.pc-builder_ComponentsSelector.OnLoading {
+  pointer-events: none;
+}
+.pc-builder_ComponentsSelector.OnLoading .ComponentsSelectorMain {
+  opacity: 0;
+}
+.pc-builder_ComponentsSelector.OnLoading .ComopentLoading_Icon {
+  opacity: 1;
+}
+.pc-builder .PCBuilder-Loader {
+  opacity: 0;
+  transition: all 0.6s 0.2s cubic-bezier(0.25, 0, 0, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.pc-builder.OnLoading {
+  pointer-events: none;
+}
+.pc-builder.OnLoading .PCBuilder-Loader {
+  opacity: 1;
+}
+
+button {
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center center;
+}
+
+.line {
+  background: var(--MainColor);
+}/*# sourceMappingURL=PcBuildAgent.css.map */

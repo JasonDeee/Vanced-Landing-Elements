@@ -1,0 +1,1755 @@
+@charset "UTF-8";
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+:root {
+  --MainColor: var(--text-color, #0c1136);
+  --AccentColor: var(--accent-color, #e72166);
+  --WhiteColor: var(--white-color, #fff);
+  --GrayColor: var(--gray-color, #e9e7e7);
+  --DeepGrayColor: var(--deep-gray-color, #c9c7c7);
+  --SecondAccentColor: var(--second-accent-color, #ffe9f1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  font-family: "Lexend", sans-serif;
+}
+
+body {
+  background-color: var(--white-color);
+  color: var(--WhiteColor);
+  height: 100vh;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+}
+
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.OpusAgent_Containter {
+  width: 38vw;
+  background-image: url(https://images.pexels.com/photos/7858767/pexels-photo-7858767.jpeg);
+  background-size: cover;
+  background-position: center center;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100%;
+}
+
+.OpusAgent_Containter * {
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.OpusAgent_Containter h2 {
+  font-size: 2.4rem;
+  text-transform: uppercase;
+}
+
+.OpusAgent_Containter .CreditInfo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 2rem;
+  color: var(--WhiteColor);
+  font-size: 0.8rem;
+  font-weight: 300;
+  opacity: 0.7;
+}
+
+.OpusAgent_Containter .CreditInfo strong {
+  font-weight: 600;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface {
+  width: 26vw;
+  height: 72vh;
+  min-height: 512px;
+  min-width: 420px;
+  max-width: 768px;
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: end;
+      -ms-flex-align: end;
+          align-items: flex-end;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  z-index: 1;
+  border: solid 2px var(--MainColor);
+  -webkit-box-shadow: 8px 8px 0px var(--MainColor);
+          box-shadow: 8px 8px 0px var(--MainColor);
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatMessages {
+  -webkit-box-flex: 1;
+      -ms-flex: auto;
+          flex: auto;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatMessages::after {
+  content: "Đang tải...";
+  display: block;
+  background-color: var(--AccentColor);
+  width: 5%;
+  padding-left: 32px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  opacity: 0;
+  white-space: nowrap;
+  letter-spacing: 8px;
+  pointer-events: none;
+  height: auto;
+  max-height: 0;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-transition: none;
+  transition: none;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatMessages.AwaitingResponse::after {
+  opacity: 1;
+  width: 32%;
+  letter-spacing: 0;
+  padding: 8px 16px;
+  max-height: 48px;
+  -webkit-transition: all 0.66s 0.3s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.66s 0.3s cubic-bezier(0.25, 0, 0, 1);
+}
+
+@media only screen and (max-width: 1440px) {
+  .OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatMessages .Vx_message {
+    font-size: 0.9rem;
+  }
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer {
+  width: 100%;
+  height: 100%;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer #AdditionInfo::before {
+  bottom: 32px;
+  -webkit-transform: translateX(-100%);
+          transform: translateX(-100%);
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .Vx_Recommendation_Question {
+  color: var(--MainColor);
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .Vx_Recommendation_Question p {
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message {
+  width: 316px;
+  height: auto;
+  min-height: 128px;
+  border: 1px solid var(--AccentColor);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: flex-start;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message *,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message *,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message * {
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Message__Title,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Message__Title,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Message__Title {
+  width: 100%;
+  padding: 1rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  position: relative;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Message__Title h2,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Message__Title h2,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Message__Title h2 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--MainColor);
+  text-transform: none;
+  border-bottom: solid 1px var(--DeepGrayColor);
+  width: 100%;
+  padding-bottom: 8px;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Message__Title h2 a,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Message__Title h2 a,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Message__Title h2 a {
+  all: unset;
+  -webkit-transition: inherit;
+  transition: inherit;
+  cursor: pointer;
+  border-bottom: solid 1px transparent;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Message__Title h2 a:hover,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Message__Title h2 a:hover,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Message__Title h2 a:hover {
+  color: var(--AccentColor);
+  border-bottom: solid 1px var(--AccentColor);
+  text-decoration: none;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister {
+  width: 100%;
+  height: auto;
+  padding: 0 calc(1rem - 4px) 1rem 1rem;
+  max-height: 256px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: flex-start;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  gap: 8px;
+  color: var(--MainColor);
+  position: relative;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister::-webkit-scrollbar,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister::-webkit-scrollbar,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister::-webkit-scrollbar {
+  width: 4px;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister::-webkit-scrollbar-thumb,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister::-webkit-scrollbar-thumb,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister::-webkit-scrollbar-thumb {
+  background-color: var(--GrayColor);
+  border-radius: 2px;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .CPU .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .CPU .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .CPU .OpusPC_SingleComponent_Slot_Icon {
+  background-image: url("../Assets/PC_Compontents_Icons/CPU.svg");
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .MainBoard .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .MainBoard .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .MainBoard .OpusPC_SingleComponent_Slot_Icon {
+  background-image: url("../Assets/PC_Compontents_Icons/MainBoard.svg");
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .RAM .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .RAM .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .RAM .OpusPC_SingleComponent_Slot_Icon {
+  background-image: url("../Assets/PC_Compontents_Icons/RAM.svg");
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .PSU .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .PSU .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .PSU .OpusPC_SingleComponent_Slot_Icon {
+  background-image: url("../Assets/PC_Compontents_Icons/PSU.svg");
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .Case .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .Case .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .Case .OpusPC_SingleComponent_Slot_Icon {
+  background-image: url("../Assets/PC_Compontents_Icons/Case.svg");
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .HDD .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .SSD .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .HDD .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .SSD .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .HDD .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .SSD .OpusPC_SingleComponent_Slot_Icon {
+  background-image: url("../Assets/PC_Compontents_Icons/HDD.svg");
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .VGA .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .VGA .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .VGA .OpusPC_SingleComponent_Slot_Icon {
+  background-image: url("../Assets/PC_Compontents_Icons/VGA.svg");
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .LiquidCooler .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .LiquidCooler .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .LiquidCooler .OpusPC_SingleComponent_Slot_Icon {
+  background-image: url("../Assets/PC_Compontents_Icons/LiquidCooler.svg");
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .AirCooler .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .AirCooler .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .AirCooler .OpusPC_SingleComponent_Slot_Icon {
+  background-image: url("../Assets/PC_Compontents_Icons/AirCooler.svg");
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot {
+  background: var(--GrayColor);
+  padding: 12px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  width: 100%;
+  position: relative;
+  gap: 8px;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot .OpusPC_SingleComponent_Slot_Information,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot .OpusPC_SingleComponent_Slot_Information,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot .OpusPC_SingleComponent_Slot_Information {
+  max-width: 78%;
+  -webkit-box-flex: 1;
+      -ms-flex: auto;
+          flex: auto;
+  position: relative;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot .OpusPC_SingleComponent_Slot_Icon,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot .OpusPC_SingleComponent_Slot_Icon {
+  min-width: 18px;
+  width: 18px;
+  height: 18px;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot h3,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot h3,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Lister .OpusPC_SingleComponent_Slot h3 {
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Footer,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Footer,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  width: 100%;
+  padding: 1rem;
+  border-top: solid 1px var(--DeepGrayColor);
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Footer .Slot_Price,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Footer .Slot_Price,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer .Slot_Price {
+  color: var(--MainColor);
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Footer .Slot_Price h3,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Footer .Slot_Price h3,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer .Slot_Price h3 {
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: none;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Footer .Slot_Price p,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Footer .Slot_Price p,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer .Slot_Price p {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Footer button,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Footer button,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer button {
+  padding: 1rem 2rem;
+  background-color: var(--AccentColor);
+  color: var(--WhiteColor);
+  border: none;
+  cursor: pointer;
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  -webkit-box-shadow: 0px 0px 0px var(--MainColor);
+          box-shadow: 0px 0px 0px var(--MainColor);
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Footer button ::after,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Footer button ::after,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer button ::after {
+  content: "";
+  display: inline-block;
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Footer button:hover,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Footer button:hover,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer button:hover {
+  -webkit-box-shadow: 4px 4px 0px var(--MainColor);
+          box-shadow: 4px 4px 0px var(--MainColor);
+  -webkit-transform: translate(-4px, -4px);
+          transform: translate(-4px, -4px);
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .OpusPC_Slot_Footer button:hover ::after,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Slot_Footer button:hover ::after,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer button:hover ::after {
+  -webkit-transform: translate(4px, 4px);
+          transform: translate(4px, 4px);
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .loader_Small,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .loader_Small,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .loader_Small {
+  width: 100%;
+  height: 20%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: var(--WhiteColor);
+  margin: 0 auto;
+  opacity: 0;
+  pointer-events: none;
+  gap: 8px;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message .loader_Small::after,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .loader_Small::after,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .loader_Small::after {
+  content: "Models đôi lúc có thể mất nhiều thời gian hơn.";
+  display: inline-block;
+  max-width: 62%;
+  height: auto;
+  color: var(--MainColor);
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: none;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_Slot_Message.pending .loader_Small,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message.pending .loader_Small,
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message.pending .loader_Small {
+  opacity: 1;
+  height: 100%;
+  pointer-events: all;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Components_Message_Image {
+  width: 100%;
+  height: auto;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_SingleComponent_Message .OpusPC_Components_Message_Image img {
+  width: 100%;
+  height: auto;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message {
+  color: var(--MainColor);
+  padding: 24px;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_RequestForRealAssist_Message__Contents {
+  margin-bottom: 16px;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_RequestForRealAssist_Message__Contents h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-transform: none;
+  margin-bottom: 4px;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_RequestForRealAssist_Message__Contents p {
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: none;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  gap: 4px;
+  border: none;
+  padding: 0;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer button {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.OpusAgent_Containter .OpusAgent_ChatInterface #Vx_chatContainer .OpusPC_RequestForRealAssist_Message .OpusPC_Slot_Footer .Opus_StayWithOpus_Button {
+  border: solid 1px var(--MainColor);
+  background: var(--WhiteColor);
+  color: var(--MainColor);
+  margin-bottom: unset;
+}
+
+.pc-builder {
+  width: 62vw;
+  background-color: var(--WhiteColor);
+  padding: 2rem 4rem;
+  padding-bottom: 0;
+  color: var(--MainColor);
+  height: 100vh;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  position: relative;
+}
+
+@media only screen and (max-width: 1440px) {
+  .pc-builder {
+    max-height: 100vh;
+  }
+}
+
+.pc-builder__header {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: solid 1px var(--MainColor);
+}
+
+.pc-builder__header h1 {
+  font-size: 1.5rem;
+  line-height: 1.7rem;
+}
+
+.pc-builder__header h1 span {
+  font-weight: 300;
+  font-size: 1rem;
+}
+
+.pc-builder__header p {
+  color: var(--MainColor);
+  font-size: 0.8rem;
+}
+
+.pc-builder__HolderSlots {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.pc-builder__HolderSlots .slot {
+  padding: 12px 32px;
+  border: solid 1px var(--MainColor);
+  font-weight: 600;
+  -webkit-box-shadow: 0px 0px 0px var(--MainColor);
+          box-shadow: 0px 0px 0px var(--MainColor);
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  cursor: pointer;
+  position: relative;
+}
+
+.pc-builder__HolderSlots .slot::after {
+  content: "";
+  display: inline-block;
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.pc-builder__HolderSlots .slot--active {
+  background-color: var(--AccentColor);
+  color: var(--WhiteColor);
+  padding: 12px 42px;
+}
+
+.pc-builder__HolderSlots .slot:hover {
+  -webkit-box-shadow: 4px 4px 0px var(--MainColor);
+          box-shadow: 4px 4px 0px var(--MainColor);
+  -webkit-transform: translate(-4px, -4px);
+          transform: translate(-4px, -4px);
+}
+
+.pc-builder__HolderSlots .slot:hover::after {
+  -webkit-transform: translate(4px, 4px);
+          transform: translate(4px, 4px);
+}
+
+.pc-builder__components {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  margin: -2rem;
+  margin-bottom: 2rem;
+}
+
+@media only screen and (min-width: 1440px) {
+  .pc-builder__components {
+    overflow-y: scroll;
+    overflow-x: visible;
+  }
+}
+
+.pc-builder__components::-webkit-scrollbar {
+  display: none;
+}
+
+.pc-builder__components .component-row {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  padding: 1rem 0;
+  margin: 1rem 2rem 0;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  border-bottom-color: var(--MainColor);
+  background: var(--WhiteColor);
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  -webkit-box-shadow: 0px 0px 0px var(--MainColor);
+          box-shadow: 0px 0px 0px var(--MainColor);
+  position: relative;
+}
+
+.pc-builder__components .component-row::after {
+  content: "";
+  display: inline-block;
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.pc-builder__components .component-row:hover {
+  border-color: var(--MainColor);
+  -webkit-transform: translate(-4px, -4px);
+          transform: translate(-4px, -4px);
+  -webkit-box-shadow: 4px 4px 0px var(--MainColor);
+          box-shadow: 4px 4px 0px var(--MainColor);
+  padding: 1rem;
+  margin: 1rem;
+  margin-bottom: 0;
+}
+
+.pc-builder__components .component-row:hover::after {
+  -webkit-transform: translate(4px, 4px);
+          transform: translate(4px, 4px);
+}
+
+.pc-builder__components .component-row:hover .ProductControl .Change button {
+  width: 24px !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.pc-builder__components .component-row__label {
+  width: 150px;
+  font-weight: 600;
+}
+
+.pc-builder__components .component-row__content {
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  gap: 1rem;
+}
+
+.pc-builder__components .component-row__content .product-card {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: solid var(--GrayColor);
+  border-width: 0 0 0 1px;
+  width: 100%;
+}
+
+.pc-builder__components .component-row__content .product-card img {
+  width: 80px;
+  height: 80px;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+
+.pc-builder__components .component-row__content .product-card__info {
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+  max-width: 62%;
+}
+
+.pc-builder__components .component-row__content .product-card__info h3 {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -ms-flex-line-pack: center;
+      align-content: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  min-width: 496px;
+}
+
+@media screen and (max-width: 1440px) {
+  .pc-builder__components .component-row__content .product-card__info h3 {
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    -webkit-box-align: start;
+        -ms-flex-align: start;
+            align-items: start;
+    min-width: 212px;
+  }
+}
+
+.pc-builder__components .component-row__content .product-card__info .warranty,
+.pc-builder__components .component-row__content .product-card__info .stock {
+  font-size: 0.8rem;
+  color: var(--MainColor);
+  opacity: 0.7;
+}
+
+.pc-builder__components .component-row__content .product-card__price {
+  color: var(--MainColor);
+  font-weight: 600;
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  gap: 2px;
+  -webkit-box-align: stretch;
+      -ms-flex-align: stretch;
+          align-items: stretch;
+}
+
+.pc-builder__components .component-row__content .product-card__price p {
+  text-align: center;
+}
+
+.pc-builder__components .component-row__content .product-card__price span {
+  color: var(--MainColor);
+  font-size: 0.8rem;
+  font-weight: 300;
+  text-align: center;
+}
+
+.pc-builder__components .component-row__content .product-card__price .Qualtity {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: stretch;
+      -ms-flex-align: stretch;
+          align-items: stretch;
+  -webkit-box-pack: stretch;
+      -ms-flex-pack: stretch;
+          justify-content: stretch;
+  border: 1px solid var(--MainColor);
+}
+
+.pc-builder__components .component-row__content .product-card__price .Qualtity p {
+  color: var(--MainColor);
+  font-size: 0.8rem;
+  font-weight: 600;
+  width: auto;
+  -webkit-box-flex: 1;
+      -ms-flex: auto;
+          flex: auto;
+  text-align: center;
+  border: solid var(--MainColor);
+  border-width: 0px 1px 0px 1px;
+  min-width: 2rem;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -ms-flex-line-pack: center;
+      align-content: center;
+}
+
+.pc-builder__components .component-row__content .product-card__price .Qualtity .Decrease button,
+.pc-builder__components .component-row__content .product-card__price .Qualtity .Increase button {
+  all: unset;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  text-align: center;
+  color: var(--MainColor);
+  line-height: 1rem;
+  font-size: 1rem;
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.pc-builder__components .component-row__content .product-card__price .Qualtity .Decrease button:hover,
+.pc-builder__components .component-row__content .product-card__price .Qualtity .Increase button:hover {
+  background-color: var(--AccentColor);
+  color: var(--WhiteColor);
+  font-size: 1.2rem;
+}
+
+.pc-builder__components .component-row__content .product-card__total {
+  color: var(--AccentColor);
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.pc-builder__components .component-row__content .product-card .ProductControl {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  gap: 1rem;
+}
+
+.pc-builder__components .component-row__content .product-card .ProductControl .Change button,
+.pc-builder__components .component-row__content .product-card .ProductControl .Remove button {
+  all: unset;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  color: var(--WhiteColor);
+  background-size: contain;
+  background-position: center center;
+  background-repeat: no-repeat;
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.pc-builder__components .component-row__content .product-card .ProductControl .Change button {
+  width: 0px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pc-builder__components .component-row__content .add-button {
+  background-color: var(--AccentColor);
+  color: var(--WhiteColor);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.pc-builder__components .component-row.selected__label {
+  display: none;
+}
+
+.pc-builder__components .component-row.selected .add-button {
+  display: none;
+}
+
+.pc-builder__components .component-row:not(.selected) .product-card {
+  display: none;
+}
+
+.pc-builder__footer {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  padding: 16px 4rem;
+  margin: 0 -4rem;
+  border-top: 1px solid var(--GrayColor);
+  background-color: var(--GrayColor);
+  justify-content: space-between;
+  -webkit-box-align: end;
+      -ms-flex-align: end;
+          align-items: end;
+}
+
+.pc-builder__footer .promotions {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  gap: 6px;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  max-width: 62%;
+}
+
+@media only screen and (min-width: 1440px) {
+  .pc-builder__footer .promotions {
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+            flex-direction: row;
+    max-width: 72%;
+  }
+}
+
+.pc-builder__footer .promotions .promo-option {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--MainColor);
+  -webkit-box-shadow: 0px 0px 0px var(--MainColor);
+          box-shadow: 0px 0px 0px var(--MainColor);
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  background-color: var(--WhiteColor);
+  position: relative;
+  cursor: pointer;
+}
+
+.pc-builder__footer .promotions .promo-option::after {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 32px;
+  background: var(--GrayColor);
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 2px solid transparent;
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  -webkit-box-shadow: 0px 0px 0px 2px transparent;
+          box-shadow: 0px 0px 0px 2px transparent;
+}
+
+.pc-builder__footer .promotions .promo-option div {
+  font-size: 0.8rem;
+}
+
+.pc-builder__footer .promotions .promo-option.selected {
+  border-color: var(--AccentColor);
+  background-color: var(--SecondAccentColor);
+}
+
+.pc-builder__footer .promotions .promo-option.selected::after {
+  border-color: var(--WhiteColor);
+  background: var(--AccentColor);
+  -webkit-box-shadow: 0px 0px 0px 1px var(--AccentColor);
+          box-shadow: 0px 0px 0px 1px var(--AccentColor);
+}
+
+.pc-builder__footer .promotions .promo-option h1 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pc-builder__footer .promotions .promo-option:hover {
+  -webkit-box-shadow: 4px 4px 0px var(--MainColor);
+          box-shadow: 4px 4px 0px var(--MainColor);
+  -webkit-transform: translate(-4px, -4px);
+          transform: translate(-4px, -4px);
+}
+
+.pc-builder__footer .promotions .promo-option img {
+  width: 40px;
+  height: 40px;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+
+.pc-builder__footer .promotions .promo-option__info {
+  font-size: 0.8rem;
+}
+
+.pc-builder__footer .total-price {
+  text-align: right;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  gap: 4px;
+  -webkit-box-align: end;
+      -ms-flex-align: end;
+          align-items: end;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: end;
+}
+
+.pc-builder__footer .total-price h2 {
+  font-size: 0.8rem;
+  font-weight: 300;
+}
+
+.pc-builder__footer .total-price .original-price {
+  text-decoration: line-through;
+  color: #666;
+  font-size: 1.2rem;
+}
+
+.pc-builder__footer .total-price .final-price {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--AccentColor);
+}
+
+.pc-builder_ComponentsSelector {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 100vw;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  background: #ffffff56;
+  -webkit-backdrop-filter: blur(16px);
+          backdrop-filter: blur(16px);
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.pc-builder_ComponentsSelector * {
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer {
+  width: 62vw;
+  min-width: 1024px;
+  height: 90vh;
+  background: var(--WhiteColor);
+  -webkit-box-shadow: 8px 8px 0px var(--MainColor);
+          box-shadow: 8px 8px 0px var(--MainColor);
+  border: solid 2px var(--MainColor);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  position: relative;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation {
+  width: 100%;
+  height: 60px;
+  background: var(--MainColor);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation .SelectorNavigation__title {
+  width: 256px;
+  max-width: 256px;
+  padding-left: 8px;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation .SelectorNavigation__Search {
+  width: 32vw;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  cursor: pointer;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation .SelectorNavigation__Search input {
+  border: none;
+  outline: none;
+  background: var(--WhiteColor);
+  -webkit-box-flex: 1;
+      -ms-flex: auto;
+          flex: auto;
+  height: 40px;
+  padding: 8px;
+  color: var(--MainColor);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation .SelectorNavigation__Search #SelectorNavigation__Search__Button {
+  all: unset;
+  width: 76px;
+  height: 40px;
+  background: var(--AccentColor);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .SelectorNavigation .SelectorNavigation__close {
+  all: unset;
+  width: 48px;
+  height: 48px;
+  margin-left: auto;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+  cursor: pointer;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain {
+  width: 100%;
+  height: calc(100% - 60px);
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: flex-start;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  position: relative;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters {
+  width: 256px;
+  min-width: 256px;
+  height: 100%;
+  border-right: solid 1px var(--MainColor);
+  padding: 8px;
+  padding-bottom: 64px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters::-webkit-scrollbar {
+  width: 4px;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters::-webkit-scrollbar-thumb {
+  background-color: var(--GrayColor);
+  border-radius: 2px;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter {
+  border-bottom: solid 1px var(--MainColor);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  color: var(--MainColor);
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: start;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter fieldset {
+  all: unset;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  gap: 8px;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter fieldset input {
+  all: unset;
+  min-width: 12px;
+  min-height: 12px;
+  border-radius: 16px;
+  border: solid 2px var(--MainColor);
+  background-color: var(--WhiteColor);
+  -webkit-box-shadow: 0px 0px 0px var(--MainColor);
+          box-shadow: 0px 0px 0px var(--MainColor);
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  cursor: pointer;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter fieldset input:checked {
+  background-color: var(--AccentColor);
+  border: solid 2px var(--WhiteColor);
+  -webkit-box-shadow: 0px 0px 0px 2px var(--AccentColor);
+          box-shadow: 0px 0px 0px 2px var(--AccentColor);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .ComponentsFilters .Filter fieldset label {
+  font-size: 0.8rem;
+  font-weight: 400;
+  display: block;
+  -webkit-box-flex: 1;
+      -ms-flex: auto;
+          flex: auto;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  gap: 8px;
+  min-width: 78px;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: start;
+  margin: 0;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer {
+  -webkit-box-flex: 1;
+      -ms-flex: auto;
+          flex: auto;
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: flex-start;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  max-height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-bottom: 16px;
+  padding-top: 8px;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer::-webkit-scrollbar {
+  width: 4px;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer::-webkit-scrollbar-thumb {
+  background-color: var(--GrayColor);
+  border-radius: 2px;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display {
+  width: -webkit-fill-available;
+  max-width: 100%;
+  padding: 8px;
+  margin: 0 8px;
+  background: var(--WhiteColor);
+  border: solid 1px transparent;
+  border-bottom-color: var(--MainColor);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  gap: 8px;
+  position: relative;
+  -webkit-box-shadow: 0px 0px 0px 0px var(--MainColor);
+          box-shadow: 0px 0px 0px 0px var(--MainColor);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display::after {
+  content: "";
+  display: inline-block;
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display:hover {
+  -webkit-box-shadow: 4px 4px 0px var(--MainColor);
+          box-shadow: 4px 4px 0px var(--MainColor);
+  -webkit-transform: translate(-4px, -4px);
+          transform: translate(-4px, -4px);
+  border-color: var(--MainColor);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display:hover::after {
+  -webkit-transform: translate(4px, 4px);
+          transform: translate(4px, 4px);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info {
+  height: 100%;
+  max-width: 84%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: start;
+      -ms-flex-pack: start;
+          justify-content: flex-start;
+  gap: 4px;
+  position: relative;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info img {
+  height: 128px;
+  width: 128px;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--MainColor);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: start;
+      -ms-flex-align: start;
+          align-items: flex-start;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info h3 .warranty {
+  margin-top: 8px;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info h3 .warranty,
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info h3 .stock {
+  font-size: 0.8rem;
+  font-weight: 300;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .product-card__info h3 .product-card__price {
+  color: var(--AccentColor);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Components_Displayer .SingleComponent_Display .productSelectButton {
+  all: unset;
+  cursor: pointer;
+  width: 96px;
+  height: 48px;
+  margin-right: 8px;
+  background-color: var(--AccentColor);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Filter_Updater,
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller {
+  position: absolute;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  height: 60px;
+  background-color: var(--GrayColor);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Filter_Updater {
+  bottom: 0;
+  left: 0;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: flex-end;
+  padding: 8px;
+  width: 256px;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Filter_Updater button {
+  all: unset;
+  cursor: pointer;
+  padding: 8px 16px;
+  color: var(--WhiteColor);
+  background-color: var(--AccentColor);
+  font-size: 0.8rem;
+  font-weight: 400;
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  -webkit-box-shadow: 0px 0px 0px var(--MainColor);
+          box-shadow: 0px 0px 0px var(--MainColor);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Filter_Updater button:hover {
+  -webkit-box-shadow: 4px 4px 0px var(--MainColor);
+          box-shadow: 4px 4px 0px var(--MainColor);
+  -webkit-transform: translate(-4px, -4px);
+          transform: translate(-4px, -4px);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller {
+  bottom: 0;
+  right: 0;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  padding: 8px;
+  width: calc(100% - 256px);
+  gap: 4px;
+  color: var(--MainColor);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller button {
+  all: unset;
+  cursor: pointer;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller button.Control {
+  height: 48px;
+  width: 48px;
+  background-image: url(../Assets/ArrowToRight.svg);
+  background-size: 20px 20px;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller #Prev {
+  -webkit-transform: rotate(180deg);
+          transform: rotate(180deg);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComponentsSelectorMain .Page_Controller button:not(.Control) {
+  padding: 8px 16px;
+  color: var(--MainColor);
+  font-size: 0.8rem;
+  font-weight: 400;
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+}
+
+.pc-builder_ComponentsSelector .SelectorContainer .ComopentLoading_Icon {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.pc-builder_ComponentsSelector.hidden .SelectorContainer {
+  -webkit-transform: translateY(20vh) scale(0.78);
+          transform: translateY(20vh) scale(0.78);
+}
+
+.pc-builder_ComponentsSelector.OnLoading {
+  pointer-events: none;
+}
+
+.pc-builder_ComponentsSelector.OnLoading .ComponentsSelectorMain {
+  opacity: 0;
+}
+
+.pc-builder_ComponentsSelector.OnLoading .ComopentLoading_Icon {
+  opacity: 1;
+}
+
+.pc-builder .PCBuilder-Loader {
+  opacity: 0;
+  -webkit-transition: all 0.6s 0.2s cubic-bezier(0.25, 0, 0, 1);
+  transition: all 0.6s 0.2s cubic-bezier(0.25, 0, 0, 1);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  background: transparent;
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.pc-builder.OnLoading {
+  pointer-events: none;
+}
+
+.pc-builder.OnLoading .PCBuilder-Loader {
+  opacity: 1;
+}
+
+button {
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center center;
+}
+
+.line {
+  background: var(--MainColor);
+}
+/*# sourceMappingURL=PcBuildAgent.css.map */

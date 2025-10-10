@@ -1,0 +1,1429 @@
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+:root {
+  --MainColor: var(--text-color, #0c1136);
+  --AccentColor: var(--accent-color, #e72166);
+  --WhiteColor: var(--white-color, #fff);
+  --GrayColor: var(--gray-color, #e9e7e7);
+  --DeepGrayColor: var(--deep-gray-color, #c9c7c7);
+
+  --SecondAccentColor: var(--second-accent-color, #ffe9f1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Lexend", sans-serif;
+}
+
+body {
+  background-color: var(--white-color);
+  color: var(--WhiteColor);
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+  // padding: 2rem;
+}
+
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+  // display: none;
+}
+
+.OpusAgent_Containter {
+  width: 38vw;
+  background-image: url(https://images.pexels.com/photos/7858767/pexels-photo-7858767.jpeg);
+  background-size: cover;
+  background-position: center center;
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100%;
+
+  * {
+    transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+  }
+
+  h2 {
+    font-size: 2.4rem;
+    text-transform: uppercase;
+  }
+  .CreditInfo {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 2rem;
+    color: var(--WhiteColor);
+    font-size: 0.8rem;
+    font-weight: 300;
+
+    opacity: 0.7;
+    strong {
+      font-weight: 600;
+    }
+  }
+
+  .OpusAgent_ChatInterface {
+    width: 26vw;
+    height: 72vh;
+
+    min-height: 512px;
+    min-width: 420px;
+    max-width: 768px;
+
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+
+    z-index: 1;
+
+    border: solid 2px var(--MainColor);
+    box-shadow: 8px 8px 0px var(--MainColor);
+
+    #Vx_chatMessages {
+      flex: auto;
+
+      &::after {
+        content: "Đang tải...";
+        display: block;
+        background-color: var(--AccentColor);
+        width: 5%;
+        padding-left: 32px;
+
+        border-radius: 8px;
+        font-size: 0.9rem;
+        opacity: 0;
+        white-space: nowrap;
+        letter-spacing: 8px;
+        pointer-events: none;
+        height: auto;
+        max-height: 0;
+
+        justify-content: center;
+        transition: none;
+      }
+      &.AwaitingResponse {
+        &::after {
+          opacity: 1;
+          width: 32%;
+          letter-spacing: 0;
+          padding: 8px 16px;
+          max-height: 48px;
+          transition: all 0.66s 0.3s cubic-bezier(0.25, 0, 0, 1);
+        }
+      }
+      .Vx_message {
+        @media only screen and (max-width: 1440px) {
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    #Vx_chatContainer {
+      width: 100%;
+      height: 100%;
+
+      #AdditionInfo::before {
+        bottom: 32px;
+        transform: translateX(-100%);
+      }
+
+      .Vx_Recommendation_Question {
+        color: var(--MainColor);
+        p {
+          font-size: 0.8rem;
+          font-weight: 400;
+        }
+      }
+
+      .OpusPC_Slot_Message,
+      .OpusPC_SingleComponent_Message,
+      .OpusPC_RequestForRealAssist_Message {
+        width: 316px;
+        height: auto;
+        min-height: 128px;
+        border: 1px solid var(--AccentColor);
+
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+
+        margin-bottom: 8px;
+
+        position: relative;
+        * {
+          transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+        }
+
+        .OpusPC_Slot_Message__Title {
+          h2 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--MainColor);
+            text-transform: none;
+            border-bottom: solid 1px var(--DeepGrayColor);
+            width: 100%;
+            padding-bottom: 8px;
+            a {
+              all: unset;
+              //  all: inherit;
+              transition: inherit;
+              cursor: pointer;
+              border-bottom: solid 1px transparent;
+
+              &:hover {
+                color: var(--AccentColor);
+                border-bottom: solid 1px var(--AccentColor);
+                text-decoration: none;
+              }
+            }
+          }
+          width: 100%;
+          padding: 1rem;
+
+          display: flex;
+          position: relative;
+        }
+        .OpusPC_Slot_Lister {
+          width: 100%;
+          height: auto;
+          padding: 0 calc(1rem - 4px) 1rem 1rem;
+          max-height: 256px;
+          overflow-y: scroll;
+          overflow-x: hidden;
+
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: flex-start;
+          gap: 8px;
+
+          color: var(--MainColor);
+
+          position: relative;
+
+          &::-webkit-scrollbar {
+            width: 4px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background-color: var(--GrayColor);
+            border-radius: 2px;
+          }
+
+          .CPU {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/CPU.svg");
+            }
+          }
+          .MainBoard {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/MainBoard.svg");
+            }
+          }
+          .RAM {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/RAM.svg");
+            }
+          }
+          .PSU {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/PSU.svg");
+            }
+          }
+          .Case {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/Case.svg");
+            }
+          }
+          .HDD,
+          .SSD {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/HDD.svg");
+            }
+          }
+          .VGA {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/VGA.svg");
+            }
+          }
+
+          .LiquidCooler {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/LiquidCooler.svg");
+            }
+          }
+          .AirCooler {
+            .OpusPC_SingleComponent_Slot_Icon {
+              background-image: url("../Assets/PC_Compontents_Icons/AirCooler.svg");
+            }
+          }
+
+          .OpusPC_SingleComponent_Slot {
+            background: var(--GrayColor);
+            padding: 12px;
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            position: relative;
+            // overflow: hidden;
+            gap: 8px;
+
+            .OpusPC_SingleComponent_Slot_Information {
+              max-width: 78%;
+              flex: auto;
+              position: relative;
+            }
+
+            .OpusPC_SingleComponent_Slot_Icon {
+              min-width: 18px;
+              width: 18px;
+              height: 18px;
+
+              background-position: center center;
+              background-repeat: no-repeat;
+              background-size: contain;
+            }
+
+            h3 {
+              font-size: 0.8rem;
+              font-weight: 400;
+              text-transform: none;
+
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+        }
+        .OpusPC_Slot_Footer {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+
+          width: 100%;
+          padding: 1rem;
+          // margin-top: 16px;
+
+          border-top: solid 1px var(--DeepGrayColor);
+
+          .Slot_Price {
+            color: var(--MainColor);
+            h3 {
+              font-size: 0.8rem;
+              font-weight: 400;
+              text-transform: none;
+            }
+            p {
+              font-size: 1.2rem;
+              font-weight: 600;
+            }
+          }
+          button {
+            padding: 1rem 2rem;
+            background-color: var(--AccentColor);
+            color: var(--WhiteColor);
+            border: none;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+            box-shadow: 0px 0px 0px var(--MainColor);
+
+            ::after {
+              content: "";
+              display: inline-block;
+              width: 100%;
+              height: 4px;
+
+              position: absolute;
+              bottom: 0;
+              right: 0;
+
+              transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+            }
+
+            &:hover {
+              box-shadow: 4px 4px 0px var(--MainColor);
+              transform: translate(-4px, -4px);
+
+              ::after {
+                transform: translate(4px, 4px);
+              }
+            }
+          }
+        }
+
+        .loader_Small {
+          width: 100%;
+          height: 20%;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+
+          position: absolute;
+          top: 0;
+          left: 0;
+
+          background-color: var(--WhiteColor);
+
+          margin: 0 auto;
+          opacity: 0;
+          pointer-events: none;
+          gap: 8px;
+
+          &::after {
+            content: "Models đôi lúc có thể mất nhiều thời gian hơn.";
+            display: inline-block;
+            max-width: 62%;
+            height: auto;
+            color: var(--MainColor);
+            text-align: center;
+
+            font-size: 0.8rem;
+            font-weight: 400;
+            text-transform: none;
+          }
+        }
+
+        &.pending {
+          .loader_Small {
+            opacity: 1;
+            height: 100%;
+            pointer-events: all;
+          }
+        }
+      }
+      .OpusPC_SingleComponent_Message {
+        .OpusPC_Components_Message_Image {
+          width: 100%;
+          height: auto;
+          img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+          }
+        }
+      }
+
+      .OpusPC_RequestForRealAssist_Message {
+        color: var(--MainColor);
+        padding: 24px;
+        .OpusPC_RequestForRealAssist_Message__Contents {
+          margin-bottom: 16px;
+          h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-transform: none;
+            margin-bottom: 4px;
+          }
+          p {
+            font-size: 0.8rem;
+            font-weight: 400;
+            text-transform: none;
+          }
+        }
+        .OpusPC_Slot_Footer {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          border: none;
+          padding: 0;
+          button {
+            width: 100%;
+            margin-bottom: 8px;
+          }
+          .Opus_StayWithOpus_Button {
+            border: solid 1px var(--MainColor);
+            background: var(--WhiteColor);
+            color: var(--MainColor);
+            margin-bottom: unset;
+          }
+        }
+      }
+    }
+  }
+}
+.pc-builder {
+  width: 62vw;
+  background-color: var(--WhiteColor);
+  padding: 2rem 4rem;
+  padding-bottom: 0;
+  color: var(--MainColor);
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  @media only screen and (max-width: 1440px) {
+    max-height: 100vh;
+  }
+
+  &__header {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: solid 1px var(--MainColor);
+
+    h1 {
+      font-size: 1.5rem;
+      line-height: 1.7rem;
+
+      span {
+        font-weight: 300;
+        font-size: 1rem;
+      }
+    }
+
+    p {
+      color: var(--MainColor);
+      font-size: 0.8rem;
+    }
+  }
+
+  &__HolderSlots {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    .slot {
+      padding: 12px 32px;
+      border: solid 1px var(--MainColor);
+      font-weight: 600;
+
+      box-shadow: 0px 0px 0px var(--MainColor);
+      transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+      cursor: pointer;
+
+      position: relative;
+
+      &::after {
+        content: "";
+        display: inline-block;
+        width: 100%;
+        height: 4px;
+
+        position: absolute;
+        bottom: 0;
+        left: 0;
+
+        transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+      }
+
+      &--active {
+        background-color: var(--AccentColor);
+        color: var(--WhiteColor);
+        padding: 12px 42px;
+      }
+
+      &:hover {
+        box-shadow: 4px 4px 0px var(--MainColor);
+        transform: translate(-4px, -4px);
+        &::after {
+          transform: translate(4px, 4px);
+        }
+      }
+    }
+  }
+
+  &__components {
+    display: flex;
+    flex-direction: column;
+    margin: -2rem;
+    margin-bottom: 2rem;
+
+    // background: var(--MainColor);
+    @media only screen and (min-width: 1440px) {
+      overflow-y: scroll;
+      overflow-x: visible;
+    }
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .component-row {
+      display: flex;
+      align-items: center;
+      padding: 1rem 0;
+      margin: 1rem 2rem 0;
+      border-width: 1px;
+      border-style: solid;
+      border-color: transparent;
+      border-bottom-color: var(--MainColor);
+
+      background: var(--WhiteColor);
+      transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+
+      box-shadow: 0px 0px 0px var(--MainColor);
+      position: relative;
+
+      &::after {
+        content: "";
+        display: inline-block;
+        width: 100%;
+        height: 4px;
+
+        position: absolute;
+        bottom: 0;
+        left: 0;
+
+        transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+      }
+
+      &:hover {
+        border-color: var(--MainColor);
+        transform: translate(-4px, -4px);
+        box-shadow: 4px 4px 0px var(--MainColor);
+
+        padding: 1rem;
+        margin: 1rem;
+        margin-bottom: 0;
+
+        &::after {
+          transform: translate(4px, 4px);
+        }
+
+        .ProductControl {
+          .Change {
+            button {
+              width: 24px !important;
+              opacity: 1 !important;
+              pointer-events: auto !important;
+            }
+          }
+        }
+      }
+
+      &__label {
+        width: 150px;
+        font-weight: 600;
+      }
+
+      &__content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .product-card {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem;
+          border: solid var(--GrayColor);
+          border-width: 0 0 0 1px;
+          width: 100%;
+
+          img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+          }
+
+          &__info {
+            flex: 1;
+            max-width: 62%;
+
+            h3 {
+              font-size: 0.9rem;
+              margin-bottom: 0.5rem;
+              display: flex;
+
+              flex-direction: row;
+
+              align-content: center;
+              justify-content: flex-start;
+              align-items: center;
+              min-width: 496px;
+
+              @media screen and (max-width: 1440px) {
+                flex-direction: column;
+                align-items: start;
+                min-width: 212px;
+              }
+            }
+
+            .warranty,
+            .stock {
+              font-size: 0.8rem;
+              color: var(--MainColor);
+              opacity: 0.7;
+            }
+          }
+
+          &__price {
+            color: var(--MainColor);
+            font-weight: 600;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+
+            align-items: stretch;
+            // justify-content: center;
+
+            p {
+              text-align: center;
+            }
+
+            span {
+              color: var(--MainColor);
+              font-size: 0.8rem;
+              font-weight: 300;
+              text-align: center;
+            }
+            .Qualtity {
+              display: flex;
+              flex-direction: row;
+              align-items: stretch;
+              justify-content: stretch;
+              border: 1px solid var(--MainColor);
+
+              p {
+                color: var(--MainColor);
+                font-size: 0.8rem;
+                font-weight: 600;
+                width: auto;
+                flex: auto;
+                text-align: center;
+                border: solid var(--MainColor);
+                border-width: 0px 1px 0px 1px;
+
+                min-width: 2rem;
+
+                justify-content: center;
+                align-content: center;
+              }
+              .Decrease,
+              .Increase {
+                button {
+                  all: unset;
+                  width: 2rem;
+                  height: 2rem;
+                  cursor: pointer;
+
+                  align-items: center;
+                  justify-content: center;
+                  text-align: center;
+                  color: var(--MainColor);
+                  line-height: 1rem;
+                  font-size: 1rem;
+
+                  transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+
+                  &:hover {
+                    background-color: var(--AccentColor);
+                    color: var(--WhiteColor);
+                    font-size: 1.2rem;
+                  }
+                }
+              }
+            }
+          }
+
+          &__total {
+            color: var(--AccentColor);
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+          }
+
+          .ProductControl {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+
+            .Change,
+            .Remove {
+              button {
+                all: unset;
+                cursor: pointer;
+                width: 24px;
+                height: 24px;
+                color: var(--WhiteColor);
+
+                background-size: contain;
+                background-position: center center;
+                background-repeat: no-repeat;
+                transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+              }
+            }
+
+            .Change {
+              button {
+                width: 0px;
+                opacity: 0;
+                pointer-events: none;
+              }
+            }
+          }
+        }
+
+        .add-button {
+          background-color: var(--AccentColor);
+          color: var(--WhiteColor);
+          padding: 0.75rem 1.5rem;
+          border: none;
+          cursor: pointer;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .component-row.selected {
+      &__label {
+        display: none;
+      }
+      .add-button {
+        display: none;
+      }
+    }
+
+    .component-row:not(.selected) {
+      .product-card {
+        display: none;
+      }
+    }
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 4rem;
+
+    margin: 0 -4rem;
+
+    border-top: 1px solid var(--GrayColor);
+    background-color: var(--GrayColor);
+
+    // position: fixed;
+    // bottom: 0;
+    // left: 0;
+    //  flex-direction: column;
+    // align-items: end;
+
+    justify-content: space-between;
+    align-items: end;
+
+    // @media only screen and (min-width: 1440px) {
+    //   position: fixed;
+    //   bottom: 0;
+    //   left: 0;
+
+    //   // flex-direction: row;
+    // }
+
+    .promotions {
+      display: flex;
+      gap: 6px;
+      flex-direction: column;
+      max-width: 62%;
+
+      @media only screen and (min-width: 1440px) {
+        flex-direction: row;
+        max-width: 72%;
+
+        // flex-direction: row;
+      }
+      .promo-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        border: 1px solid var(--MainColor);
+        box-shadow: 0px 0px 0px var(--MainColor);
+        transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+        background-color: var(--WhiteColor);
+
+        position: relative;
+
+        &::after {
+          content: "";
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          border-radius: 32px;
+
+          background: var(--GrayColor);
+          position: absolute;
+          top: 8px;
+          right: 8px;
+
+          border: 2px solid transparent;
+          transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+          box-shadow: 0px 0px 0px 2px transparent;
+        }
+
+        div {
+          font-size: 0.8rem;
+        }
+
+        &.selected {
+          border-color: var(--AccentColor);
+          background-color: var(--SecondAccentColor);
+
+          &::after {
+            border-color: var(--WhiteColor);
+
+            background: var(--AccentColor);
+
+            box-shadow: 0px 0px 0px 1px var(--AccentColor);
+          }
+        }
+
+        h1 {
+          font-size: 1rem;
+          font-weight: 600;
+        }
+
+        cursor: pointer;
+
+        &:hover {
+          box-shadow: 4px 4px 0px var(--MainColor);
+          transform: translate(-4px, -4px);
+        }
+
+        img {
+          width: 40px;
+          height: 40px;
+          object-fit: contain;
+        }
+
+        &__info {
+          font-size: 0.8rem;
+        }
+      }
+    }
+
+    .total-price {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: end;
+      justify-content: end;
+
+      h2 {
+        font-size: 0.8rem;
+        font-weight: 300;
+      }
+
+      .original-price {
+        text-decoration: line-through;
+        color: #666;
+        font-size: 1.2rem;
+      }
+
+      .final-price {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--AccentColor);
+      }
+    }
+  }
+
+  &_ComponentsSelector {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 100vw;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background: #ffffff56;
+    backdrop-filter: blur(16px);
+
+    transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+
+    * {
+      transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+    }
+
+    .SelectorContainer {
+      width: 62vw;
+      min-width: 1024px;
+      height: 90vh;
+
+      background: var(--WhiteColor);
+      box-shadow: 8px 8px 0px var(--MainColor);
+      border: solid 2px var(--MainColor);
+
+      display: flex;
+      flex-direction: column;
+      position: relative;
+
+      .SelectorNavigation {
+        width: 100%;
+        height: 60px;
+        background: var(--MainColor);
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+
+        .SelectorNavigation__title {
+          width: 256px;
+          max-width: 256px;
+          padding-left: 8px;
+        }
+
+        .SelectorNavigation__Search {
+          width: 32vw;
+
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+
+          cursor: pointer;
+
+          input {
+            // all: unset;
+
+            border: none;
+            outline: none;
+
+            background: var(--WhiteColor);
+            flex: auto;
+            height: 40px;
+            padding: 8px;
+            color: var(--MainColor);
+          }
+
+          #SelectorNavigation__Search__Button {
+            all: unset;
+            width: 76px;
+            height: 40px;
+
+            background: var(--AccentColor);
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: 20px 20px;
+          }
+        }
+        .SelectorNavigation__close {
+          all: unset;
+          width: 48px;
+          height: 48px;
+          margin-left: auto;
+          background-position: center center;
+          background-repeat: no-repeat;
+          background-size: 20px 20px;
+
+          cursor: pointer;
+        }
+      }
+      .ComponentsSelectorMain {
+        width: 100%;
+        height: calc(100% - 60px);
+
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: flex-start;
+        position: relative;
+
+        .ComponentsFilters {
+          width: 256px;
+          min-width: 256px;
+          height: 100%;
+
+          border-right: solid 1px var(--MainColor);
+          // margin: 8px;
+          padding: 8px;
+          padding-bottom: 64px;
+          overflow-y: scroll;
+          overflow-x: hidden;
+
+          &::-webkit-scrollbar {
+            width: 4px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background-color: var(--GrayColor);
+            border-radius: 2px;
+          }
+
+          .Filter {
+            border-bottom: solid 1px var(--MainColor);
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+
+            color: var(--MainColor);
+
+            flex-wrap: wrap;
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+            justify-content: start;
+
+            h3 {
+              font-size: 1rem;
+              font-weight: 600;
+              margin-bottom: 0.5rem;
+            }
+
+            fieldset {
+              all: unset;
+
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: start;
+              gap: 8px;
+
+              flex-wrap: wrap;
+
+              input {
+                all: unset;
+                min-width: 12px;
+                min-height: 12px;
+
+                border-radius: 16px;
+
+                border: solid 2px var(--MainColor);
+                background-color: var(--WhiteColor);
+                box-shadow: 0px 0px 0px var(--MainColor);
+                transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+                cursor: pointer;
+
+                &:checked {
+                  background-color: var(--AccentColor);
+                  border: solid 2px var(--WhiteColor);
+                  box-shadow: 0px 0px 0px 2px var(--AccentColor);
+                }
+              }
+
+              label {
+                font-size: 0.8rem;
+                font-weight: 400;
+
+                display: block;
+                flex: auto;
+
+                // width: max-content;
+
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+                min-width: 78px;
+                // width: 78px;
+                //margin-right: 16px;
+                justify-content: start;
+                margin: 0;
+
+                // white-space: nowrap;
+
+                // margin: 0 4px 0 0;
+              }
+            }
+          }
+        }
+        .Components_Displayer {
+          flex: auto;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: flex-start;
+          max-height: 100%;
+          overflow-y: scroll;
+          overflow-x: hidden;
+
+          padding-bottom: 16px;
+          padding-top: 8px;
+
+          &::-webkit-scrollbar {
+            width: 4px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background-color: var(--GrayColor);
+            border-radius: 2px;
+          }
+
+          .SingleComponent_Display {
+            width: -webkit-fill-available;
+            max-width: 100%;
+            // height: 120px;
+            padding: 8px;
+            margin: 0 8px;
+            background: var(--WhiteColor);
+
+            border: solid 1px transparent;
+            border-bottom-color: var(--MainColor);
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            position: relative;
+
+            box-shadow: 0px 0px 0px 0px var(--MainColor);
+
+            &::after {
+              content: "";
+              display: inline-block;
+              width: 100%;
+              height: 4px;
+
+              position: absolute;
+              bottom: 0;
+              left: 0;
+
+              transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+            }
+
+            &:hover {
+              box-shadow: 4px 4px 0px var(--MainColor);
+              transform: translate(-4px, -4px);
+              border-color: var(--MainColor);
+
+              &::after {
+                transform: translate(4px, 4px);
+              }
+            }
+
+            .product-card__info {
+              height: 100%;
+              max-width: 84%;
+
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: flex-start;
+              gap: 4px;
+
+              position: relative;
+              img {
+                height: 128px;
+                width: 128px;
+                object-fit: contain;
+              }
+              h3 {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--MainColor);
+
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: center;
+
+                .warranty {
+                  margin-top: 8px;
+                }
+                .warranty,
+                .stock {
+                  font-size: 0.8rem;
+                  font-weight: 300;
+                }
+
+                .product-card__price {
+                  color: var(--AccentColor);
+                  font-size: 1.2rem;
+                  font-weight: 600;
+                }
+              }
+            }
+
+            .productSelectButton {
+              all: unset;
+              cursor: pointer;
+              width: 96px;
+              height: 48px;
+              margin-right: 8px;
+              background-color: var(--AccentColor);
+              background-position: center center;
+              background-repeat: no-repeat;
+              background-size: 20px 20px;
+            }
+          }
+        }
+
+        .Filter_Updater,
+        .Page_Controller {
+          position: absolute;
+          display: flex;
+          flex-direction: row;
+          height: 60px;
+          background-color: var(--GrayColor);
+        }
+
+        .Filter_Updater {
+          bottom: 0;
+          left: 0;
+
+          align-items: center;
+          justify-content: flex-end;
+
+          padding: 8px;
+
+          width: 256px;
+
+          button {
+            all: unset;
+            cursor: pointer;
+            padding: 8px 16px;
+
+            color: var(--WhiteColor);
+            background-color: var(--AccentColor);
+
+            font-size: 0.8rem;
+            font-weight: 400;
+
+            transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+            box-shadow: 0px 0px 0px var(--MainColor);
+
+            &:hover {
+              box-shadow: 4px 4px 0px var(--MainColor);
+              transform: translate(-4px, -4px);
+            }
+          }
+        }
+
+        .Page_Controller {
+          bottom: 0;
+          right: 0;
+
+          align-items: center;
+          justify-content: center;
+
+          padding: 8px;
+
+          width: calc(100% - 256px);
+          gap: 4px;
+
+          color: var(--MainColor);
+
+          button {
+            all: unset;
+            cursor: pointer;
+          }
+          button.Control {
+            height: 48px;
+            width: 48px;
+            background-image: url(../Assets/ArrowToRight.svg);
+            background-size: 20px 20px;
+            background-position: center center;
+            background-repeat: no-repeat;
+          }
+
+          #Prev {
+            transform: rotate(180deg);
+          }
+
+          button:not(.Control) {
+            padding: 8px 16px;
+
+            color: var(--MainColor);
+
+            font-size: 0.8rem;
+            font-weight: 400;
+
+            transition: all 0.4s cubic-bezier(0.25, 0, 0, 1);
+          }
+        }
+      }
+
+      .ComopentLoading_Icon {
+        width: 100%;
+        height: 100%;
+
+        position: absolute;
+        left: 0;
+        top: 0;
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        opacity: 0;
+        pointer-events: none;
+
+        z-index: 100;
+      }
+    }
+  }
+
+  &_ComponentsSelector.hidden {
+    .SelectorContainer {
+      transform: translateY(20vh) scale(0.78);
+    }
+  }
+  &_ComponentsSelector.OnLoading {
+    pointer-events: none;
+    .ComponentsSelectorMain {
+      opacity: 0;
+    }
+    .ComopentLoading_Icon {
+      opacity: 1;
+    }
+  }
+
+  .PCBuilder-Loader {
+    opacity: 0;
+    transition: all 0.6s 0.2s cubic-bezier(0.25, 0, 0, 1);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+
+    backdrop-filter: blur(8px);
+
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    bottom: 0;
+
+    pointer-events: none;
+  }
+}
+
+.pc-builder.OnLoading {
+  pointer-events: none;
+  .PCBuilder-Loader {
+    opacity: 1;
+  }
+}
+
+button {
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center center;
+}
+.line {
+  background: var(--MainColor);
+}
