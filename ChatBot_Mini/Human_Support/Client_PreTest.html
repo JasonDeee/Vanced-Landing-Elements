@@ -91,332 +91,356 @@
       }
     </style>
   </head>
-  <body></body>
-</html>
+  <body>
     <div class="container">
-        <h1>🧪 Client P2P Test - Vanced Support</h1>
-        <p><strong>MachineID:</strong> <span id="machineId">20250909S5690</span></p>
-        
-        <div id="statusArea">
-            <div class="status waiting" id="statusMsg">
-                Sẵn sàng test P2P connection
-            </div>
-        </div>
+      <h1>🧪 Client P2P Test - Vanced Support</h1>
+      <p>
+        <strong>MachineID:</strong> <span id="machineId">20250909S5690</span>
+      </p>
 
-        <div id="controlArea">
-            <button id="requestSupportBtn" onclick="requestHumanSupport()">
-                🆘 Yêu cầu gặp tư vấn viên
-            </button>
-            <button id="testSpreadsheetBtn" onclick="testSpreadsheetConnection()">
-                📊 Test Spreadsheet Connection
-            </button>
+      <div id="statusArea">
+        <div class="status waiting" id="statusMsg">
+          Sẵn sàng test P2P connection
         </div>
+      </div>
 
-        <div id="waitingArea" style="display: none;">
-            <h3>⏳ Đang chờ tư vấn viên...</h3>
-            <p>Thời gian chờ: <span id="countdown">180</span> giây</p>
-            <div id="peerInfo">
-                <p><strong>PeerID:</strong> <span id="currentPeerID">-</span></p>
-            </div>
-        </div>
+      <div id="controlArea">
+        <button id="requestSupportBtn" onclick="requestHumanSupport()">
+          🆘 Yêu cầu gặp tư vấn viên
+        </button>
+        <button id="testSpreadsheetBtn" onclick="testSpreadsheetConnection()">
+          📊 Test Spreadsheet Connection
+        </button>
+      </div>
 
-        <div id="chatArea" style="display: none;">
-            <h3>💬 Chat với tư vấn viên</h3>
-            <div class="chat-area" id="chatMessages"></div>
-            <div>
-                <input type="text" id="messageInput" placeholder="Nhập tin nhắn..." 
-                       onkeypress="if(event.key==='Enter') sendMessage()">
-                <button onclick="sendMessage()">Gửi</button>
-                <button onclick="endChat()" style="background: #dc3545;">Kết thúc</button>
-            </div>
+      <div id="waitingArea" style="display: none">
+        <h3>⏳ Đang chờ tư vấn viên...</h3>
+        <p>Thời gian chờ: <span id="countdown">180</span> giây</p>
+        <div id="peerInfo">
+          <p><strong>PeerID:</strong> <span id="currentPeerID">-</span></p>
         </div>
+      </div>
 
-        <div id="debugArea">
-            <h4>🔧 Debug Info</h4>
-            <div id="debugLog" style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
+      <div id="chatArea" style="display: none">
+        <h3>💬 Chat với tư vấn viên</h3>
+        <div class="chat-area" id="chatMessages"></div>
+        <div>
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="Nhập tin nhắn..."
+            onkeypress="if(event.key==='Enter') sendMessage()"
+          />
+          <button onclick="sendMessage()">Gửi</button>
+          <button onclick="endChat()" style="background: #dc3545">
+            Kết thúc
+          </button>
         </div>
+      </div>
+
+      <div id="debugArea">
+        <h4>🔧 Debug Info</h4>
+        <div
+          id="debugLog"
+          style="
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+          "
+        ></div>
+      </div>
     </div>
 
     <script>
-        // Configuration
-        const MACHINE_ID = "20250909S5690";
-        const SPREADSHEET_URL = "https://script.google.com/macros/s/AKfycbwYour_Spreadsheet_URL_Here/exec"; // Cập nhật URL này
-        
-        // Global variables
-        let peer = null;
-        let connection = null;
-        let countdownTimer = null;
-        let isConnected = false;
-        
-        // Debug logging
-        function debugLog(message, data = null) {
-            const timestamp = new Date().toISOString();
-            const logMessage = `[${timestamp}] ${message}`;
-            
-            console.log(logMessage, data || '');
-            
-            const debugArea = document.getElementById('debugLog');
-            const logEntry = document.createElement('div');
-            logEntry.textContent = logMessage + (data ? ` | ${JSON.stringify(data)}` : '');
-            debugArea.appendChild(logEntry);
-            debugArea.scrollTop = debugArea.scrollHeight;
-        }  
-      
-        // Update status display
-        function updateStatus(message, type = 'waiting') {
-            const statusMsg = document.getElementById('statusMsg');
-            statusMsg.textContent = message;
-            statusMsg.className = `status ${type}`;
-            debugLog(`Status: ${message} (${type})`);
+      // Configuration
+      const MACHINE_ID = "20250909S5690";
+      const SPREADSHEET_URL =
+        "https://script.google.com/macros/s/AKfycbzZPxkICg1AHucIZ2AFQmnLLg_hjG8s9ouJUU9eSG1043AronwRwV45i5tMOQT5VuPDvw/exec"; // Cập nhật URL này
+
+      // Global variables
+      let peer = null;
+      let connection = null;
+      let countdownTimer = null;
+      let isConnected = false;
+
+      // Debug logging
+      function debugLog(message, data = null) {
+        const timestamp = new Date().toISOString();
+        const logMessage = `[${timestamp}] ${message}`;
+
+        console.log(logMessage, data || "");
+
+        const debugArea = document.getElementById("debugLog");
+        const logEntry = document.createElement("div");
+        logEntry.textContent =
+          logMessage + (data ? ` | ${JSON.stringify(data)}` : "");
+        debugArea.appendChild(logEntry);
+        debugArea.scrollTop = debugArea.scrollHeight;
+      }
+
+      // Update status display
+      function updateStatus(message, type = "waiting") {
+        const statusMsg = document.getElementById("statusMsg");
+        statusMsg.textContent = message;
+        statusMsg.className = `status ${type}`;
+        debugLog(`Status: ${message} (${type})`);
+      }
+
+      // Test Spreadsheet connection
+      async function testSpreadsheetConnection() {
+        updateStatus("Testing Spreadsheet connection...", "waiting");
+
+        try {
+          const url = new URL(SPREADSHEET_URL);
+          url.searchParams.append("action", "initChat");
+          url.searchParams.append("machineId", MACHINE_ID);
+          url.searchParams.append("userIP", "test-ip");
+
+          debugLog("Testing Spreadsheet connection", { url: url.toString() });
+
+          const response = await fetch(url.toString());
+          const data = await response.json();
+
+          debugLog("Spreadsheet response", data);
+
+          if (data.status === "existing_user" || data.status === "new_user") {
+            updateStatus("✅ Spreadsheet connection successful!", "connected");
+          } else {
+            updateStatus("❌ Spreadsheet connection failed", "error");
+          }
+        } catch (error) {
+          debugLog("Spreadsheet connection error", error.message);
+          updateStatus("❌ Spreadsheet connection error", "error");
         }
-        
-        // Test Spreadsheet connection
-        async function testSpreadsheetConnection() {
-            updateStatus('Testing Spreadsheet connection...', 'waiting');
-            
-            try {
-                const url = new URL(SPREADSHEET_URL);
-                url.searchParams.append('action', 'initChat');
-                url.searchParams.append('machineId', MACHINE_ID);
-                url.searchParams.append('userIP', 'test-ip');
-                
-                debugLog('Testing Spreadsheet connection', { url: url.toString() });
-                
-                const response = await fetch(url.toString());
-                const data = await response.json();
-                
-                debugLog('Spreadsheet response', data);
-                
-                if (data.status === 'existing_user' || data.status === 'new_user') {
-                    updateStatus('✅ Spreadsheet connection successful!', 'connected');
-                } else {
-                    updateStatus('❌ Spreadsheet connection failed', 'error');
-                }
-            } catch (error) {
-                debugLog('Spreadsheet connection error', error.message);
-                updateStatus('❌ Spreadsheet connection error', 'error');
+      }
+
+      // Request human support
+      async function requestHumanSupport() {
+        updateStatus("Khởi tạo P2P connection...", "waiting");
+
+        // Generate custom PeerID
+        const peerID = `vanced_${MACHINE_ID}_${Date.now()}`;
+        debugLog("Generated PeerID", peerID);
+
+        try {
+          // Initialize PeerJS
+          peer = new Peer(peerID);
+
+          peer.on("open", (id) => {
+            debugLog("Peer opened", id);
+            document.getElementById("currentPeerID").textContent = id;
+
+            // Save to Spreadsheet
+            savePeerIDToSpreadsheet(id);
+
+            // Show waiting UI
+            showWaitingUI();
+
+            // Start countdown
+            startCountdown();
+          });
+
+          peer.on("connection", (conn) => {
+            debugLog("Admin connected!", conn.peer);
+            connection = conn;
+            isConnected = true;
+
+            // Stop countdown
+            if (countdownTimer) {
+              clearInterval(countdownTimer);
             }
+
+            // Setup connection handlers
+            setupConnection(conn);
+
+            // Show chat UI
+            showChatUI();
+            updateStatus("✅ Đã kết nối với tư vấn viên!", "connected");
+          });
+
+          peer.on("error", (error) => {
+            debugLog("Peer error", error);
+            updateStatus("❌ Lỗi P2P connection", "error");
+          });
+        } catch (error) {
+          debugLog("Request support error", error.message);
+          updateStatus("❌ Lỗi khởi tạo P2P", "error");
         }
-        
-        // Request human support
-        async function requestHumanSupport() {
-            updateStatus('Khởi tạo P2P connection...', 'waiting');
-            
-            // Generate custom PeerID
-            const peerID = `vanced_${MACHINE_ID}_${Date.now()}`;
-            debugLog('Generated PeerID', peerID);
-            
-            try {
-                // Initialize PeerJS
-                peer = new Peer(peerID);
-                
-                peer.on('open', (id) => {
-                    debugLog('Peer opened', id);
-                    document.getElementById('currentPeerID').textContent = id;
-                    
-                    // Save to Spreadsheet
-                    savePeerIDToSpreadsheet(id);
-                    
-                    // Show waiting UI
-                    showWaitingUI();
-                    
-                    // Start countdown
-                    startCountdown();
-                });
-                
-                peer.on('connection', (conn) => {
-                    debugLog('Admin connected!', conn.peer);
-                    connection = conn;
-                    isConnected = true;
-                    
-                    // Stop countdown
-                    if (countdownTimer) {
-                        clearInterval(countdownTimer);
-                    }
-                    
-                    // Setup connection handlers
-                    setupConnection(conn);
-                    
-                    // Show chat UI
-                    showChatUI();
-                    updateStatus('✅ Đã kết nối với tư vấn viên!', 'connected');
-                });
-                
-                peer.on('error', (error) => {
-                    debugLog('Peer error', error);
-                    updateStatus('❌ Lỗi P2P connection', 'error');
-                });
-                
-            } catch (error) {
-                debugLog('Request support error', error.message);
-                updateStatus('❌ Lỗi khởi tạo P2P', 'error');
-            }
-        }  
-      
-        // Save PeerID to Spreadsheet
-        async function savePeerIDToSpreadsheet(peerID) {
-            try {
-                const p2pData = {
-                    clientPeerID: peerID,
-                    adminPeerID: null,
-                    status: "waiting",
-                    adminNickname: null,
-                    timestamp: new Date().toISOString(),
-                    connectionStartTime: null
-                };
-                
-                const url = new URL(SPREADSHEET_URL);
-                url.searchParams.append('action', 'updateP2PRequest');
-                url.searchParams.append('machineId', MACHINE_ID);
-                url.searchParams.append('p2pData', JSON.stringify(p2pData));
-                
-                debugLog('Saving PeerID to Spreadsheet', p2pData);
-                
-                const response = await fetch(url.toString());
-                const data = await response.json();
-                
-                debugLog('Spreadsheet save response', data);
-                
-            } catch (error) {
-                debugLog('Save PeerID error', error.message);
-            }
+      }
+
+      // Save PeerID to Spreadsheet
+      async function savePeerIDToSpreadsheet(peerID) {
+        try {
+          const p2pData = {
+            clientPeerID: peerID,
+            adminPeerID: null,
+            status: "waiting",
+            adminNickname: null,
+            timestamp: new Date().toISOString(),
+            connectionStartTime: null,
+          };
+
+          const url = new URL(SPREADSHEET_URL);
+          url.searchParams.append("action", "updateP2PRequest");
+          url.searchParams.append("machineId", MACHINE_ID);
+          url.searchParams.append("p2pData", JSON.stringify(p2pData));
+
+          debugLog("Saving PeerID to Spreadsheet", p2pData);
+
+          const response = await fetch(url.toString());
+          const data = await response.json();
+
+          debugLog("Spreadsheet save response", data);
+        } catch (error) {
+          debugLog("Save PeerID error", error.message);
         }
-        
-        // Show waiting UI
-        function showWaitingUI() {
-            document.getElementById('controlArea').style.display = 'none';
-            document.getElementById('waitingArea').style.display = 'block';
+      }
+
+      // Show waiting UI
+      function showWaitingUI() {
+        document.getElementById("controlArea").style.display = "none";
+        document.getElementById("waitingArea").style.display = "block";
+      }
+
+      // Show chat UI
+      function showChatUI() {
+        document.getElementById("waitingArea").style.display = "none";
+        document.getElementById("chatArea").style.display = "block";
+      }
+
+      // Start countdown timer
+      function startCountdown() {
+        let timeLeft = 180; // 3 minutes
+        const countdownElement = document.getElementById("countdown");
+
+        countdownTimer = setInterval(() => {
+          timeLeft--;
+          countdownElement.textContent = timeLeft;
+
+          if (timeLeft <= 0) {
+            clearInterval(countdownTimer);
+            handleTimeout();
+          }
+        }, 1000);
+      }
+
+      // Handle timeout
+      function handleTimeout() {
+        if (!isConnected) {
+          updateStatus("⏰ Timeout - Không có tư vấn viên kết nối", "timeout");
+
+          if (peer) {
+            peer.destroy();
+          }
+
+          // Show fallback options
+          alert(
+            "Không có tư vấn viên trực tuyến. Vui lòng liên hệ:\nEmail: contact@vanced.agency\nPhone: 0123-456-789"
+          );
         }
-        
-        // Show chat UI
-        function showChatUI() {
-            document.getElementById('waitingArea').style.display = 'none';
-            document.getElementById('chatArea').style.display = 'block';
+      }
+
+      // Setup connection handlers
+      function setupConnection(conn) {
+        conn.on("data", (data) => {
+          debugLog("Received message", data);
+          displayMessage(data.message, "admin");
+        });
+
+        conn.on("close", () => {
+          debugLog("Connection closed by admin");
+          updateStatus("❌ Tư vấn viên đã ngắt kết nối", "error");
+          isConnected = false;
+        });
+
+        conn.on("error", (error) => {
+          debugLog("Connection error", error);
+          updateStatus("❌ Lỗi kết nối P2P", "error");
+        });
+      }
+
+      // Send message
+      function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const message = input.value.trim();
+
+        if (!message || !connection) return;
+
+        // Display message locally
+        displayMessage(message, "user");
+
+        // Send to admin
+        connection.send({
+          type: "message",
+          message: message,
+          timestamp: new Date().toISOString(),
+          from: "client",
+        });
+
+        debugLog("Sent message", message);
+        input.value = "";
+      }
+
+      // Display message in chat
+      function displayMessage(message, sender) {
+        const chatMessages = document.getElementById("chatMessages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${
+          sender === "user" ? "user-msg" : "admin-msg"
+        }`;
+        messageDiv.textContent = `${
+          sender === "user" ? "Bạn" : "Tư vấn viên"
+        }: ${message}`;
+
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      // End chat
+      function endChat() {
+        if (connection) {
+          connection.send({
+            type: "end_chat",
+            timestamp: new Date().toISOString(),
+            from: "client",
+          });
+
+          connection.close();
         }
-        
-        // Start countdown timer
-        function startCountdown() {
-            let timeLeft = 180; // 3 minutes
-            const countdownElement = document.getElementById('countdown');
-            
-            countdownTimer = setInterval(() => {
-                timeLeft--;
-                countdownElement.textContent = timeLeft;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownTimer);
-                    handleTimeout();
-                }
-            }, 1000);
+
+        if (peer) {
+          peer.destroy();
         }
-        
-        // Handle timeout
-        function handleTimeout() {
-            if (!isConnected) {
-                updateStatus('⏰ Timeout - Không có tư vấn viên kết nối', 'timeout');
-                
-                if (peer) {
-                    peer.destroy();
-                }
-                
-                // Show fallback options
-                alert('Không có tư vấn viên trực tuyến. Vui lòng liên hệ:\nEmail: contact@vanced.agency\nPhone: 0123-456-789');
-            }
+
+        updateStatus("✅ Đã kết thúc cuộc trò chuyện", "connected");
+
+        // Reset UI
+        document.getElementById("controlArea").style.display = "block";
+        document.getElementById("waitingArea").style.display = "none";
+        document.getElementById("chatArea").style.display = "none";
+
+        // Clear chat messages
+        document.getElementById("chatMessages").innerHTML = "";
+
+        debugLog("Chat ended by client");
+      }
+
+      // Initialize on page load
+      window.onload = function () {
+        debugLog("Client PreTest initialized", { machineId: MACHINE_ID });
+        updateStatus("Sẵn sàng test P2P connection", "waiting");
+      };
+
+      // Cleanup on page unload
+      window.onbeforeunload = function () {
+        if (peer) {
+          peer.destroy();
         }
-        
-        // Setup connection handlers
-        function setupConnection(conn) {
-            conn.on('data', (data) => {
-                debugLog('Received message', data);
-                displayMessage(data.message, 'admin');
-            });
-            
-            conn.on('close', () => {
-                debugLog('Connection closed by admin');
-                updateStatus('❌ Tư vấn viên đã ngắt kết nối', 'error');
-                isConnected = false;
-            });
-            
-            conn.on('error', (error) => {
-                debugLog('Connection error', error);
-                updateStatus('❌ Lỗi kết nối P2P', 'error');
-            });
-        }       
- 
-        // Send message
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            
-            if (!message || !connection) return;
-            
-            // Display message locally
-            displayMessage(message, 'user');
-            
-            // Send to admin
-            connection.send({
-                type: 'message',
-                message: message,
-                timestamp: new Date().toISOString(),
-                from: 'client'
-            });
-            
-            debugLog('Sent message', message);
-            input.value = '';
-        }
-        
-        // Display message in chat
-        function displayMessage(message, sender) {
-            const chatMessages = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender === 'user' ? 'user-msg' : 'admin-msg'}`;
-            messageDiv.textContent = `${sender === 'user' ? 'Bạn' : 'Tư vấn viên'}: ${message}`;
-            
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        // End chat
-        function endChat() {
-            if (connection) {
-                connection.send({
-                    type: 'end_chat',
-                    timestamp: new Date().toISOString(),
-                    from: 'client'
-                });
-                
-                connection.close();
-            }
-            
-            if (peer) {
-                peer.destroy();
-            }
-            
-            updateStatus('✅ Đã kết thúc cuộc trò chuyện', 'connected');
-            
-            // Reset UI
-            document.getElementById('controlArea').style.display = 'block';
-            document.getElementById('waitingArea').style.display = 'none';
-            document.getElementById('chatArea').style.display = 'none';
-            
-            // Clear chat messages
-            document.getElementById('chatMessages').innerHTML = '';
-            
-            debugLog('Chat ended by client');
-        }
-        
-        // Initialize on page load
-        window.onload = function() {
-            debugLog('Client PreTest initialized', { machineId: MACHINE_ID });
-            updateStatus('Sẵn sàng test P2P connection', 'waiting');
-        };
-        
-        // Cleanup on page unload
-        window.onbeforeunload = function() {
-            if (peer) {
-                peer.destroy();
-            }
-        };
+      };
     </script>
-</body>
+  </body>
 </html>

@@ -715,7 +715,7 @@ let adminDashboard = null;
  */
 function initializeAdminDashboard(adminNickname) {
   const spreadsheetUrl =
-    "https://script.google.com/macros/s/AKfycbwYour_Spreadsheet_URL_Here/exec"; // Cập nhật URL này
+    "https://script.google.com/macros/s/AKfycbzZPxkICg1AHucIZ2AFQmnLLg_hjG8s9ouJUU9eSG1043AronwRwV45i5tMOQT5VuPDvw/exec"; // Cập nhật URL này
 
   adminDashboard = new VancedAdminDashboard(adminNickname, spreadsheetUrl);
   adminDashboard.initialize();

@@ -8,6 +8,7 @@
 
 // ====== DEBUG CONFIGURATION ======
 const DeBug_IsActive = true; // Set to false to disable debug logging
+const ADMIN_EMAIL = "me@vanced.media"; // Cập nhật email admin ở đây
 
 /**
  * Debug logging function
@@ -1192,8 +1193,6 @@ function checkAbandonedConnections() {
  * @param {Object} p2pData - P2P data
  */
 function sendP2PNotificationEmail(machineId, p2pData) {
-  const ADMIN_EMAIL = "admin@vanced.agency"; // Cập nhật email admin ở đây
-
   try {
     const subject = `[Vanced Support] Khách hàng yêu cầu hỗ trợ - ${machineId}`;
     const body = `
