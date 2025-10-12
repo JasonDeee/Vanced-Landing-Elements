@@ -527,6 +527,39 @@ function doGet(e) {
         response = handleUpdateAll(params);
         break;
 
+      case "updateP2PRequest":
+        response = handleP2PRequest(params.machineId, params.p2pData);
+        break;
+
+      case "getWaitingClients":
+        response = getWaitingClients(params.adminNickname);
+        break;
+
+      case "updateClientStatus":
+        response = updateClientStatus(
+          params.machineId,
+          params.status,
+          params.adminPeerID,
+          params.adminNickname
+        );
+        break;
+
+      case "saveChatMessage":
+        response = saveChatMessage(
+          params.machineId,
+          params.message,
+          params.sender
+        );
+        break;
+
+      case "getChatHistory":
+        response = getChatHistory(params.machineId);
+        break;
+
+      case "checkAbandonedConnections":
+        response = checkAbandonedConnections();
+        break;
+
       default:
         response = { status: "error", message: "Invalid action" };
     }
@@ -765,5 +798,425 @@ function doPost(e) {
     return ContentService.createTextOutput(
       JSON.stringify(errorResponse)
     ).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ====== P2P SUPPORT FUNCTIONS ======
+
+/**
+ * Handle P2P support request
+ * @param {string} machineId - MachineID
+ * @param {string} p2pDataJson - P2P data as JSON string
+ * @returns {Object} - Response object
+ */
+function handleP2PRequest(machineId, p2pDataJson) {
+  debugLog("handleP2PRequest called", { machineId, p2pDataJson });
+
+  try {
+    const p2pData = JSON.parse(p2pDataJson);
+    const monthSheet = getCurrentMonthSheet();
+    const sheet = getOrCreateMonthSheet(monthSheet);
+    const row = findMachineIdRow(sheet, machineId);
+
+    if (row === 0) {
+      return {
+        status: "error",
+        message: "MachineID không tồn tại",
+      };
+    }
+
+    // Update cột I (ConfirmedRealPersonRequest)
+    sheet.getRange(row, 9).setValue(JSON.stringify(p2pData)); // Column I
+
+    // Send email notification
+    sendP2PNotificationEmail(machineId, p2pData);
+
+    debugLog("P2P request saved", { machineId, p2pData });
+
+    return {
+      status: "success",
+      message: "P2P request saved successfully",
+    };
+  } catch (error) {
+    debugLog("Error in handleP2PRequest", { error: error.message, machineId });
+    return {
+      status: "error",
+      message: "Lỗi xử lý P2P request",
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Get waiting clients for admin dashboard
+ * @param {string} adminNickname - Admin nickname
+ * @returns {Object} - Response with client list
+ */
+function getWaitingClients(adminNickname) {
+  debugLog("getWaitingClients called", { adminNickname });
+
+  try {
+    const monthSheet = getCurrentMonthSheet();
+    const sheet = getOrCreateMonthSheet(monthSheet);
+    const data = sheet.getDataRange().getValues();
+    const clients = [];
+
+    for (let i = 1; i < data.length; i++) {
+      const [
+        machineId,
+        ip,
+        conversation,
+        requestedForRealPerson,
+        rpm,
+        rpd,
+        lastRequestTimeStamp,
+        summerize,
+        confirmData,
+      ] = data[i];
+
+      if (confirmData) {
+        try {
+          const p2pData = JSON.parse(confirmData);
+
+          // Only include waiting or warn status
+          if (p2pData.status === "waiting" || p2pData.status === "warn") {
+            clients.push({
+              machineId: machineId,
+              ip: ip,
+              status: p2pData.status,
+              clientPeerID: p2pData.clientPeerID,
+              timestamp: p2pData.timestamp,
+              summerize: summerize || "",
+              lastRequestTimeStamp: lastRequestTimeStamp,
+            });
+          }
+        } catch (parseError) {
+          debugLog("Error parsing P2P data", {
+            machineId,
+            error: parseError.message,
+          });
+        }
+      }
+    }
+
+    // Sort by timestamp (newest first)
+    clients.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    debugLog("Retrieved waiting clients", {
+      count: clients.length,
+      adminNickname,
+    });
+
+    return {
+      status: "success",
+      clients: clients,
+      count: clients.length,
+    };
+  } catch (error) {
+    debugLog("Error in getWaitingClients", {
+      error: error.message,
+      adminNickname,
+    });
+    return {
+      status: "error",
+      message: "Lỗi lấy danh sách khách hàng",
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Update client P2P status
+ * @param {string} machineId - MachineID
+ * @param {string} status - New status
+ * @param {string} adminPeerID - Admin PeerID
+ * @param {string} adminNickname - Admin nickname
+ * @returns {Object} - Response object
+ */
+function updateClientStatus(machineId, status, adminPeerID, adminNickname) {
+  debugLog("updateClientStatus called", {
+    machineId,
+    status,
+    adminPeerID,
+    adminNickname,
+  });
+
+  try {
+    const monthSheet = getCurrentMonthSheet();
+    const sheet = getOrCreateMonthSheet(monthSheet);
+    const row = findMachineIdRow(sheet, machineId);
+
+    if (row === 0) {
+      return {
+        status: "error",
+        message: "MachineID không tồn tại",
+      };
+    }
+
+    // Get current P2P data
+    const currentData = sheet.getRange(row, 9).getValue(); // Column I
+    let p2pData = {};
+
+    if (currentData) {
+      try {
+        p2pData = JSON.parse(currentData);
+      } catch (parseError) {
+        debugLog("Error parsing existing P2P data", parseError.message);
+      }
+    }
+
+    // Update P2P data
+    p2pData.status = status;
+    if (adminPeerID) p2pData.adminPeerID = adminPeerID;
+    if (adminNickname) p2pData.adminNickname = adminNickname;
+    if (status === "connected")
+      p2pData.connectionStartTime = new Date().toISOString();
+
+    // Save updated data
+    sheet.getRange(row, 9).setValue(JSON.stringify(p2pData));
+
+    debugLog("Client status updated", { machineId, status, p2pData });
+
+    return {
+      status: "success",
+      message: "Status updated successfully",
+    };
+  } catch (error) {
+    debugLog("Error in updateClientStatus", {
+      error: error.message,
+      machineId,
+    });
+    return {
+      status: "error",
+      message: "Lỗi cập nhật status",
+      error: error.message,
+    };
+  }
+}
+/**
+ * Save P2P chat message
+ * @param {string} machineId - MachineID
+ * @param {string} message - Message content
+ * @param {string} sender - Message sender
+ * @returns {Object} - Response object
+ */
+function saveChatMessage(machineId, message, sender) {
+  debugLog("saveChatMessage called", { machineId, message, sender });
+
+  try {
+    const monthSheet = getCurrentMonthSheet();
+    const sheet = getOrCreateMonthSheet(monthSheet);
+    const row = findMachineIdRow(sheet, machineId);
+
+    if (row === 0) {
+      return {
+        status: "error",
+        message: "MachineID không tồn tại",
+      };
+    }
+
+    // Get current conversation
+    const currentConversation = sheet.getRange(row, 3).getValue(); // Column C
+    let conversation = [];
+
+    if (currentConversation) {
+      try {
+        conversation = JSON.parse(currentConversation);
+      } catch (parseError) {
+        debugLog("Error parsing conversation", parseError.message);
+        conversation = [];
+      }
+    }
+
+    // Add new message
+    const newMessage = {
+      role: sender === "admin" ? "assistant" : "user",
+      content: message,
+    };
+
+    conversation.push(newMessage);
+
+    // Save updated conversation
+    sheet.getRange(row, 3).setValue(JSON.stringify(conversation));
+
+    debugLog("Chat message saved", {
+      machineId,
+      messageLength: message.length,
+      conversationLength: conversation.length,
+    });
+
+    return {
+      status: "success",
+      message: "Message saved successfully",
+    };
+  } catch (error) {
+    debugLog("Error in saveChatMessage", { error: error.message, machineId });
+    return {
+      status: "error",
+      message: "Lỗi lưu tin nhắn",
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Get chat history for admin
+ * @param {string} machineId - MachineID
+ * @returns {Object} - Response with chat history
+ */
+function getChatHistory(machineId) {
+  debugLog("getChatHistory called", { machineId });
+
+  try {
+    const monthSheet = getCurrentMonthSheet();
+    const sheet = getOrCreateMonthSheet(monthSheet);
+    const row = findMachineIdRow(sheet, machineId);
+
+    if (row === 0) {
+      return {
+        status: "error",
+        message: "MachineID không tồn tại",
+      };
+    }
+
+    // Get conversation
+    const conversationData = sheet.getRange(row, 3).getValue(); // Column C
+    let chatHistory = [];
+
+    if (conversationData) {
+      try {
+        chatHistory = JSON.parse(conversationData);
+      } catch (parseError) {
+        debugLog("Error parsing chat history", parseError.message);
+        chatHistory = [];
+      }
+    }
+
+    debugLog("Retrieved chat history", {
+      machineId,
+      historyLength: chatHistory.length,
+    });
+
+    return {
+      status: "success",
+      chatHistory: chatHistory,
+      machineId: machineId,
+    };
+  } catch (error) {
+    debugLog("Error in getChatHistory", { error: error.message, machineId });
+    return {
+      status: "error",
+      message: "Lỗi lấy lịch sử chat",
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Check and update abandoned connections
+ * @returns {Object} - Response object
+ */
+function checkAbandonedConnections() {
+  debugLog("checkAbandonedConnections called");
+
+  try {
+    const monthSheet = getCurrentMonthSheet();
+    const sheet = getOrCreateMonthSheet(monthSheet);
+    const data = sheet.getDataRange().getValues();
+    let updatedCount = 0;
+
+    for (let i = 1; i < data.length; i++) {
+      const [
+        machineId,
+        ip,
+        conversation,
+        requestedForRealPerson,
+        rpm,
+        rpd,
+        lastRequestTimeStamp,
+        summerize,
+        confirmData,
+      ] = data[i];
+
+      if (confirmData) {
+        try {
+          const p2pData = JSON.parse(confirmData);
+          const lastRequest = new Date(lastRequestTimeStamp);
+          const now = getVietnamTime();
+          const diffMinutes = (now - lastRequest) / (1000 * 60);
+
+          // Check if connection is abandoned (>25 minutes)
+          if (
+            diffMinutes > 25 &&
+            p2pData.status !== "closed" &&
+            p2pData.status !== "warn"
+          ) {
+            p2pData.status = "warn";
+            sheet.getRange(i + 1, 9).setValue(JSON.stringify(p2pData)); // Column I
+            updatedCount++;
+
+            debugLog("Marked connection as abandoned", {
+              machineId,
+              diffMinutes,
+            });
+          }
+        } catch (parseError) {
+          debugLog("Error parsing P2P data in abandoned check", {
+            machineId,
+            error: parseError.message,
+          });
+        }
+      }
+    }
+
+    debugLog("Abandoned connections check completed", { updatedCount });
+
+    return {
+      status: "success",
+      message: `Checked abandoned connections, updated ${updatedCount} records`,
+      updatedCount: updatedCount,
+    };
+  } catch (error) {
+    debugLog("Error in checkAbandonedConnections", { error: error.message });
+    return {
+      status: "error",
+      message: "Lỗi kiểm tra kết nối bị bỏ",
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Send P2P notification email
+ * @param {string} machineId - MachineID
+ * @param {Object} p2pData - P2P data
+ */
+function sendP2PNotificationEmail(machineId, p2pData) {
+  const ADMIN_EMAIL = "admin@vanced.agency"; // Cập nhật email admin ở đây
+
+  try {
+    const subject = `[Vanced Support] Khách hàng yêu cầu hỗ trợ - ${machineId}`;
+    const body = `
+Khách hàng ${machineId} đang yêu cầu hỗ trợ trực tiếp.
+
+Chi tiết:
+- MachineID: ${machineId}
+- PeerID: ${p2pData.clientPeerID}
+- Thời gian: ${p2pData.timestamp}
+- Status: ${p2pData.status}
+
+Vui lòng truy cập Admin Dashboard để hỗ trợ khách hàng.
+
+---
+Vanced Customer Support System
+    `;
+
+    MailApp.sendEmail(ADMIN_EMAIL, subject, body);
+    debugLog("P2P notification email sent", { machineId, email: ADMIN_EMAIL });
+  } catch (error) {
+    debugLog("Error sending P2P notification email", {
+      error: error.message,
+      machineId,
+    });
   }
 }

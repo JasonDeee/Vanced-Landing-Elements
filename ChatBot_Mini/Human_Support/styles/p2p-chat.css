@@ -1,0 +1,430 @@
+/**
+ * Vanced Customer Support - P2P Chat Styles
+ * Styles for P2P chat functionality
+ */
+
+/* ====== P2P WAITING UI ====== */
+.p2p-waiting-ui {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 10px 0;
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.p2p-waiting-content h3 {
+  color: #856404;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.p2p-waiting-content p {
+  color: #856404;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.peer-id {
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.p2p-loading-spinner {
+  margin: 15px 0;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #856404;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.p2p-cancel-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.p2p-cancel-btn:hover {
+  background: #c82333;
+}
+
+/* ====== P2P CHAT UI ====== */
+.p2p-chat-ui {
+  background: white;
+  border: 1px solid #e4e6ea;
+  border-radius: 8px;
+  margin: 10px 0;
+  overflow: hidden;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.p2p-chat-header {
+  background: #f8f9fa;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4e6ea;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.p2p-chat-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.p2p-end-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.p2p-end-btn:hover {
+  background: #c82333;
+}
+
+.p2p-chat-messages {
+  height: 300px;
+  overflow-y: auto;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.p2p-message {
+  margin-bottom: 12px;
+  max-width: 70%;
+  animation: slideIn 0.2s ease-out;
+}
+
+.p2p-message.p2p-admin-message {
+  margin-left: auto;
+  text-align: right;
+}
+
+.p2p-message-sender {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.p2p-message-content {
+  background: #e4e6ea;
+  color: #000;
+  padding: 8px 12px;
+  border-radius: 18px;
+  display: inline-block;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+
+.p2p-admin-message .p2p-message-content {
+  background: #0084ff;
+  color: white;
+}
+
+.p2p-user-message .p2p-message-content {
+  background: #e4e6ea;
+  color: #000;
+}
+
+.p2p-message-time {
+  font-size: 10px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.p2p-chat-input {
+  padding: 12px 16px;
+  border-top: 1px solid #e4e6ea;
+  display: flex;
+  gap: 8px;
+  background: white;
+}
+
+.p2p-chat-input input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+  font-size: 14px;
+}
+
+.p2p-chat-input input:focus {
+  border-color: #0084ff;
+}
+
+.p2p-chat-input button {
+  padding: 8px 16px;
+  background: #0084ff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.p2p-chat-input button:hover {
+  background: #0066cc;
+}
+
+/* ====== STATUS MESSAGES ====== */
+.p2p-status-message {
+  padding: 10px 16px;
+  margin: 10px 0;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.p2p-status-success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.p2p-status-error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.p2p-status-timeout {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+/* ====== FALLBACK OPTIONS ====== */
+.p2p-fallback-options {
+  background: white;
+  border: 1px solid #e4e6ea;
+  border-radius: 8px;
+  margin: 10px 0;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.p2p-fallback-content {
+  padding: 20px;
+  text-align: center;
+}
+
+.p2p-fallback-content h4 {
+  color: #333;
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+.p2p-fallback-content p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.p2p-fallback-content a {
+  color: #0084ff;
+  text-decoration: none;
+}
+
+.p2p-fallback-content a:hover {
+  text-decoration: underline;
+}
+
+.p2p-close-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.p2p-close-btn:hover {
+  background: #5a6268;
+}
+
+/* ====== ANIMATIONS ====== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ====== RESPONSIVE DESIGN ====== */
+@media (max-width: 768px) {
+  .p2p-message {
+    max-width: 85%;
+  }
+
+  .p2p-chat-messages {
+    height: 250px;
+  }
+
+  .p2p-chat-input {
+    padding: 8px 12px;
+  }
+
+  .p2p-chat-input input {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+
+  .p2p-waiting-content {
+    padding: 16px;
+  }
+
+  .peer-id {
+    font-size: 10px;
+    word-break: break-all;
+  }
+}
+
+/* ====== DARK MODE SUPPORT ====== */
+.dark_mode .p2p-chat-ui {
+  background: #2c2c2c;
+  border-color: #444;
+}
+
+.dark_mode .p2p-chat-header {
+  background: #333;
+  border-color: #444;
+}
+
+.dark_mode .p2p-chat-header h3 {
+  color: #fff;
+}
+
+.dark_mode .p2p-chat-messages {
+  background: #1e1e1e;
+}
+
+.dark_mode .p2p-user-message .p2p-message-content {
+  background: #444;
+  color: #fff;
+}
+
+.dark_mode .p2p-message-sender {
+  color: #ccc;
+}
+
+.dark_mode .p2p-message-time {
+  color: #888;
+}
+
+.dark_mode .p2p-chat-input {
+  background: #2c2c2c;
+  border-color: #444;
+}
+
+.dark_mode .p2p-chat-input input {
+  background: #333;
+  border-color: #555;
+  color: #fff;
+}
+
+.dark_mode .p2p-waiting-ui {
+  background: #3c3c3c;
+  border-color: #555;
+}
+
+.dark_mode .p2p-waiting-content h3,
+.dark_mode .p2p-waiting-content p {
+  color: #fff;
+}
+
+.dark_mode .peer-id {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.dark_mode .p2p-fallback-options {
+  background: #2c2c2c;
+  border-color: #444;
+}
+
+.dark_mode .p2p-fallback-content h4 {
+  color: #fff;
+}
+
+.dark_mode .p2p-fallback-content p {
+  color: #ccc;
+}
+
+/* ====== ACCESSIBILITY ====== */
+.p2p-chat-input input:focus,
+.p2p-cancel-btn:focus,
+.p2p-end-btn:focus,
+.p2p-close-btn:focus {
+  outline: 2px solid #0084ff;
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .p2p-message-content {
+    border: 2px solid #000;
+  }
+
+  .p2p-admin-message .p2p-message-content {
+    border-color: #fff;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .p2p-waiting-ui,
+  .p2p-chat-ui,
+  .p2p-message,
+  .p2p-status-message,
+  .p2p-fallback-options {
+    animation: none;
+  }
+
+  .p2p-loading-spinner {
+    animation: none;
+    border-top-color: transparent;
+  }
+}

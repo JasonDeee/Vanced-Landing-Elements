@@ -118,6 +118,9 @@ export default {
           case "sendMessage":
             response = await handleSendMessage(body, clientIP, env, ctx);
             break;
+          case "requestP2PSupport":
+            response = await handleP2PRequest(body, clientIP, env, ctx);
+            break;
           default:
             // Backward compatibility - treat as sendMessage
             response = await handleSendMessage(body, clientIP, env, ctx);
@@ -716,6 +719,82 @@ async function updateSpreadsheetAsync(
       error: error.message,
       duration,
       machineId,
+    };
+  }
+}
+/**
+ * Xử lý yêu cầu P2P support
+ */
+async function handleP2PRequest(body, clientIP, env, ctx) {
+  const { machineId, p2pData } = body;
+
+  if (!machineId) {
+    return {
+      status: "error",
+      message: "MachineID is required",
+    };
+  }
+
+  if (!p2pData) {
+    return {
+      status: "error",
+      message: "P2P data is required",
+    };
+  }
+
+  try {
+    debugLog("Processing P2P support request", {
+      machineId,
+      clientPeerID: p2pData.clientPeerID,
+      status: p2pData.status,
+    });
+
+    // Check ban status
+    const banStatus = checkBanStatus(clientIP, machineId);
+    if (banStatus.isBanned) {
+      return {
+        status: "banned",
+        message: banStatus.message,
+        reason: banStatus.reason,
+      };
+    }
+
+    // Call Apps Script to save P2P request
+    const appsScriptResponse = await callAppsScript(
+      "updateP2PRequest",
+      {
+        machineId: machineId,
+        p2pData: JSON.stringify(p2pData),
+      },
+      env
+    );
+
+    if (appsScriptResponse.status === "error") {
+      throw new Error(appsScriptResponse.message);
+    }
+
+    debugLog("P2P request saved successfully", {
+      machineId,
+      responseStatus: appsScriptResponse.status,
+    });
+
+    return {
+      status: "success",
+      message: "P2P request saved successfully",
+      machineId: machineId,
+      peerID: p2pData.clientPeerID,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    debugLog("Error in handleP2PRequest", {
+      machineId,
+      error: error.message,
+    });
+
+    return {
+      status: "error",
+      message: "Lỗi xử lý yêu cầu P2P",
+      error: error.message,
     };
   }
 }
