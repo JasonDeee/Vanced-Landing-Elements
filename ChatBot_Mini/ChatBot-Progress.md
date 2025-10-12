@@ -106,12 +106,22 @@ Frontend (Chat UI) → Cloudflare Workers → OpenRouter API → Google Spreadsh
 
 - [x] Human support flow detection
 - [x] **P2P Architecture Design & Planning**
-- [ ] **🎯 ĐANG LÀM: Client P2P Implementation**
-- [ ] Admin Dashboard UI (Messenger-style)
-- [ ] P2P Connection Management
-- [ ] Chat History Management (Admin responsibility)
-- [ ] Timeout & Warning Systems
-- [ ] Email notification system
+- [x] **Client P2P Implementation (PeerJS)**
+- [x] **Admin Dashboard UI (Messenger-style)**
+- [x] **P2P Connection Management**
+- [x] **Chat History Management (Admin responsibility)**
+- [x] **Timeout & Warning Systems**
+- [x] **Email notification system**
+- [ ] **🎯 ĐANG LÀM: Custom Signaling Server Implementation**
+
+### Phase 6.5: Custom Signaling Server 🚧
+
+- [ ] **🎯 HIỆN TẠI: Signaling Server Architecture Design**
+- [ ] **Backend Implementation (Apps Script vs WebSocket vs Cloudflare)**
+- [ ] **WebRTC Signaling Protocol Implementation**
+- [ ] **SDP & ICE Candidates Exchange**
+- [ ] **Connection State Management**
+- [ ] **Fallback & Error Handling**
 
 ### Phase 7: Testing & Polish
 
@@ -146,13 +156,14 @@ User Message → Workers → Gemini (voi tuned data) → Response
 11. ✅ Error handling va CORS
 12. ✅ Async data updates
 
-### Dang lam (Phase 6):
+### Dang lam (Phase 6.5):
 
-- 🎯 **P2P Human Support System** - Muc tieu chinh tiep theo
-- ✅ Architecture & Technical Design completed
-- 🚧 Client P2P logic implementation
-- 📝 Admin Dashboard UI (Messenger-style)
-- 📝 Connection management & timeout systems
+- 🎯 **Custom Signaling Server** - Muc tieu chinh tiep theo
+- ✅ P2P Human Support System (UI & Logic) completed
+- ✅ All PeerJS public servers down - need custom solution
+- � ASignaling Server Architecture Design
+- 📝 Backend Implementation (Apps Script vs WebSocket vs Cloudflare)
+- 📝 WebRTC Signaling Protocol
 
 ### Can lam tiep (Phase 7):
 
@@ -160,59 +171,118 @@ User Message → Workers → Gemini (voi tuned data) → Response
 - 📝 UI/UX improvements
 - 📝 Mobile optimization
 
-## NEXT STEPS - P2P Human Support System 🎯
+## NEXT STEPS - Custom Signaling Server �
+
+### Van de hien tai:
+
+**Tat ca PeerJS public servers deu down** - Can custom signaling server implementation
 
 ### Muc tieu:
 
-Khi AI detect user muon gap tu van vien that, system se:
+Implement custom signaling server de thay the PeerJS:
 
-1. Khoi tao P2P connection voi custom PeerID
-2. Hien thi waiting UI (3 phut timeout)
-3. Admin dashboard de quan ly clients
-4. P2P chat truc tiep giua client va admin
-5. Admin luu chat history len Spreadsheet
+1. **WebRTC Signaling Protocol** - SDP offer/answer exchange
+2. **ICE Candidates Exchange** - Network connectivity info
+3. **Connection State Management** - Peer registration & discovery
+4. **Real-time Communication** - WebSocket hoac polling
+5. **Fallback Mechanisms** - Error handling & reconnection
 
 ### Tasks can lam:
 
-1. **Client P2P Implementation** 🚧
+1. **Signaling Server Architecture** 🚧
 
-   - Tich hop PeerJS voi custom PeerID format
-   - Waiting UI voi 3 phut timeout
-   - P2P chat interface
-   - Connection error handling
+   - Chon backend platform (Apps Script vs WebSocket vs Cloudflare)
+   - Design signaling protocol
+   - Connection state management
+   - Error handling & timeouts
 
-2. **Admin Dashboard** 📝
+2. **WebRTC Implementation** 📝
 
-   - Messenger-style full-screen UI
-   - Client list voi search & refresh
-   - Warning system cho abandoned connections
-   - P2P connection management
+   - Replace PeerJS voi native WebRTC APIs
+   - SDP offer/answer handling
+   - ICE candidates exchange
+   - Connection establishment
 
-3. **Backend Updates** 📝
+3. **Backend Integration** 📝
 
-   - Spreadsheet schema update (cot I format)
-   - Email notification system
-   - Abandoned connection checker (25 phut)
-   - Chat history management
+   - Signaling server endpoints
+   - Real-time communication (WebSocket/Polling)
+   - Peer registration & discovery
+   - Connection cleanup
 
-4. **Connection Management** 📝
-   - Timeout systems (3 phut client, 25 phut warning)
-   - Status tracking (waiting|connected|closed|warn)
-   - Admin responsibility cho chat history
+4. **Client Updates** 📝
+   - Remove PeerJS dependency
+   - Implement custom WebRTC client
+   - Update UI for new signaling flow
+   - Error handling & reconnection
 
-### Implementation Plan:
+### Implementation Options Analysis:
 
-```
-User request → Generate PeerID → Wait for admin → P2P Chat → Admin saves history
-```
+#### Option 1: Apps Script + Spreadsheet Signaling
+
+**Pros:**
+
+- ✅ Su dung infrastructure co san
+- ✅ Khong can server moi
+- ✅ Integrated voi system hien tai
+- ✅ Don gian implement
+
+**Cons:**
+
+- ❌ Polling-based (khong real-time)
+- ❌ Rate limiting issues
+- ❌ Latency cao cho signaling
+- ❌ Khong scale tot
+
+#### Option 2: Cloudflare Workers + Durable Objects
+
+**Pros:**
+
+- ✅ Real-time WebSocket support
+- ✅ Global edge network
+- ✅ Scalable architecture
+- ✅ Integrated voi Workers hien tai
+
+**Cons:**
+
+- ❌ Phuc tap implement
+- ❌ Can hoc Durable Objects
+- ❌ Cost implications
+- ❌ WebSocket limits
+
+#### Option 3: Simple WebSocket Server (Node.js)
+
+**Pros:**
+
+- ✅ Full control over signaling
+- ✅ Real-time WebSocket
+- ✅ Mature WebRTC libraries
+- ✅ Easy to implement
+
+**Cons:**
+
+- ❌ Can host server rieng
+- ❌ Infrastructure management
+- ❌ Scaling challenges
+- ❌ Additional complexity
+
+### Recommended Approach: **Apps Script Signaling** (Phase 1)
+
+**Ly do:**
+
+- 🎯 Fastest to implement
+- 🎯 Uses existing infrastructure
+- 🎯 Good enough for customer support use case
+- 🎯 Can upgrade later if needed
 
 ### Technical Specifications:
 
-- **PeerID Format:** `vanced_{machineId}_{timestamp}`
-- **Client Timeout:** 3 minutes waiting
-- **Admin Warning:** 25 minutes abandoned connection
-- **UI Style:** Messenger-like full screen
-- **Chat History:** Admin responsibility via Spreadsheet API
+- **Signaling Protocol:** HTTP polling via Apps Script
+- **SDP Exchange:** Store offers/answers in Spreadsheet
+- **ICE Candidates:** Batch exchange via polling
+- **Connection Discovery:** Spreadsheet-based peer registry
+- **Polling Interval:** 2-3 seconds for signaling
+- **Timeout:** 30 seconds for connection establishment
 
 ## Technical Notes
 
@@ -222,11 +292,14 @@ User request → Generate PeerID → Wait for admin → P2P Chat → Admin saves
 - ✅ MachineID fingerprinting cho user tracking
 - ✅ Async updates voi ctx.waitUntil() cho performance
 - ✅ P2P Architecture design completed
-- 🎯 P2P Human Support system implementation
-- Focus vao P2P direct connection va admin responsibility
-- Custom PeerID format: `vanced_{machineId}_{timestamp}`
-- Admin dashboard: Messenger-style UI
-- Connection management: 3min timeout + 25min warning system
+- ✅ P2P Human Support system UI & logic completed
+- 🚨 **PeerJS public servers all down** - blocking P2P connections
+- 🎯 **Custom Signaling Server** implementation required
+- **Recommended:** Apps Script + Spreadsheet signaling (polling-based)
+- **Alternative:** Cloudflare Workers + Durable Objects (WebSocket)
+- **Fallback:** Simple Node.js WebSocket server
+- Focus: WebRTC signaling protocol implementation
+- Custom signaling: SDP exchange + ICE candidates via HTTP polling
 
 ## Debug Status
 

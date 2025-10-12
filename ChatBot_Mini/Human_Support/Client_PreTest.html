@@ -139,6 +139,9 @@
         <button id="clearCacheBtn" onclick="clearBrowserCache()">
           🗑️ Clear Cache & Reload
         </button>
+        <button id="testAllServersBtn" onclick="testAllPeerJSServers()">
+          🔍 Test All Servers
+        </button>
       </div>
 
       <div id="waitingArea" style="display: none">
@@ -275,6 +278,16 @@
         });
 
         try {
+          // Use working server config or test first
+          if (!workingServerConfig) {
+            updateStatus("Tìm server khả dụng...", "waiting");
+            const serverFound = await testPeerJSConnection();
+            if (!serverFound) {
+              updateStatus("❌ Không tìm thấy PeerJS server khả dụng", "error");
+              return;
+            }
+          }
+
           // Add connection timeout
           const connectionTimeout = setTimeout(() => {
             debugLog("PeerJS connection timeout");
@@ -284,16 +297,19 @@
             }
           }, 10000); // 10 seconds timeout
 
-          // Initialize PeerJS with explicit config
-          peer = new Peer(peerID, {
-            debug: 2, // Enable debug logging
+          // Initialize PeerJS with working server config
+          const peerConfig = {
+            ...workingServerConfig,
             config: {
               iceServers: [
                 { urls: "stun:stun.l.google.com:19302" },
                 { urls: "stun:global.stun.twilio.com:3478" },
               ],
             },
-          });
+          };
+
+          debugLog("Using PeerJS config", peerConfig);
+          peer = new Peer(peerID, peerConfig);
 
           peer.on("open", (id) => {
             clearTimeout(connectionTimeout);
@@ -524,43 +540,114 @@
         debugLog("Chat ended by client");
       }
 
+      // List of alternative PeerJS servers
+      const PEERJS_SERVERS = [
+        {
+          name: "Default PeerJS",
+          config: { debug: 2 },
+        },
+        {
+          name: "0.peerjs.com",
+          config: {
+            host: "0.peerjs.com",
+            port: 443,
+            path: "/",
+            secure: true,
+            debug: 2,
+          },
+        },
+        {
+          name: "PeerJS Heroku",
+          config: {
+            host: "peerjs-server.herokuapp.com",
+            port: 443,
+            path: "/",
+            secure: true,
+            debug: 2,
+          },
+        },
+      ];
+
+      let workingServerConfig = null;
+
       // Test PeerJS server connection
       async function testPeerJSConnection() {
-        updateStatus("Testing PeerJS server...", "waiting");
+        updateStatus("Testing PeerJS servers...", "waiting");
 
-        try {
-          const testPeerID = `test_${Date.now()}`;
-          debugLog("Testing PeerJS with ID", testPeerID);
+        for (let i = 0; i < PEERJS_SERVERS.length; i++) {
+          const server = PEERJS_SERVERS[i];
+          debugLog(`Testing server: ${server.name}`, server.config);
 
-          const testPeer = new Peer(testPeerID, {
-            debug: 2,
-          });
-
-          const testTimeout = setTimeout(() => {
-            debugLog("PeerJS test timeout");
-            updateStatus("❌ PeerJS server không phản hồi", "error");
-            testPeer.destroy();
-          }, 8000);
-
-          testPeer.on("open", (id) => {
-            clearTimeout(testTimeout);
-            debugLog("PeerJS test successful", id);
-            updateStatus(
-              "✅ PeerJS server hoạt động bình thường!",
-              "connected"
-            );
-            testPeer.destroy();
-          });
-
-          testPeer.on("error", (error) => {
-            clearTimeout(testTimeout);
-            debugLog("PeerJS test error", error);
-            updateStatus(`❌ PeerJS server lỗi: ${error.type}`, "error");
-          });
-        } catch (error) {
-          debugLog("PeerJS test exception", error);
-          updateStatus("❌ Lỗi test PeerJS", "error");
+          const success = await testSingleServer(server);
+          if (success) {
+            workingServerConfig = server.config;
+            updateStatus(`✅ Server hoạt động: ${server.name}`, "connected");
+            return true;
+          }
         }
+
+        updateStatus("❌ Tất cả PeerJS servers đều không phản hồi", "error");
+        return false;
+      }
+
+      // Test a single PeerJS server
+      function testSingleServer(server) {
+        return new Promise((resolve) => {
+          try {
+            const testPeerID = `test_${Date.now()}_${Math.random()
+              .toString(36)
+              .substr(2, 5)}`;
+            debugLog(`Testing ${server.name} with ID`, testPeerID);
+
+            const testPeer = new Peer(testPeerID, server.config);
+
+            const testTimeout = setTimeout(() => {
+              debugLog(`${server.name} timeout`);
+              testPeer.destroy();
+              resolve(false);
+            }, 5000); // Reduced timeout
+
+            testPeer.on("open", (id) => {
+              clearTimeout(testTimeout);
+              debugLog(`${server.name} test successful`, id);
+              testPeer.destroy();
+              resolve(true);
+            });
+
+            testPeer.on("error", (error) => {
+              clearTimeout(testTimeout);
+              debugLog(`${server.name} test error`, error);
+              testPeer.destroy();
+              resolve(false);
+            });
+          } catch (error) {
+            debugLog(`${server.name} test exception`, error);
+            resolve(false);
+          }
+        });
+      }
+
+      // Test all PeerJS servers manually
+      async function testAllPeerJSServers() {
+        updateStatus("Testing all servers manually...", "waiting");
+
+        for (let i = 0; i < PEERJS_SERVERS.length; i++) {
+          const server = PEERJS_SERVERS[i];
+          updateStatus(`Testing ${server.name}...`, "waiting");
+
+          const success = await testSingleServer(server);
+          if (success) {
+            workingServerConfig = server.config;
+            updateStatus(`✅ ${server.name} hoạt động!`, "connected");
+            debugLog("Manual test found working server", server);
+            return;
+          } else {
+            updateStatus(`❌ ${server.name} không hoạt động`, "error");
+            await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1s between tests
+          }
+        }
+
+        updateStatus("❌ Không có server nào hoạt động", "error");
       }
 
       // Clear browser cache and reload
