@@ -94,9 +94,31 @@
   <body>
     <div class="container">
       <h1>🧪 Client P2P Test - Vanced Support</h1>
-      <p>
-        <strong>MachineID:</strong> <span id="machineId">20250909S5690</span>
-      </p>
+      <div style="margin-bottom: 20px">
+        <p>
+          <strong>Base MachineID:</strong>
+          <span id="baseMachineId">20250909S5690</span>
+        </p>
+        <div style="margin: 10px 0">
+          <label for="machineIdSuffix"
+            ><strong>Suffix (để test multiple clients):</strong></label
+          >
+          <input
+            type="text"
+            id="machineIdSuffix"
+            placeholder="Nhập suffix..."
+            style="width: 200px; margin-left: 10px"
+            onchange="updateMachineId()"
+            onkeyup="updateMachineId()"
+          />
+        </div>
+        <p>
+          <strong>Final MachineID:</strong>
+          <span id="finalMachineId" style="color: #007bff; font-weight: bold"
+            >20250909S5690</span
+          >
+        </p>
+      </div>
 
       <div id="statusArea">
         <div class="status waiting" id="statusMsg">
@@ -157,7 +179,7 @@
 
     <script>
       // Configuration
-      const MACHINE_ID = "20250909S5690";
+      const BASE_MACHINE_ID = "20250909S5690";
       const SPREADSHEET_URL =
         "https://script.google.com/macros/s/AKfycbzZPxkICg1AHucIZ2AFQmnLLg_hjG8s9ouJUU9eSG1043AronwRwV45i5tMOQT5VuPDvw/exec"; // Cập nhật URL này
 
@@ -166,6 +188,23 @@
       let connection = null;
       let countdownTimer = null;
       let isConnected = false;
+      let currentMachineId = BASE_MACHINE_ID;
+
+      // Update MachineID with suffix
+      function updateMachineId() {
+        const suffix = document.getElementById("machineIdSuffix").value.trim();
+        currentMachineId = suffix
+          ? `${BASE_MACHINE_ID}_${suffix}`
+          : BASE_MACHINE_ID;
+
+        document.getElementById("finalMachineId").textContent =
+          currentMachineId;
+        debugLog("MachineID updated", {
+          baseMachineId: BASE_MACHINE_ID,
+          suffix: suffix,
+          finalMachineId: currentMachineId,
+        });
+      }
 
       // Debug logging
       function debugLog(message, data = null) {
@@ -197,7 +236,7 @@
         try {
           const url = new URL(SPREADSHEET_URL);
           url.searchParams.append("action", "initChat");
-          url.searchParams.append("machineId", MACHINE_ID);
+          url.searchParams.append("machineId", currentMachineId);
           url.searchParams.append("userIP", "test-ip");
 
           debugLog("Testing Spreadsheet connection", { url: url.toString() });
@@ -223,8 +262,11 @@
         updateStatus("Khởi tạo P2P connection...", "waiting");
 
         // Generate custom PeerID
-        const peerID = `vanced_${MACHINE_ID}_${Date.now()}`;
-        debugLog("Generated PeerID", peerID);
+        const peerID = `vanced_${currentMachineId}_${Date.now()}`;
+        debugLog("Generated PeerID", {
+          machineId: currentMachineId,
+          peerID: peerID,
+        });
 
         try {
           // Initialize PeerJS
@@ -286,7 +328,7 @@
 
           const url = new URL(SPREADSHEET_URL);
           url.searchParams.append("action", "updateP2PRequest");
-          url.searchParams.append("machineId", MACHINE_ID);
+          url.searchParams.append("machineId", currentMachineId);
           url.searchParams.append("p2pData", JSON.stringify(p2pData));
 
           debugLog("Saving PeerID to Spreadsheet", p2pData);
@@ -431,7 +473,10 @@
 
       // Initialize on page load
       window.onload = function () {
-        debugLog("Client PreTest initialized", { machineId: MACHINE_ID });
+        debugLog("Client PreTest initialized", {
+          baseMachineId: BASE_MACHINE_ID,
+          currentMachineId: currentMachineId,
+        });
         updateStatus("Sẵn sàng test P2P connection", "waiting");
       };
 

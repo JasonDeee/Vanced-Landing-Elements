@@ -5,7 +5,6 @@ addEventListener("fetch", (event) => {
 // Thêm constants
 const Vx_WEBAPP_URL =
   "https://script.google.com/macros/s/AKfycbxIn6xWfd0af8eMXRen8HA3sZ21G-O8z63wAQ5fRkdIejaYfrtZZXQvd15oHHYXiLMA/exec";
-const Vx_Gemini_API_KEY = "AIzaSyDbbfqZ5VC6v4AdmugerAtMfNOg2YdD5Pg";
 
 // Cập nhật Vx_Current_Chat_Info global
 let Vx_Current_Chat_Info = {
