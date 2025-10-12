@@ -133,6 +133,12 @@
         <button id="testSpreadsheetBtn" onclick="testSpreadsheetConnection()">
           📊 Test Spreadsheet Connection
         </button>
+        <button id="testPeerJSBtn" onclick="testPeerJSConnection()">
+          🔗 Test PeerJS Server
+        </button>
+        <button id="clearCacheBtn" onclick="clearBrowserCache()">
+          🗑️ Clear Cache & Reload
+        </button>
       </div>
 
       <div id="waitingArea" style="display: none">
@@ -269,11 +275,33 @@
         });
 
         try {
-          // Initialize PeerJS
-          peer = new Peer(peerID);
+          // Add connection timeout
+          const connectionTimeout = setTimeout(() => {
+            debugLog("PeerJS connection timeout");
+            updateStatus("⏰ Timeout kết nối PeerJS server", "error");
+            if (peer) {
+              peer.destroy();
+            }
+          }, 10000); // 10 seconds timeout
+
+          // Initialize PeerJS with explicit config
+          peer = new Peer(peerID, {
+            debug: 2, // Enable debug logging
+            config: {
+              iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:global.stun.twilio.com:3478" },
+              ],
+            },
+          });
 
           peer.on("open", (id) => {
-            debugLog("Peer opened", id);
+            clearTimeout(connectionTimeout);
+            debugLog("Peer opened successfully", {
+              id: id,
+              expectedId: peerID,
+              match: id === peerID,
+            });
             document.getElementById("currentPeerID").textContent = id;
 
             // Save to Spreadsheet
@@ -305,8 +333,33 @@
           });
 
           peer.on("error", (error) => {
-            debugLog("Peer error", error);
-            updateStatus("❌ Lỗi P2P connection", "error");
+            clearTimeout(connectionTimeout);
+            debugLog("Peer error details", {
+              type: error.type,
+              message: error.message,
+              error: error,
+            });
+
+            let errorMessage = "❌ Lỗi P2P connection";
+            if (error.type === "network") {
+              errorMessage = "❌ Lỗi mạng - Kiểm tra internet";
+            } else if (error.type === "server-error") {
+              errorMessage = "❌ PeerJS server lỗi - Thử lại sau";
+            } else if (error.type === "unavailable-id") {
+              errorMessage = "❌ PeerID đã được sử dụng";
+            }
+
+            updateStatus(errorMessage, "error");
+          });
+
+          peer.on("disconnected", () => {
+            debugLog("Peer disconnected from server");
+            updateStatus("⚠️ Mất kết nối tới PeerJS server", "error");
+          });
+
+          peer.on("close", () => {
+            debugLog("Peer connection closed");
+            updateStatus("❌ PeerJS connection đã đóng", "error");
           });
         } catch (error) {
           debugLog("Request support error", error.message);
@@ -471,13 +524,74 @@
         debugLog("Chat ended by client");
       }
 
+      // Test PeerJS server connection
+      async function testPeerJSConnection() {
+        updateStatus("Testing PeerJS server...", "waiting");
+
+        try {
+          const testPeerID = `test_${Date.now()}`;
+          debugLog("Testing PeerJS with ID", testPeerID);
+
+          const testPeer = new Peer(testPeerID, {
+            debug: 2,
+          });
+
+          const testTimeout = setTimeout(() => {
+            debugLog("PeerJS test timeout");
+            updateStatus("❌ PeerJS server không phản hồi", "error");
+            testPeer.destroy();
+          }, 8000);
+
+          testPeer.on("open", (id) => {
+            clearTimeout(testTimeout);
+            debugLog("PeerJS test successful", id);
+            updateStatus(
+              "✅ PeerJS server hoạt động bình thường!",
+              "connected"
+            );
+            testPeer.destroy();
+          });
+
+          testPeer.on("error", (error) => {
+            clearTimeout(testTimeout);
+            debugLog("PeerJS test error", error);
+            updateStatus(`❌ PeerJS server lỗi: ${error.type}`, "error");
+          });
+        } catch (error) {
+          debugLog("PeerJS test exception", error);
+          updateStatus("❌ Lỗi test PeerJS", "error");
+        }
+      }
+
+      // Clear browser cache and reload
+      function clearBrowserCache() {
+        debugLog("Clearing cache and reloading");
+
+        // Clear localStorage
+        localStorage.clear();
+
+        // Clear sessionStorage
+        sessionStorage.clear();
+
+        // Force reload without cache
+        location.reload(true);
+      }
+
       // Initialize on page load
       window.onload = function () {
         debugLog("Client PreTest initialized", {
           baseMachineId: BASE_MACHINE_ID,
           currentMachineId: currentMachineId,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
         });
         updateStatus("Sẵn sàng test P2P connection", "waiting");
+
+        // Auto test PeerJS on load
+        setTimeout(() => {
+          debugLog("Auto-testing PeerJS server on load");
+          testPeerJSConnection();
+        }, 1000);
       };
 
       // Cleanup on page unload
