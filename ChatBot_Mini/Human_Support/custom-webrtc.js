@@ -36,6 +36,8 @@ class CustomWebRTCClient {
     this.isInitiator = false;
     this.pollingInterval = null;
     this.lastMessageID = null;
+    this.pendingIceCandidates = []; // Queue for ICE candidates received before remote description
+    this.remoteDescriptionSet = false;
 
     // Event handlers
     this.onOpen = null;
@@ -289,17 +291,25 @@ Initiate WebRTC connection (create offer)
         sdp: offerData.sdp,
       });
 
+      this.remoteDescriptionSet = true;
+      webrtcDebugLog("Remote description set from offer");
+
+      // Process any pending ICE candidates
+      await this.processPendingIceCandidates();
+
       // Create answer
       const answer = await this.peerConnection.createAnswer();
       await this.peerConnection.setLocalDescription(answer);
 
-      // Send answer via signaling
-      await this.sendSignalingMessage(fromPeerID, "answer", {
-        sdp: answer.sdp,
-        type: answer.type,
-      });
+      // Send answer via signaling (with small delay to ensure proper order)
+      setTimeout(async () => {
+        await this.sendSignalingMessage(fromPeerID, "answer", {
+          sdp: answer.sdp,
+          type: answer.type,
+        });
 
-      webrtcDebugLog("Sent answer to", fromPeerID);
+        webrtcDebugLog("Sent answer to", fromPeerID);
+      }, 100);
     } catch (error) {
       webrtcDebugLog("Error handling offer", error);
       if (this.onError) {
@@ -321,7 +331,11 @@ Initiate WebRTC connection (create offer)
           sdp: answerData.sdp,
         });
 
+        this.remoteDescriptionSet = true;
         webrtcDebugLog("Set remote description from answer");
+
+        // Process any pending ICE candidates
+        await this.processPendingIceCandidates();
       }
     } catch (error) {
       webrtcDebugLog("Error handling answer", error);
@@ -338,17 +352,63 @@ Initiate WebRTC connection (create offer)
     try {
       webrtcDebugLog("Handling ICE candidate", candidateData);
 
-      if (this.peerConnection && candidateData.candidate) {
-        await this.peerConnection.addIceCandidate({
-          candidate: candidateData.candidate,
-          sdpMLineIndex: candidateData.sdpMLineIndex,
-          sdpMid: candidateData.sdpMid,
-        });
-
-        webrtcDebugLog("Added ICE candidate");
+      if (!this.peerConnection) {
+        webrtcDebugLog("No peer connection, ignoring ICE candidate");
+        return;
       }
+
+      if (!candidateData.candidate) {
+        webrtcDebugLog("Empty ICE candidate, ignoring");
+        return;
+      }
+
+      // If remote description is not set yet, queue the ICE candidate
+      if (!this.remoteDescriptionSet) {
+        webrtcDebugLog("Remote description not set, queuing ICE candidate");
+        this.pendingIceCandidates.push(candidateData);
+        return;
+      }
+
+      // Add ICE candidate immediately
+      await this.addIceCandidate(candidateData);
     } catch (error) {
       webrtcDebugLog("Error handling ICE candidate", error);
+    }
+  }
+
+  /**
+   * Add ICE candidate to peer connection
+   */
+  async addIceCandidate(candidateData) {
+    try {
+      await this.peerConnection.addIceCandidate({
+        candidate: candidateData.candidate,
+        sdpMLineIndex: candidateData.sdpMLineIndex,
+        sdpMid: candidateData.sdpMid,
+      });
+
+      webrtcDebugLog("Added ICE candidate successfully");
+    } catch (error) {
+      webrtcDebugLog("Error adding ICE candidate", error);
+      // Don't throw error, just log it
+    }
+  }
+
+  /**
+   * Process pending ICE candidates after remote description is set
+   */
+  async processPendingIceCandidates() {
+    if (this.pendingIceCandidates.length > 0) {
+      webrtcDebugLog("Processing pending ICE candidates", {
+        count: this.pendingIceCandidates.length,
+      });
+
+      for (const candidateData of this.pendingIceCandidates) {
+        await this.addIceCandidate(candidateData);
+      }
+
+      this.pendingIceCandidates = [];
+      webrtcDebugLog("Finished processing pending ICE candidates");
     }
   }
 
@@ -381,23 +441,33 @@ Initiate WebRTC connection (create offer)
 
     // Handle connection state changes
     this.peerConnection.onconnectionstatechange = () => {
-      webrtcDebugLog(
-        "Connection state changed",
-        this.peerConnection.connectionState
-      );
+      webrtcDebugLog("Connection state changed", {
+        connectionState: this.peerConnection.connectionState,
+        iceConnectionState: this.peerConnection.iceConnectionState,
+        iceGatheringState: this.peerConnection.iceGatheringState,
+      });
 
       if (this.peerConnection.connectionState === "connected") {
         this.isConnected = true;
-        webrtcDebugLog("WebRTC connection established");
+        webrtcDebugLog("WebRTC connection established successfully");
       } else if (
         this.peerConnection.connectionState === "disconnected" ||
         this.peerConnection.connectionState === "failed"
       ) {
         this.isConnected = false;
+        webrtcDebugLog("WebRTC connection lost");
         if (this.onClose) {
           this.onClose();
         }
       }
+    };
+
+    // Handle ICE connection state changes
+    this.peerConnection.oniceconnectionstatechange = () => {
+      webrtcDebugLog(
+        "ICE connection state changed",
+        this.peerConnection.iceConnectionState
+      );
     };
 
     // Handle incoming data channel
@@ -527,6 +597,8 @@ Initiate WebRTC connection (create offer)
     }
 
     this.isConnected = false;
+    this.remoteDescriptionSet = false;
+    this.pendingIceCandidates = [];
   }
 
   /**
