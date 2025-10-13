@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Client P2P Test - Vanced Support</title>
-    <script src="https://unpkg.com/peerjs@1.5.0/dist/peerjs.min.js"></script>
+    <script src="custom-webrtc.js"></script>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -268,48 +268,36 @@
 
       // Request human support
       async function requestHumanSupport() {
-        updateStatus("Khởi tạo P2P connection...", "waiting");
+        updateStatus("Khởi tạo Custom WebRTC connection...", "waiting");
 
         // Generate custom PeerID
         const peerID = `vanced_${currentMachineId}_${Date.now()}`;
-        debugLog("Generated PeerID", {
+        const roomID = `room_${currentMachineId}`;
+
+        debugLog("Generated PeerID for Custom WebRTC", {
           machineId: currentMachineId,
           peerID: peerID,
+          roomID: roomID,
         });
 
         try {
-          // Use working server config or test first
-          if (!workingServerConfig) {
-            updateStatus("Tìm server khả dụng...", "waiting");
-            const serverFound = await testPeerJSConnection();
-            if (!serverFound) {
-              updateStatus("❌ Không tìm thấy PeerJS server khả dụng", "error");
-              return;
-            }
-          }
-
           // Add connection timeout
           const connectionTimeout = setTimeout(() => {
-            debugLog("PeerJS connection timeout");
-            updateStatus("⏰ Timeout kết nối PeerJS server", "error");
+            debugLog("Custom WebRTC connection timeout");
+            updateStatus("⏰ Timeout kết nối Custom WebRTC", "error");
             if (peer) {
               peer.destroy();
             }
-          }, 10000); // 10 seconds timeout
+          }, 30000); // 30 seconds timeout for custom signaling
 
-          // Initialize PeerJS with working server config
-          const peerConfig = {
-            ...workingServerConfig,
-            config: {
-              iceServers: [
-                { urls: "stun:stun.l.google.com:19302" },
-                { urls: "stun:global.stun.twilio.com:3478" },
-              ],
-            },
+          // Initialize Custom WebRTC Client
+          const webrtcConfig = {
+            signalingServerUrl: SPREADSHEET_URL,
+            roomID: roomID,
           };
 
-          debugLog("Using PeerJS config", peerConfig);
-          peer = new Peer(peerID, peerConfig);
+          debugLog("Using Custom WebRTC config", webrtcConfig);
+          peer = createCustomPeer(peerID, webrtcConfig);
 
           peer.on("open", (id) => {
             clearTimeout(connectionTimeout);
@@ -331,7 +319,7 @@
           });
 
           peer.on("connection", (conn) => {
-            debugLog("Admin connected!", conn.peer);
+            debugLog("Admin connected via Custom WebRTC!", conn.peer);
             connection = conn;
             isConnected = true;
 
@@ -350,36 +338,28 @@
 
           peer.on("error", (error) => {
             clearTimeout(connectionTimeout);
-            debugLog("Peer error details", {
-              type: error.type,
+            debugLog("Custom WebRTC error details", {
               message: error.message,
               error: error,
             });
 
-            let errorMessage = "❌ Lỗi P2P connection";
-            if (error.type === "network") {
+            let errorMessage = "❌ Lỗi Custom WebRTC connection";
+            if (error.message && error.message.includes("network")) {
               errorMessage = "❌ Lỗi mạng - Kiểm tra internet";
-            } else if (error.type === "server-error") {
-              errorMessage = "❌ PeerJS server lỗi - Thử lại sau";
-            } else if (error.type === "unavailable-id") {
-              errorMessage = "❌ PeerID đã được sử dụng";
+            } else if (error.message && error.message.includes("signaling")) {
+              errorMessage = "❌ Signaling server lỗi - Thử lại sau";
             }
 
             updateStatus(errorMessage, "error");
           });
 
-          peer.on("disconnected", () => {
-            debugLog("Peer disconnected from server");
-            updateStatus("⚠️ Mất kết nối tới PeerJS server", "error");
-          });
-
           peer.on("close", () => {
-            debugLog("Peer connection closed");
-            updateStatus("❌ PeerJS connection đã đóng", "error");
+            debugLog("Custom WebRTC connection closed");
+            updateStatus("❌ Custom WebRTC connection đã đóng", "error");
           });
         } catch (error) {
           debugLog("Request support error", error.message);
-          updateStatus("❌ Lỗi khởi tạo P2P", "error");
+          updateStatus("❌ Lỗi khởi tạo Custom WebRTC", "error");
         }
       }
 

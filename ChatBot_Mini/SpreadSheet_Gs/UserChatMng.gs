@@ -561,6 +561,11 @@ function doGet(e) {
         response = checkAbandonedConnections();
         break;
 
+      // Custom Signaling API endpoints
+      case "signaling":
+        response = handleSignalingAPI(params.signalingAction, params);
+        break;
+
       default:
         response = { status: "error", message: "Invalid action" };
     }
@@ -1217,5 +1222,412 @@ Vanced Customer Support System
       error: error.message,
       machineId,
     });
+  }
+}
+// ====== CUSTOM SIGNALING SERVER FUNCTIONS ======
+
+/**
+ * Initialize custom signaling - create signaling sheet if not exists
+ */
+function initializeSignalingSheet() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let signalingSheet = spreadsheet.getSheetByName("P2P_Signaling");
+
+  if (!signalingSheet) {
+    signalingSheet = spreadsheet.insertSheet("P2P_Signaling");
+
+    // Create headers for signaling data
+    const headers = [
+      "ID", // Unique message ID
+      "FromPeerID", // Sender PeerID
+      "ToPeerID", // Target PeerID
+      "Type", // offer|answer|ice-candidate|ping|pong
+      "Data", // SDP/ICE data (JSON string)
+      "Timestamp", // Creation timestamp
+      "Status", // pending|delivered|expired
+      "RoomID", // P2P Room ID (for grouping)
+    ];
+
+    signalingSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+    // Format header
+    const headerRange = signalingSheet.getRange(1, 1, 1, headers.length);
+    headerRange.setFontWeight("bold");
+    headerRange.setBackground("#e8f0fe");
+
+    debugLog("Created P2P_Signaling sheet", { headers });
+  }
+
+  return signalingSheet;
+}
+
+/**
+ * Register peer in signaling system
+ * @param {string} peerID - Peer ID to register
+ * @param {string} roomID - Room ID for P2P session
+ * @returns {Object} - Registration result
+ */
+function registerPeer(peerID, roomID) {
+  debugLog("registerPeer called", { peerID, roomID });
+
+  try {
+    const signalingSheet = initializeSignalingSheet();
+
+    // Send ping message to register peer
+    const pingMessage = {
+      id: generateMessageID(),
+      fromPeerID: peerID,
+      toPeerID: "SYSTEM",
+      type: "ping",
+      data: JSON.stringify({ action: "register", roomID: roomID }),
+      timestamp: new Date().toISOString(),
+      status: "pending",
+      roomID: roomID,
+    };
+
+    // Add ping message to signaling sheet
+    const newRow = signalingSheet.getLastRow() + 1;
+    signalingSheet
+      .getRange(newRow, 1, 1, 8)
+      .setValues([
+        [
+          pingMessage.id,
+          pingMessage.fromPeerID,
+          pingMessage.toPeerID,
+          pingMessage.type,
+          pingMessage.data,
+          pingMessage.timestamp,
+          pingMessage.status,
+          pingMessage.roomID,
+        ],
+      ]);
+
+    debugLog("Peer registered successfully", {
+      peerID,
+      roomID,
+      messageID: pingMessage.id,
+    });
+
+    return {
+      status: "success",
+      message: "Peer registered successfully",
+      peerID: peerID,
+      roomID: roomID,
+      messageID: pingMessage.id,
+    };
+  } catch (error) {
+    debugLog("Error in registerPeer", { error: error.message, peerID, roomID });
+    return {
+      status: "error",
+      message: "Failed to register peer",
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Send signaling message (SDP offer/answer or ICE candidate)
+ * @param {string} fromPeerID - Sender PeerID
+ * @param {string} toPeerID - Target PeerID
+ * @param {string} type - Message type (offer|answer|ice-candidate)
+ * @param {Object} data - Signaling data
+ * @param {string} roomID - Room ID
+ * @returns {Object} - Send result
+ */
+function sendSignalingMessage(fromPeerID, toPeerID, type, data, roomID) {
+  debugLog("sendSignalingMessage called", {
+    fromPeerID,
+    toPeerID,
+    type,
+    roomID,
+    dataSize: JSON.stringify(data).length,
+  });
+
+  try {
+    const signalingSheet = initializeSignalingSheet();
+
+    const message = {
+      id: generateMessageID(),
+      fromPeerID: fromPeerID,
+      toPeerID: toPeerID,
+      type: type,
+      data: JSON.stringify(data),
+      timestamp: new Date().toISOString(),
+      status: "pending",
+      roomID: roomID,
+    };
+
+    // Add message to signaling sheet
+    const newRow = signalingSheet.getLastRow() + 1;
+    signalingSheet
+      .getRange(newRow, 1, 1, 8)
+      .setValues([
+        [
+          message.id,
+          message.fromPeerID,
+          message.toPeerID,
+          message.type,
+          message.data,
+          message.timestamp,
+          message.status,
+          message.roomID,
+        ],
+      ]);
+
+    debugLog("Signaling message sent", {
+      messageID: message.id,
+      type,
+      fromPeerID,
+      toPeerID,
+    });
+
+    return {
+      status: "success",
+      message: "Signaling message sent",
+      messageID: message.id,
+      timestamp: message.timestamp,
+    };
+  } catch (error) {
+    debugLog("Error in sendSignalingMessage", {
+      error: error.message,
+      fromPeerID,
+      toPeerID,
+      type,
+    });
+    return {
+      status: "error",
+      message: "Failed to send signaling message",
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Poll for signaling messages for a specific peer
+ * @param {string} peerID - Peer ID to poll messages for
+ * @param {string} lastMessageID - Last received message ID (optional)
+ * @returns {Object} - Poll result with messages
+ */
+function pollSignalingMessages(peerID, lastMessageID) {
+  debugLog("pollSignalingMessages called", { peerID, lastMessageID });
+
+  try {
+    const signalingSheet = initializeSignalingSheet();
+    const data = signalingSheet.getDataRange().getValues();
+
+    const messages = [];
+    let foundLastMessage = !lastMessageID; // If no lastMessageID, get all pending
+
+    // Scan through all messages
+    for (let i = 1; i < data.length; i++) {
+      // Skip header row
+      const [
+        id,
+        fromPeerID,
+        toPeerID,
+        type,
+        messageData,
+        timestamp,
+        status,
+        roomID,
+      ] = data[i];
+
+      // Skip if not for this peer
+      if (toPeerID !== peerID && toPeerID !== "ALL") continue;
+
+      // Skip if already delivered
+      if (status === "delivered" || status === "expired") continue;
+
+      // If we have lastMessageID, only get messages after it
+      if (lastMessageID && !foundLastMessage) {
+        if (id === lastMessageID) {
+          foundLastMessage = true;
+        }
+        continue;
+      }
+
+      // Add message to results
+      messages.push({
+        id: id,
+        fromPeerID: fromPeerID,
+        toPeerID: toPeerID,
+        type: type,
+        data: messageData ? JSON.parse(messageData) : null,
+        timestamp: timestamp,
+        roomID: roomID,
+      });
+
+      // Mark message as delivered
+      signalingSheet.getRange(i + 1, 7).setValue("delivered"); // Column G: Status
+    }
+
+    // Cleanup old messages (older than 5 minutes)
+    cleanupOldSignalingMessages();
+
+    debugLog("Polling completed", {
+      peerID,
+      messagesFound: messages.length,
+      lastMessageID,
+    });
+
+    return {
+      status: "success",
+      messages: messages,
+      count: messages.length,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    debugLog("Error in pollSignalingMessages", {
+      error: error.message,
+      peerID,
+      lastMessageID,
+    });
+    return {
+      status: "error",
+      message: "Failed to poll signaling messages",
+      error: error.message,
+      messages: [],
+    };
+  }
+}
+
+/**
+ * Get peers in a specific room
+ * @param {string} roomID - Room ID to get peers for
+ * @returns {Object} - Peers in room
+ */
+function getPeersInRoom(roomID) {
+  debugLog("getPeersInRoom called", { roomID });
+
+  try {
+    const signalingSheet = initializeSignalingSheet();
+    const data = signalingSheet.getDataRange().getValues();
+
+    const peers = new Set();
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+
+    // Find all peers that sent ping messages in this room recently
+    for (let i = 1; i < data.length; i++) {
+      const [
+        id,
+        fromPeerID,
+        toPeerID,
+        type,
+        messageData,
+        timestamp,
+        status,
+        msgRoomID,
+      ] = data[i];
+
+      if (msgRoomID === roomID && type === "ping") {
+        const msgTime = new Date(timestamp);
+        if (msgTime > fiveMinutesAgo) {
+          peers.add(fromPeerID);
+        }
+      }
+    }
+
+    const peerList = Array.from(peers);
+
+    debugLog("Peers in room found", { roomID, peers: peerList });
+
+    return {
+      status: "success",
+      roomID: roomID,
+      peers: peerList,
+      count: peerList.length,
+    };
+  } catch (error) {
+    debugLog("Error in getPeersInRoom", { error: error.message, roomID });
+    return {
+      status: "error",
+      message: "Failed to get peers in room",
+      error: error.message,
+      peers: [],
+    };
+  }
+}
+
+/**
+ * Cleanup old signaling messages (older than 5 minutes)
+ */
+function cleanupOldSignalingMessages() {
+  try {
+    const signalingSheet = initializeSignalingSheet();
+    const data = signalingSheet.getDataRange().getValues();
+
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    let cleanedCount = 0;
+
+    // Mark old messages as expired (from bottom to top to avoid index issues)
+    for (let i = data.length - 1; i >= 1; i--) {
+      const timestamp = data[i][5]; // Column F: Timestamp
+      const status = data[i][6]; // Column G: Status
+
+      if (timestamp && status !== "expired") {
+        const msgTime = new Date(timestamp);
+        if (msgTime < fiveMinutesAgo) {
+          signalingSheet.getRange(i + 1, 7).setValue("expired");
+          cleanedCount++;
+        }
+      }
+    }
+
+    if (cleanedCount > 0) {
+      debugLog("Cleaned up old signaling messages", { cleanedCount });
+    }
+  } catch (error) {
+    debugLog("Error in cleanupOldSignalingMessages", { error: error.message });
+  }
+}
+
+/**
+ * Generate unique message ID
+ * @returns {string} - Unique message ID
+ */
+function generateMessageID() {
+  return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Handle signaling API requests
+ * @param {string} action - API action
+ * @param {Object} params - Request parameters
+ * @returns {Object} - API response
+ */
+function handleSignalingAPI(action, params) {
+  debugLog("handleSignalingAPI called", { action, params });
+
+  switch (action) {
+    case "register":
+      return registerPeer(params.peerID, params.roomID);
+
+    case "send":
+      return sendSignalingMessage(
+        params.fromPeerID,
+        params.toPeerID,
+        params.type,
+        JSON.parse(params.data || "{}"),
+        params.roomID
+      );
+
+    case "poll":
+      return pollSignalingMessages(params.peerID, params.lastMessageID);
+
+    case "getPeers":
+      return getPeersInRoom(params.roomID);
+
+    case "cleanup":
+      cleanupOldSignalingMessages();
+      return { status: "success", message: "Cleanup completed" };
+
+    default:
+      return {
+        status: "error",
+        message: "Invalid signaling action",
+        validActions: ["register", "send", "poll", "getPeers", "cleanup"],
+      };
   }
 }

@@ -177,23 +177,30 @@ class VancedAdminDashboard {
    */
   async connectToClient(client) {
     try {
-      adminDebugLog("Connecting to client", client);
+      adminDebugLog("Connecting to client via Custom WebRTC", client);
 
       // Generate admin PeerID
       const adminPeerID = P2PUtils.generateAdminPeerID(this.adminNickname);
-      adminDebugLog("Generated admin PeerID", adminPeerID);
+      const roomID = `room_${client.machineId}`;
 
-      // Initialize admin peer
-      this.peer = new Peer(adminPeerID);
+      adminDebugLog("Generated admin PeerID", { adminPeerID, roomID });
+
+      // Initialize Custom WebRTC Client
+      const webrtcConfig = {
+        signalingServerUrl: this.spreadsheetUrl,
+        roomID: roomID,
+      };
+
+      this.peer = createCustomPeer(adminPeerID, webrtcConfig);
 
       this.peer.on("open", (id) => {
-        adminDebugLog("Admin peer opened", id);
+        adminDebugLog("Admin Custom WebRTC opened", id);
         this.initiateConnection(client, id);
       });
 
       this.peer.on("error", (error) => {
-        adminDebugLog("Admin peer error", error);
-        this.showError("Lỗi P2P: " + error.message);
+        adminDebugLog("Admin Custom WebRTC error", error);
+        this.showError("Lỗi Custom WebRTC: " + error.message);
       });
     } catch (error) {
       adminDebugLog("Error connecting to client", error);
@@ -210,8 +217,8 @@ class VancedAdminDashboard {
         adminPeerID,
       });
 
-      // Connect to client
-      this.currentConnection = this.peer.connect(client.clientPeerID);
+      // Connect to client via Custom WebRTC
+      this.currentConnection = await this.peer.connect(client.clientPeerID);
       this.currentClient = client;
 
       this.currentConnection.on("open", () => {
