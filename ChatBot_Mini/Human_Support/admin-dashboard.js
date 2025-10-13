@@ -51,12 +51,12 @@ class VancedAdminDashboard {
       // Load initial client list
       await this.refreshClientList();
 
-      // Setup periodic refresh (every 30 seconds)
-      setInterval(() => {
-        if (!this.isConnected) {
-          this.refreshClientList();
-        }
-      }, 30000);
+      // Setup periodic refresh (every 30 seconds) - DISABLED for debugging
+      // setInterval(() => {
+      //   if (!this.isConnected) {
+      //     this.refreshClientList();
+      //   }
+      // }, 30000);
     } catch (error) {
       adminDebugLog("Error initializing dashboard", error);
       this.showError("Lỗi khởi tạo dashboard: " + error.message);

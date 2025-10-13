@@ -1433,7 +1433,14 @@ function pollSignalingMessages(peerID, lastMessageID) {
       ] = data[i];
 
       // Skip if not for this peer
-      if (toPeerID !== peerID && toPeerID !== "ALL") continue;
+      const isDirectMessage = toPeerID === peerID;
+      const isRoomBroadcast =
+        toPeerID === "ROOM_BROADCAST" || toPeerID === "ALL";
+
+      if (!isDirectMessage && !isRoomBroadcast) continue;
+
+      // For room broadcasts, skip if from same peer (don't receive own messages)
+      if (isRoomBroadcast && fromPeerID === peerID) continue;
 
       // Skip if already delivered
       if (status === "delivered" || status === "expired") continue;

@@ -191,8 +191,14 @@ class CustomWebRTCClient {
           messages: data.messages,
         });
 
-        // Process each message
+        // Process each message in order
         for (const message of data.messages) {
+          webrtcDebugLog("Processing signaling message", {
+            type: message.type,
+            from: message.fromPeerID,
+            id: message.id,
+          });
+
           await this.handleSignalingMessage(message);
           this.lastMessageID = message.id;
         }
@@ -214,6 +220,11 @@ class CustomWebRTCClient {
     try {
       switch (message.type) {
         case "offer":
+          webrtcDebugLog("🎯 RECEIVED OFFER from admin!", {
+            from: message.fromPeerID,
+            to: message.toPeerID,
+            dataPreview: message.data ? message.data.type : "no data",
+          });
           await this.handleOffer(message.data, message.fromPeerID);
           break;
 
@@ -261,6 +272,12 @@ Initiate WebRTC connection (create offer)
       await this.peerConnection.setLocalDescription(offer);
 
       // Send offer via signaling
+      webrtcDebugLog("Sending offer to specific peer", {
+        targetPeerID,
+        offerType: offer.type,
+        sdpPreview: offer.sdp.substring(0, 100) + "...",
+      });
+
       await this.sendSignalingMessage(targetPeerID, "offer", {
         sdp: offer.sdp,
         type: offer.type,
@@ -430,8 +447,8 @@ Initiate WebRTC connection (create offer)
       if (event.candidate) {
         webrtcDebugLog("Generated ICE candidate", event.candidate);
 
-        // Send ICE candidate via signaling
-        this.sendSignalingMessage("ALL", "ice-candidate", {
+        // Send ICE candidate via signaling to room peers
+        this.sendSignalingMessage("ROOM_BROADCAST", "ice-candidate", {
           candidate: event.candidate.candidate,
           sdpMLineIndex: event.candidate.sdpMLineIndex,
           sdpMid: event.candidate.sdpMid,
@@ -636,7 +653,11 @@ Initiate WebRTC connection (create offer)
    * Connect to another peer (for admin side)
    */
   async connect(targetPeerID) {
-    webrtcDebugLog("Connecting to peer", targetPeerID);
+    webrtcDebugLog("🚀 ADMIN CONNECTING to client peer", {
+      adminPeerID: this.peerID,
+      targetClientPeerID: targetPeerID,
+      roomID: this.roomID,
+    });
 
     // Set as initiator and start connection
     this.isInitiator = true;
