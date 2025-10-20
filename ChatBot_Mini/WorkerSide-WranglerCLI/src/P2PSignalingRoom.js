@@ -1,0 +1,374 @@
+/**
+ * Vanced Customer Support - P2P Signaling Room (Durable Object)
+ * Handles WebRTC signaling for P2P connections between clients and admins
+ */
+
+// ====== DEBUG CONFIGURATION ======
+const P2P_DEBUG_ACTIVE = true;
+
+/**
+ * Debug logging function for P2P Signaling
+ * @param {string} message - Debug message
+ * @param {any} data - Optional data to log
+ */
+function p2pSignalingLog(message, data = null) {
+  if (!P2P_DEBUG_ACTIVE) return;
+
+  const timestamp = new Date().toISOString();
+  const logMessage = `[P2P-SIGNALING ${timestamp}] ${message}`;
+
+  if (data !== null) {
+    console.log(`${logMessage}`, data);
+  } else {
+    console.log(logMessage);
+  }
+}
+
+// ====== P2P SIGNALING ROOM DURABLE OBJECT ======
+export class P2PSignalingRoom {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+    this.sessions = new Map(); // WebSocket sessions
+    this.peers = new Map(); // Peer information
+    this.roomId = null;
+
+    p2pSignalingLog("P2P Signaling Room initialized");
+  }
+
+  /**
+   * Handle HTTP requests to the Durable Object
+   */
+  async fetch(request) {
+    const url = new URL(request.url);
+
+    // Handle WebSocket upgrade
+    if (request.headers.get("Upgrade") === "websocket") {
+      return this.handleWebSocket(request);
+    }
+
+    // Handle HTTP API requests
+    if (url.pathname === "/api/room-info") {
+      return this.handleRoomInfo();
+    }
+
+    return new Response("Not found", { status: 404 });
+  }
+
+  /**
+   * Handle WebSocket connections
+   */
+  async handleWebSocket(request) {
+    const url = new URL(request.url);
+    const peerID = url.searchParams.get("peerID");
+    const roomID = url.searchParams.get("roomID");
+
+    if (!peerID || !roomID) {
+      return new Response("Missing peerID or roomID", { status: 400 });
+    }
+
+    // Create WebSocket pair
+    const webSocketPair = new WebSocketPair();
+    const [client, server] = Object.values(webSocketPair);
+
+    // Accept the WebSocket connection
+    server.accept();
+
+    // Store room ID
+    this.roomId = roomID;
+
+    // Setup session
+    const session = {
+      peerID: peerID,
+      roomID: roomID,
+      webSocket: server,
+      connectedAt: new Date().toISOString(),
+      isAlive: true,
+    };
+
+    // Store session
+    this.sessions.set(peerID, session);
+    this.peers.set(peerID, {
+      peerID: peerID,
+      roomID: roomID,
+      type: peerID.startsWith("admin_") ? "admin" : "client",
+      connectedAt: session.connectedAt,
+    });
+
+    p2pSignalingLog("WebSocket connection established", {
+      peerID,
+      roomID,
+      totalSessions: this.sessions.size,
+    });
+
+    // Setup WebSocket event handlers
+    server.addEventListener("message", (event) => {
+      this.handleWebSocketMessage(peerID, event.data);
+    });
+
+    server.addEventListener("close", () => {
+      this.handleWebSocketClose(peerID);
+    });
+
+    server.addEventListener("error", (error) => {
+      p2pSignalingLog("WebSocket error", { peerID, error });
+      this.handleWebSocketClose(peerID);
+    });
+
+    // Send welcome message
+    server.send(
+      JSON.stringify({
+        type: "connected",
+        peerID: peerID,
+        roomID: roomID,
+        peersInRoom: Array.from(this.peers.keys()).filter(
+          (id) => id !== peerID
+        ),
+      })
+    );
+
+    // Notify other peers about new connection
+    this.broadcastToRoom(
+      {
+        type: "peer-joined",
+        peerID: peerID,
+        roomID: roomID,
+      },
+      peerID
+    );
+
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+    });
+  }
+
+  /**
+   * Handle incoming WebSocket messages
+   */
+  async handleWebSocketMessage(fromPeerID, messageData) {
+    try {
+      const message = JSON.parse(messageData);
+
+      p2pSignalingLog("Received signaling message", {
+        from: fromPeerID,
+        type: message.type,
+        to: message.toPeerID,
+      });
+
+      switch (message.type) {
+        case "offer":
+        case "answer":
+        case "ice-candidate":
+          await this.relaySignalingMessage(fromPeerID, message);
+          break;
+
+        case "ping":
+          await this.handlePing(fromPeerID);
+          break;
+
+        case "get-peers":
+          await this.sendPeerList(fromPeerID);
+          break;
+
+        default:
+          p2pSignalingLog("Unknown message type", {
+            type: message.type,
+            from: fromPeerID,
+          });
+      }
+    } catch (error) {
+      p2pSignalingLog("Error handling WebSocket message", {
+        error: error.message,
+        from: fromPeerID,
+      });
+    }
+  }
+
+  /**
+   * Relay signaling messages between peers
+   */
+  async relaySignalingMessage(fromPeerID, message) {
+    const { toPeerID, type, data } = message;
+
+    // If toPeerID is 'ROOM_BROADCAST', send to all peers in room except sender
+    if (toPeerID === "ROOM_BROADCAST" || toPeerID === "ALL") {
+      this.broadcastToRoom(
+        {
+          type: type,
+          fromPeerID: fromPeerID,
+          data: data,
+          timestamp: new Date().toISOString(),
+        },
+        fromPeerID
+      );
+
+      p2pSignalingLog("Broadcasted message to room", {
+        type,
+        from: fromPeerID,
+        recipients: this.sessions.size - 1,
+      });
+    } else {
+      // Send to specific peer
+      const targetSession = this.sessions.get(toPeerID);
+
+      if (targetSession && targetSession.isAlive) {
+        targetSession.webSocket.send(
+          JSON.stringify({
+            type: type,
+            fromPeerID: fromPeerID,
+            toPeerID: toPeerID,
+            data: data,
+            timestamp: new Date().toISOString(),
+          })
+        );
+
+        p2pSignalingLog("Relayed message to specific peer", {
+          type,
+          from: fromPeerID,
+          to: toPeerID,
+        });
+      } else {
+        p2pSignalingLog("Target peer not found or disconnected", {
+          targetPeerID: toPeerID,
+          from: fromPeerID,
+        });
+
+        // Send error back to sender
+        const senderSession = this.sessions.get(fromPeerID);
+        if (senderSession && senderSession.isAlive) {
+          senderSession.webSocket.send(
+            JSON.stringify({
+              type: "error",
+              message: "Target peer not found",
+              targetPeerID: toPeerID,
+            })
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Handle ping messages
+   */
+  async handlePing(fromPeerID) {
+    const session = this.sessions.get(fromPeerID);
+    if (session && session.isAlive) {
+      session.webSocket.send(
+        JSON.stringify({
+          type: "pong",
+          timestamp: new Date().toISOString(),
+          peersInRoom: Array.from(this.peers.keys()),
+        })
+      );
+    }
+  }
+
+  /**
+   * Send peer list to requesting peer
+   */
+  async sendPeerList(fromPeerID) {
+    const session = this.sessions.get(fromPeerID);
+    if (session && session.isAlive) {
+      const peerList = Array.from(this.peers.values()).map((peer) => ({
+        peerID: peer.peerID,
+        type: peer.type,
+        connectedAt: peer.connectedAt,
+      }));
+
+      session.webSocket.send(
+        JSON.stringify({
+          type: "peer-list",
+          peers: peerList,
+          roomID: this.roomId,
+        })
+      );
+    }
+  }
+
+  /**
+   * Broadcast message to all peers in room except sender
+   */
+  broadcastToRoom(message, excludePeerID = null) {
+    let sentCount = 0;
+
+    for (const [peerID, session] of this.sessions) {
+      if (peerID !== excludePeerID && session.isAlive) {
+        try {
+          session.webSocket.send(JSON.stringify(message));
+          sentCount++;
+        } catch (error) {
+          p2pSignalingLog("Error broadcasting to peer", {
+            peerID,
+            error: error.message,
+          });
+          this.handleWebSocketClose(peerID);
+        }
+      }
+    }
+
+    return sentCount;
+  }
+
+  /**
+   * Handle WebSocket connection close
+   */
+  handleWebSocketClose(peerID) {
+    p2pSignalingLog("WebSocket connection closed", {
+      peerID,
+      remainingSessions: this.sessions.size - 1,
+    });
+
+    // Remove session and peer
+    this.sessions.delete(peerID);
+    this.peers.delete(peerID);
+
+    // Notify other peers about disconnection
+    this.broadcastToRoom({
+      type: "peer-left",
+      peerID: peerID,
+      roomID: this.roomId,
+    });
+
+    // If no more sessions, the Durable Object will be garbage collected
+    if (this.sessions.size === 0) {
+      p2pSignalingLog("All peers disconnected, room will be cleaned up", {
+        roomID: this.roomId,
+      });
+    }
+  }
+
+  /**
+   * Handle room info API request
+   */
+  async handleRoomInfo() {
+    const roomInfo = {
+      roomID: this.roomId,
+      peersCount: this.sessions.size,
+      peers: Array.from(this.peers.values()),
+      createdAt: new Date().toISOString(),
+    };
+
+    return new Response(JSON.stringify(roomInfo), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  /**
+   * Cleanup inactive connections (called periodically)
+   */
+  async cleanup() {
+    const now = Date.now();
+    const timeout = 5 * 60 * 1000; // 5 minutes
+
+    for (const [peerID, session] of this.sessions) {
+      const connectedTime = new Date(session.connectedAt).getTime();
+
+      if (now - connectedTime > timeout && !session.isAlive) {
+        p2pSignalingLog("Cleaning up inactive session", { peerID });
+        this.handleWebSocketClose(peerID);
+      }
+    }
+  }
+}

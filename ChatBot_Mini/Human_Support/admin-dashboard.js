@@ -177,7 +177,7 @@ class VancedAdminDashboard {
    */
   async connectToClient(client) {
     try {
-      adminDebugLog("Connecting to client via Custom WebRTC", client);
+      adminDebugLog("Connecting to client via WebSocket WebRTC", client);
 
       // Generate admin PeerID
       const adminPeerID = P2PUtils.generateAdminPeerID(this.adminNickname);
@@ -185,22 +185,22 @@ class VancedAdminDashboard {
 
       adminDebugLog("Generated admin PeerID", { adminPeerID, roomID });
 
-      // Initialize Custom WebRTC Client
+      // Initialize WebSocket WebRTC Client
       const webrtcConfig = {
-        signalingServerUrl: this.spreadsheetUrl,
+        signalingServerUrl: "https://vanced-chatbot.caocv-work.workers.dev", // TODO: Update with your Workers URL
         roomID: roomID,
       };
 
-      this.peer = createCustomPeer(adminPeerID, webrtcConfig);
+      this.peer = createWebSocketPeer(adminPeerID, webrtcConfig);
 
       this.peer.on("open", (id) => {
-        adminDebugLog("Admin Custom WebRTC opened", id);
+        adminDebugLog("Admin WebSocket WebRTC opened", id);
         this.initiateConnection(client, id);
       });
 
       this.peer.on("error", (error) => {
-        adminDebugLog("Admin Custom WebRTC error", error);
-        this.showError("Lỗi Custom WebRTC: " + error.message);
+        adminDebugLog("Admin WebSocket WebRTC error", error);
+        this.showError("Lỗi WebSocket WebRTC: " + error.message);
       });
     } catch (error) {
       adminDebugLog("Error connecting to client", error);

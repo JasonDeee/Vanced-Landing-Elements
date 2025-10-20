@@ -1,6 +1,6 @@
 # Cloudflare Workers configuration
-name = "vanced-support-chatbot"
-main = "New_worker.js"
+name = "vanced-chatbot"
+main = "src/worker.js"
 compatibility_date = "2024-01-15"
 
 # Environment variables
@@ -22,9 +22,19 @@ command = ""
 #   { pattern = "chat.yourdomain.com/*", zone_name = "yourdomain.com" }
 # ]
 
+# Durable Objects configuration
+[[durable_objects.bindings]]
+name = "P2P_SIGNALING_ROOM"
+class_name = "P2PSignalingRoom"
+
+# Durable Objects migrations (SQLite for Free Plan)
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["P2PSignalingRoom"]
+
 # KV namespaces (cho future chat history storage)
 # kv_namespaces = [
-#   { binding = "CHAT_HISTORY", id = "your-kv-namespace-id", preview_id = "your-preview-kv-namespace-id" }
+#   { binding = "CHAT_HISTORY", id = "8fb44eea85a94f6b8e5e5a6b5b402f12", preview_id = "your-preview-kv-namespace-id" }
 # ]
 
 # Compatibility flags

@@ -7,6 +7,7 @@ import {
 } from "./data.js";
 
 import { checkBanStatus, getBanListStats } from "./BanList.js";
+import { P2PSignalingRoom } from "./P2PSignalingRoom.js";
 
 /**
  * Vanced Customer Support Chatbot
@@ -47,6 +48,12 @@ let APPS_SCRIPT_URL;
  */
 export default {
   async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+
+    // Handle P2P signaling requests (separate from chat API)
+    if (url.pathname.startsWith("/p2p/")) {
+      return handleP2PRequest(request, env, ctx);
+    }
     OPENROUTER_API_KEY = env.OPENROUTER_API_KEY; // Từ environment variables
     APPS_SCRIPT_URL = env.APPS_SCRIPT_URL; // URL của Google Apps Script
 
@@ -118,9 +125,7 @@ export default {
           case "sendMessage":
             response = await handleSendMessage(body, clientIP, env, ctx);
             break;
-          case "requestP2PSupport":
-            response = await handleP2PRequest(body, clientIP, env, ctx);
-            break;
+          // Legacy P2P support removed - now using Durable Objects WebSocket signaling
           default:
             // Backward compatibility - treat as sendMessage
             response = await handleSendMessage(body, clientIP, env, ctx);
@@ -722,79 +727,69 @@ async function updateSpreadsheetAsync(
     };
   }
 }
+
 /**
- * Xử lý yêu cầu P2P support
+ * Handle P2P signaling requests (separate from chat API for low latency)
  */
-async function handleP2PRequest(body, clientIP, env, ctx) {
-  const { machineId, p2pData } = body;
+async function handleP2PRequest(request, env, ctx) {
+  const url = new URL(request.url);
 
-  if (!machineId) {
-    return {
-      status: "error",
-      message: "MachineID is required",
-    };
-  }
-
-  if (!p2pData) {
-    return {
-      status: "error",
-      message: "P2P data is required",
-    };
-  }
+  debugLog("P2P request received", {
+    pathname: url.pathname,
+    method: request.method,
+    hasWebSocketUpgrade: request.headers.get("Upgrade") === "websocket",
+  });
 
   try {
-    debugLog("Processing P2P support request", {
-      machineId,
-      clientPeerID: p2pData.clientPeerID,
-      status: p2pData.status,
-    });
-
-    // Check ban status
-    const banStatus = checkBanStatus(clientIP, machineId);
-    if (banStatus.isBanned) {
-      return {
-        status: "banned",
-        message: banStatus.message,
-        reason: banStatus.reason,
-      };
+    // Extract room ID from URL path: /p2p/room/{roomID}
+    const pathParts = url.pathname.split("/");
+    if (
+      pathParts.length < 4 ||
+      pathParts[1] !== "p2p" ||
+      pathParts[2] !== "room"
+    ) {
+      return new Response("Invalid P2P path. Use /p2p/room/{roomID}", {
+        status: 400,
+      });
     }
 
-    // Call Apps Script to save P2P request
-    const appsScriptResponse = await callAppsScript(
-      "updateP2PRequest",
-      {
-        machineId: machineId,
-        p2pData: JSON.stringify(p2pData),
-      },
-      env
-    );
-
-    if (appsScriptResponse.status === "error") {
-      throw new Error(appsScriptResponse.message);
+    const roomID = pathParts[3];
+    if (!roomID) {
+      return new Response("Room ID is required", { status: 400 });
     }
 
-    debugLog("P2P request saved successfully", {
-      machineId,
-      responseStatus: appsScriptResponse.status,
+    // Get Durable Object instance for this room
+    const durableObjectId = env.P2P_SIGNALING_ROOM.idFromName(roomID);
+    const durableObject = env.P2P_SIGNALING_ROOM.get(durableObjectId);
+
+    // Forward request to Durable Object
+    const response = await durableObject.fetch(request);
+
+    debugLog("P2P request forwarded to Durable Object", {
+      roomID,
+      status: response.status,
+      hasWebSocket: !!response.webSocket,
     });
 
-    return {
-      status: "success",
-      message: "P2P request saved successfully",
-      machineId: machineId,
-      peerID: p2pData.clientPeerID,
-      timestamp: new Date().toISOString(),
-    };
+    return response;
   } catch (error) {
-    debugLog("Error in handleP2PRequest", {
-      machineId,
+    debugLog("Error handling P2P request", {
       error: error.message,
+      pathname: url.pathname,
     });
 
-    return {
-      status: "error",
-      message: "Lỗi xử lý yêu cầu P2P",
-      error: error.message,
-    };
+    return new Response(
+      JSON.stringify({
+        error: "P2P signaling error",
+        message: error.message,
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
 }
+
+// Export Durable Object class
+export { P2PSignalingRoom };

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Client P2P Test - Vanced Support</title>
-    <script src="custom-webrtc.js"></script>
+    <script src="websocket-webrtc.js"></script>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -268,13 +268,13 @@
 
       // Request human support
       async function requestHumanSupport() {
-        updateStatus("Khởi tạo Custom WebRTC connection...", "waiting");
+        updateStatus("Khởi tạo WebSocket WebRTC connection...", "waiting");
 
         // Generate custom PeerID
         const peerID = `vanced_${currentMachineId}_${Date.now()}`;
         const roomID = `room_${currentMachineId}`;
 
-        debugLog("Generated PeerID for Custom WebRTC", {
+        debugLog("Generated PeerID for WebSocket WebRTC", {
           machineId: currentMachineId,
           peerID: peerID,
           roomID: roomID,
@@ -283,21 +283,21 @@
         try {
           // Add connection timeout
           const connectionTimeout = setTimeout(() => {
-            debugLog("Custom WebRTC connection timeout");
-            updateStatus("⏰ Timeout kết nối Custom WebRTC", "error");
+            debugLog("WebSocket WebRTC connection timeout");
+            updateStatus("⏰ Timeout kết nối WebSocket WebRTC", "error");
             if (peer) {
               peer.destroy();
             }
-          }, 30000); // 30 seconds timeout for custom signaling
+          }, 30000); // 30 seconds timeout
 
-          // Initialize Custom WebRTC Client
+          // Initialize WebSocket WebRTC Client
           const webrtcConfig = {
-            signalingServerUrl: SPREADSHEET_URL,
+            signalingServerUrl: "https://vanced-chatbot.caocv-work.workers.dev", // TODO: Update with your Workers URL
             roomID: roomID,
           };
 
-          debugLog("Using Custom WebRTC config", webrtcConfig);
-          peer = createCustomPeer(peerID, webrtcConfig);
+          debugLog("Using WebSocket WebRTC config", webrtcConfig);
+          peer = createWebSocketPeer(peerID, webrtcConfig);
 
           peer.on("open", (id) => {
             clearTimeout(connectionTimeout);
@@ -319,7 +319,7 @@
           });
 
           peer.on("connection", (conn) => {
-            debugLog("Admin connected via Custom WebRTC!", conn.peer);
+            debugLog("Admin connected via WebSocket WebRTC!", conn.peer);
             connection = conn;
             isConnected = true;
 
@@ -359,7 +359,7 @@
           });
         } catch (error) {
           debugLog("Request support error", error.message);
-          updateStatus("❌ Lỗi khởi tạo Custom WebRTC", "error");
+          updateStatus("❌ Lỗi khởi tạo WebSocket WebRTC", "error");
         }
       }
 
