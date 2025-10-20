@@ -94,6 +94,7 @@ export class P2PSignalingRoom {
 			roomID: roomID,
 			webSocket: server,
 			connectedAt: new Date().toISOString(),
+			lastActivity: new Date().toISOString(),
 			isAlive: true,
 		};
 
@@ -264,13 +265,22 @@ export class P2PSignalingRoom {
 	async handlePing(fromPeerID) {
 		const session = this.sessions.get(fromPeerID);
 		if (session && session.isAlive) {
+			// Update last activity
+			session.lastActivity = new Date().toISOString();
+
 			session.webSocket.send(
 				JSON.stringify({
 					type: 'pong',
 					timestamp: new Date().toISOString(),
 					peersInRoom: Array.from(this.peers.keys()),
+					roomID: this.roomId,
 				})
 			);
+
+			p2pSignalingLog('Responded to ping', {
+				fromPeerID,
+				peersInRoom: this.sessions.size,
+			});
 		}
 	}
 

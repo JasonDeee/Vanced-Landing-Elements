@@ -344,6 +344,12 @@
       let peers = new Map(); // Map of peerID -> RTCPeerConnection
       let connectedPeers = new Set(); // Set of successfully connected peer IDs
       let messageQueue = []; // Queue messages until connected
+      let reconnectAttempts = 0;
+      let maxReconnectAttempts = 5;
+      let reconnectDelay = 1000; // Start with 1 second
+      let pingInterval = null;
+      let isConnecting = false;
+      let isManualDisconnect = false;
 
       const SIGNALING_SERVER =
         "wss://vanced-chatbot.caocv-work.workers.dev/p2p/room/";
@@ -422,8 +428,15 @@
         await connectToSignalingServer();
       }
 
-      // Connect to signaling server
+      // Connect to signaling server with auto-reconnect
       async function connectToSignalingServer() {
+        if (isConnecting) {
+          console.log("Already connecting, skipping...");
+          return;
+        }
+
+        isConnecting = true;
+
         try {
           updateStatus("Đang kết nối đến server...", "info");
 
@@ -433,6 +446,14 @@
           signalingSocket.onopen = () => {
             updateStatus("✅ Đã kết nối đến signaling server", "success");
             console.log("Connected to signaling server");
+
+            // Reset reconnect attempts on successful connection
+            reconnectAttempts = 0;
+            reconnectDelay = 1000;
+            isConnecting = false;
+
+            // Start ping interval to keep connection alive
+            startPingInterval();
           };
 
           signalingSocket.onmessage = async (event) => {
@@ -440,19 +461,83 @@
             await handleSignalingMessage(message);
           };
 
-          signalingSocket.onclose = () => {
-            updateStatus("❌ Mất kết nối đến server", "error");
-            console.log("Disconnected from signaling server");
+          signalingSocket.onclose = (event) => {
+            console.log("WebSocket closed:", event.code, event.reason);
+            isConnecting = false;
+            stopPingInterval();
+
+            if (!isManualDisconnect) {
+              updateStatus("❌ Mất kết nối đến server", "error");
+              attemptReconnect();
+            }
           };
 
           signalingSocket.onerror = (error) => {
-            updateStatus("❌ Lỗi kết nối: " + error.message, "error");
             console.error("Signaling error:", error);
+            isConnecting = false;
+            updateStatus("❌ Lỗi kết nối WebSocket", "error");
           };
         } catch (error) {
+          isConnecting = false;
           updateStatus("❌ Không thể kết nối: " + error.message, "error");
           console.error("Connection error:", error);
+          attemptReconnect();
         }
+      }
+
+      // Start ping interval to keep connection alive
+      function startPingInterval() {
+        stopPingInterval(); // Clear any existing interval
+
+        pingInterval = setInterval(() => {
+          if (
+            signalingSocket &&
+            signalingSocket.readyState === WebSocket.OPEN
+          ) {
+            signalingSocket.send(JSON.stringify({ type: "ping" }));
+            console.log("Sent ping to server");
+          } else {
+            stopPingInterval();
+          }
+        }, 30000); // Ping every 30 seconds
+      }
+
+      // Stop ping interval
+      function stopPingInterval() {
+        if (pingInterval) {
+          clearInterval(pingInterval);
+          pingInterval = null;
+        }
+      }
+
+      // Attempt to reconnect with exponential backoff
+      function attemptReconnect() {
+        if (isManualDisconnect || reconnectAttempts >= maxReconnectAttempts) {
+          if (reconnectAttempts >= maxReconnectAttempts) {
+            updateStatus(
+              "❌ Không thể kết nối lại. Vui lòng refresh trang.",
+              "error"
+            );
+          }
+          return;
+        }
+
+        reconnectAttempts++;
+        const delay = Math.min(
+          reconnectDelay * Math.pow(2, reconnectAttempts - 1),
+          30000
+        );
+
+        updateStatus(
+          `🔄 Đang thử kết nối lại... (${reconnectAttempts}/${maxReconnectAttempts})`,
+          "info"
+        );
+
+        setTimeout(() => {
+          if (!isManualDisconnect) {
+            connectToSignalingServer();
+          }
+        }, delay);
       }
 
       // Handle signaling messages
@@ -504,7 +589,7 @@
             break;
 
           case "pong":
-            console.log("Received pong from server");
+            console.log("Received pong from server - connection alive");
             break;
 
           default:
@@ -827,10 +912,34 @@
 
       // Cleanup on page unload
       window.addEventListener("beforeunload", () => {
+        isManualDisconnect = true;
+        stopPingInterval();
+
         if (signalingSocket) {
           signalingSocket.close();
         }
+
         peers.forEach((pc) => pc.close());
+      });
+
+      // Handle page visibility changes to manage connections
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          console.log("Page hidden - maintaining connection");
+        } else {
+          console.log("Page visible - checking connection");
+
+          // Check if connection is still alive when page becomes visible
+          if (
+            signalingSocket &&
+            signalingSocket.readyState !== WebSocket.OPEN
+          ) {
+            console.log(
+              "Connection lost while page was hidden, reconnecting..."
+            );
+            connectToSignalingServer();
+          }
+        }
       });
     </script>
   </body>
