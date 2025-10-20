@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini Chat Room - P2P</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 800px;
+        height: 600px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        margin-bottom: 5px;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 14px;
+      }
+
+      .login-screen {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+      }
+
+      .login-form {
+        background: #f8f9fa;
+        padding: 30px;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+      }
+
+      .login-form h2 {
+        color: #333;
+        margin-bottom: 20px;
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: 500;
+      }
+
+      .input-group input,
+      .input-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      .input-group input:focus,
+      .input-group select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .chat-screen {
+        flex: 1;
+        display: none;
+        flex-direction: column;
+      }
+
+      .chat-info {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 1px solid #e1e5e9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .user-info {
+        font-weight: 500;
+        color: #333;
+      }
+
+      .room-info {
+        font-size: 14px;
+        color: #666;
+      }
+
+      .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #fafafa;
+      }
+
+      .message {
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        border-radius: 10px;
+        max-width: 70%;
+        word-wrap: break-word;
+      }
+
+      .message.own {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-left: auto;
+        text-align: right;
+      }
+
+      .message.other {
+        background: white;
+        border: 1px solid #e1e5e9;
+        margin-right: auto;
+      }
+
+      .message-header {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-bottom: 5px;
+      }
+
+      .message.own .message-header {
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .message.other .message-header {
+        color: #666;
+      }
+
+      .message-input {
+        display: flex;
+        padding: 20px;
+        background: white;
+        border-top: 1px solid #e1e5e9;
+      }
+
+      .message-input input {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 25px;
+        font-size: 16px;
+        margin-right: 10px;
+      }
+
+      .message-input input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .send-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .status {
+        padding: 10px 20px;
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        margin: 10px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .status.error {
+        background: #ffebee;
+        border-left-color: #f44336;
+        color: #c62828;
+      }
+
+      .status.success {
+        background: #e8f5e8;
+        border-left-color: #4caf50;
+        color: #2e7d32;
+      }
+
+      .peers-list {
+        background: #f0f0f0;
+        padding: 10px 20px;
+        border-bottom: 1px solid #e1e5e9;
+        font-size: 14px;
+      }
+
+      .peer-tag {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        margin-right: 8px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          width: 95%;
+          height: 90vh;
+        }
+
+        .message {
+          max-width: 85%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🚀 Mini Chat Room</h1>
+        <p>Kết nối P2P trực tiếp - Không qua server</p>
+      </div>
+
+      <!-- Login Screen -->
+      <div class="login-screen" id="loginScreen">
+        <div class="login-form">
+          <h2>Tham gia Chat Room</h2>
+          <div class="input-group">
+            <label for="nickname">Nickname của bạn:</label>
+            <input
+              type="text"
+              id="nickname"
+              placeholder="Nhập tên hiển thị..."
+              maxlength="20"
+            />
+          </div>
+          <div class="input-group">
+            <label for="roomId">Room ID:</label>
+            <select id="roomId">
+              <option value="public-room-1">🌍 Public Room 1</option>
+              <option value="public-room-2">🎮 Gaming Room</option>
+              <option value="public-room-3">💼 Work Chat</option>
+              <option value="custom">🔧 Custom Room</option>
+            </select>
+          </div>
+          <div class="input-group" id="customRoomGroup" style="display: none">
+            <label for="customRoom">Custom Room ID:</label>
+            <input
+              type="text"
+              id="customRoom"
+              placeholder="Nhập room ID tùy chỉnh..."
+            />
+          </div>
+          <button class="btn" id="joinBtn" onclick="joinRoom()">
+            Tham gia Chat
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Screen -->
+      <div class="chat-screen" id="chatScreen">
+        <div class="chat-info">
+          <div class="user-info" id="userInfo"></div>
+          <div class="room-info" id="roomInfo"></div>
+        </div>
+        <div class="peers-list" id="peersList" style="display: none"></div>
+        <div class="status" id="connectionStatus">Đang kết nối...</div>
+        <div class="messages-container" id="messagesContainer"></div>
+        <div class="message-input">
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="Nhập tin nhắn..."
+            maxlength="500"
+          />
+          <button class="send-btn" onclick="sendMessage()">Gửi</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Global variables
+      let currentUser = {
+        nickname: "",
+        peerID: "",
+        roomID: "",
+      };
+
+      let signalingSocket = null;
+      let peers = new Map(); // Map of peerID -> RTCPeerConnection
+      let connectedPeers = new Set(); // Set of successfully connected peer IDs
+      let messageQueue = []; // Queue messages until connected
+
+      const SIGNALING_SERVER =
+        "wss://vanced-chatbot.caocv-work.workers.dev/p2p/room/";
+
+      // UI Event Handlers
+      document.getElementById("roomId").addEventListener("change", function () {
+        const customGroup = document.getElementById("customRoomGroup");
+        if (this.value === "custom") {
+          customGroup.style.display = "block";
+        } else {
+          customGroup.style.display = "none";
+        }
+      });
+
+      document
+        .getElementById("messageInput")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            sendMessage();
+          }
+        });
+
+      document
+        .getElementById("nickname")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            joinRoom();
+          }
+        });
+
+      // Generate unique peer ID
+      function generatePeerID() {
+        return (
+          "user_" +
+          Math.random().toString(36).substr(2, 9) +
+          "_" +
+          Date.now().toString(36)
+        );
+      }
+
+      // Join room function
+      async function joinRoom() {
+        const nickname = document.getElementById("nickname").value.trim();
+        const roomSelect = document.getElementById("roomId").value;
+
+        let roomID;
+        if (roomSelect === "custom") {
+          roomID = document.getElementById("customRoom").value.trim();
+          if (!roomID) {
+            alert("Vui lòng nhập Room ID tùy chỉnh!");
+            return;
+          }
+        } else {
+          roomID = roomSelect;
+        }
+
+        if (!nickname) {
+          alert("Vui lòng nhập nickname!");
+          return;
+        }
+
+        // Set user info
+        currentUser.nickname = nickname;
+        currentUser.peerID = generatePeerID();
+        currentUser.roomID = roomID;
+
+        // Switch to chat screen
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("chatScreen").style.display = "flex";
+
+        // Update UI
+        document.getElementById("userInfo").textContent = `👤 ${nickname}`;
+        document.getElementById("roomInfo").textContent = `🏠 ${roomID}`;
+
+        // Connect to signaling server
+        await connectToSignalingServer();
+      }
+
+      // Connect to signaling server
+      async function connectToSignalingServer() {
+        try {
+          updateStatus("Đang kết nối đến server...", "info");
+
+          const wsUrl = `${SIGNALING_SERVER}${currentUser.roomID}?peerID=${currentUser.peerID}&roomID=${currentUser.roomID}`;
+          signalingSocket = new WebSocket(wsUrl);
+
+          signalingSocket.onopen = () => {
+            updateStatus("✅ Đã kết nối đến signaling server", "success");
+            console.log("Connected to signaling server");
+          };
+
+          signalingSocket.onmessage = async (event) => {
+            const message = JSON.parse(event.data);
+            await handleSignalingMessage(message);
+          };
+
+          signalingSocket.onclose = () => {
+            updateStatus("❌ Mất kết nối đến server", "error");
+            console.log("Disconnected from signaling server");
+          };
+
+          signalingSocket.onerror = (error) => {
+            updateStatus("❌ Lỗi kết nối: " + error.message, "error");
+            console.error("Signaling error:", error);
+          };
+        } catch (error) {
+          updateStatus("❌ Không thể kết nối: " + error.message, "error");
+          console.error("Connection error:", error);
+        }
+      }
+
+      // Handle signaling messages
+      async function handleSignalingMessage(message) {
+        console.log("Received signaling message:", message);
+
+        switch (message.type) {
+          case "connected":
+            updateStatus(`✅ Đã tham gia room: ${message.roomID}`, "success");
+            // Request peer list
+            signalingSocket.send(JSON.stringify({ type: "get-peers" }));
+            break;
+
+          case "peer-joined":
+            if (message.peerID !== currentUser.peerID) {
+              updateStatus(`👋 ${message.peerID} đã tham gia`, "info");
+              // Create offer to new peer
+              await createPeerConnection(message.peerID, true);
+            }
+            break;
+
+          case "peer-left":
+            if (message.peerID !== currentUser.peerID) {
+              updateStatus(`👋 ${message.peerID} đã rời khỏi room`, "info");
+              removePeer(message.peerID);
+            }
+            break;
+
+          case "peer-list":
+            updatePeersList(message.peers);
+            // Connect to existing peers
+            for (const peer of message.peers) {
+              if (peer.peerID !== currentUser.peerID) {
+                await createPeerConnection(peer.peerID, false);
+              }
+            }
+            break;
+
+          case "offer":
+            await handleOffer(message);
+            break;
+
+          case "answer":
+            await handleAnswer(message);
+            break;
+
+          case "ice-candidate":
+            await handleIceCandidate(message);
+            break;
+
+          case "pong":
+            console.log("Received pong from server");
+            break;
+
+          default:
+            console.log("Unknown message type:", message.type);
+        }
+      }
+
+      // Create peer connection
+      async function createPeerConnection(peerID, shouldCreateOffer) {
+        if (peers.has(peerID)) {
+          console.log("Peer connection already exists for:", peerID);
+          return;
+        }
+
+        console.log(
+          "Creating peer connection for:",
+          peerID,
+          "shouldCreateOffer:",
+          shouldCreateOffer
+        );
+
+        const peerConnection = new RTCPeerConnection({
+          iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun1.l.google.com:19302" },
+          ],
+        });
+
+        // Create data channel for messages
+        let dataChannel;
+        if (shouldCreateOffer) {
+          dataChannel = peerConnection.createDataChannel("messages", {
+            ordered: true,
+          });
+          setupDataChannel(dataChannel, peerID);
+        }
+
+        // Handle incoming data channel
+        peerConnection.ondatachannel = (event) => {
+          const channel = event.channel;
+          setupDataChannel(channel, peerID);
+        };
+
+        // Handle ICE candidates
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            signalingSocket.send(
+              JSON.stringify({
+                type: "ice-candidate",
+                toPeerID: peerID,
+                data: event.candidate,
+              })
+            );
+          }
+        };
+
+        // Handle connection state changes
+        peerConnection.onconnectionstatechange = () => {
+          console.log(
+            `Connection state with ${peerID}:`,
+            peerConnection.connectionState
+          );
+          if (peerConnection.connectionState === "connected") {
+            connectedPeers.add(peerID);
+            updateStatus(`✅ Đã kết nối P2P với ${peerID}`, "success");
+          } else if (
+            peerConnection.connectionState === "disconnected" ||
+            peerConnection.connectionState === "failed"
+          ) {
+            connectedPeers.delete(peerID);
+            removePeer(peerID);
+          }
+        };
+
+        peers.set(peerID, peerConnection);
+
+        // Create offer if needed
+        if (shouldCreateOffer) {
+          const offer = await peerConnection.createOffer();
+          await peerConnection.setLocalDescription(offer);
+
+          signalingSocket.send(
+            JSON.stringify({
+              type: "offer",
+              toPeerID: peerID,
+              data: offer,
+            })
+          );
+        }
+      }
+
+      // Setup data channel
+      function setupDataChannel(dataChannel, peerID) {
+        dataChannel.onopen = () => {
+          console.log(`Data channel opened with ${peerID}`);
+          connectedPeers.add(peerID);
+
+          // Send queued messages
+          while (messageQueue.length > 0) {
+            const queuedMessage = messageQueue.shift();
+            broadcastMessage(queuedMessage);
+          }
+        };
+
+        dataChannel.onmessage = (event) => {
+          const message = JSON.parse(event.data);
+          displayMessage(message, false);
+        };
+
+        dataChannel.onclose = () => {
+          console.log(`Data channel closed with ${peerID}`);
+          connectedPeers.delete(peerID);
+        };
+
+        dataChannel.onerror = (error) => {
+          console.error(`Data channel error with ${peerID}:`, error);
+        };
+      }
+
+      // Handle WebRTC offer
+      async function handleOffer(message) {
+        const peerID = message.fromPeerID;
+
+        if (!peers.has(peerID)) {
+          await createPeerConnection(peerID, false);
+        }
+
+        const peerConnection = peers.get(peerID);
+        await peerConnection.setRemoteDescription(message.data);
+
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        signalingSocket.send(
+          JSON.stringify({
+            type: "answer",
+            toPeerID: peerID,
+            data: answer,
+          })
+        );
+      }
+
+      // Handle WebRTC answer
+      async function handleAnswer(message) {
+        const peerID = message.fromPeerID;
+        const peerConnection = peers.get(peerID);
+
+        if (peerConnection) {
+          await peerConnection.setRemoteDescription(message.data);
+        }
+      }
+
+      // Handle ICE candidate
+      async function handleIceCandidate(message) {
+        const peerID = message.fromPeerID;
+        const peerConnection = peers.get(peerID);
+
+        if (peerConnection) {
+          await peerConnection.addIceCandidate(message.data);
+        }
+      }
+
+      // Remove peer
+      function removePeer(peerID) {
+        if (peers.has(peerID)) {
+          peers.get(peerID).close();
+          peers.delete(peerID);
+        }
+        connectedPeers.delete(peerID);
+        updatePeersDisplay();
+      }
+
+      // Send message
+      function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const messageText = input.value.trim();
+
+        if (!messageText) return;
+
+        const message = {
+          from: currentUser.nickname,
+          fromPeerID: currentUser.peerID,
+          text: messageText,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Display own message
+        displayMessage(message, true);
+
+        // Send to connected peers or queue
+        if (connectedPeers.size > 0) {
+          broadcastMessage(message);
+        } else {
+          messageQueue.push(message);
+          updateStatus("📤 Tin nhắn đã được xếp hàng chờ kết nối", "info");
+        }
+
+        input.value = "";
+      }
+
+      // Broadcast message to all connected peers
+      function broadcastMessage(message) {
+        const messageStr = JSON.stringify(message);
+        let sentCount = 0;
+
+        peers.forEach((peerConnection, peerID) => {
+          if (connectedPeers.has(peerID)) {
+            const dataChannel =
+              peerConnection.getDataChannels?.()?.[0] ||
+              Array.from(peerConnection.getTransceivers()).find(
+                (t) => t.sender?.track?.kind === "application"
+              )?.sender?.track;
+
+            // Find data channel
+            const channels = [];
+            peerConnection.getTransceivers().forEach((transceiver) => {
+              if (transceiver.sender && transceiver.sender.track === null) {
+                // This might be a data channel transceiver
+              }
+            });
+
+            // Alternative: store data channels in a map
+            if (window.dataChannels && window.dataChannels.has(peerID)) {
+              const channel = window.dataChannels.get(peerID);
+              if (channel.readyState === "open") {
+                channel.send(messageStr);
+                sentCount++;
+              }
+            }
+          }
+        });
+
+        console.log(`Message sent to ${sentCount} peers`);
+      }
+
+      // Display message in UI
+      function displayMessage(message, isOwn) {
+        const container = document.getElementById("messagesContainer");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${isOwn ? "own" : "other"}`;
+
+        const time = new Date(message.timestamp).toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        messageDiv.innerHTML = `
+                <div class="message-header">${
+                  isOwn ? "Bạn" : message.from
+                } • ${time}</div>
+                <div>${escapeHtml(message.text)}</div>
+            `;
+
+        container.appendChild(messageDiv);
+        container.scrollTop = container.scrollHeight;
+      }
+
+      // Update status
+      function updateStatus(message, type = "info") {
+        const statusDiv = document.getElementById("connectionStatus");
+        statusDiv.textContent = message;
+        statusDiv.className = `status ${type}`;
+      }
+
+      // Update peers list
+      function updatePeersList(peers) {
+        const peersDiv = document.getElementById("peersList");
+
+        if (peers.length <= 1) {
+          peersDiv.style.display = "none";
+          return;
+        }
+
+        peersDiv.style.display = "block";
+        const otherPeers = peers.filter((p) => p.peerID !== currentUser.peerID);
+
+        peersDiv.innerHTML = `
+                <strong>👥 Người dùng online (${otherPeers.length}):</strong> 
+                ${otherPeers
+                  .map((p) => `<span class="peer-tag">${p.peerID}</span>`)
+                  .join("")}
+            `;
+      }
+
+      // Update peers display
+      function updatePeersDisplay() {
+        const peersDiv = document.getElementById("peersList");
+        const connectedCount = connectedPeers.size;
+
+        if (connectedCount === 0) {
+          peersDiv.style.display = "none";
+          return;
+        }
+
+        peersDiv.style.display = "block";
+        peersDiv.innerHTML = `
+                <strong>🔗 Kết nối P2P (${connectedCount}):</strong> 
+                ${Array.from(connectedPeers)
+                  .map((id) => `<span class="peer-tag">${id}</span>`)
+                  .join("")}
+            `;
+      }
+
+      // Escape HTML
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Store data channels globally for easier access
+      window.dataChannels = new Map();
+
+      // Override setupDataChannel to store channels
+      const originalSetupDataChannel = setupDataChannel;
+      setupDataChannel = function (dataChannel, peerID) {
+        window.dataChannels.set(peerID, dataChannel);
+        originalSetupDataChannel(dataChannel, peerID);
+      };
+
+      // Cleanup on page unload
+      window.addEventListener("beforeunload", () => {
+        if (signalingSocket) {
+          signalingSocket.close();
+        }
+        peers.forEach((pc) => pc.close());
+      });
+    </script>
+  </body>
+</html>
