@@ -329,6 +329,13 @@
             maxlength="500"
           />
           <button class="send-btn" onclick="sendMessage()">Gửi</button>
+          <button
+            class="btn"
+            onclick="retryConnections()"
+            style="margin-left: 10px; padding: 8px 16px; font-size: 14px"
+          >
+            🔄 Retry
+          </button>
         </div>
       </div>
     </div>
@@ -354,6 +361,19 @@
 
       const SIGNALING_SERVER =
         "wss://vanced-chatbot.caocv-work.workers.dev/p2p/room/";
+
+      // Debug configuration
+      const DEBUG_P2P = true;
+
+      function debugP2P(message, data = null) {
+        if (!DEBUG_P2P) return;
+        const timestamp = new Date().toISOString();
+        if (data) {
+          console.log(`[P2P-DEBUG ${timestamp}] ${message}`, data);
+        } else {
+          console.log(`[P2P-DEBUG ${timestamp}] ${message}`);
+        }
+      }
 
       // UI Event Handlers
       document.getElementById("roomId").addEventListener("change", function () {
@@ -616,7 +636,32 @@
           iceServers: [
             { urls: "stun:stun.l.google.com:19302" },
             { urls: "stun:stun1.l.google.com:19302" },
+            { urls: "stun:stun2.l.google.com:19302" },
+            { urls: "stun:stun3.l.google.com:19302" },
+            { urls: "stun:stun4.l.google.com:19302" },
+            // Free TURN servers for NAT traversal
+            {
+              urls: "turn:openrelay.metered.ca:80",
+              username: "openrelayproject",
+              credential: "openrelayproject",
+            },
+            {
+              urls: "turn:openrelay.metered.ca:443",
+              username: "openrelayproject",
+              credential: "openrelayproject",
+            },
+            {
+              urls: "turn:openrelay.metered.ca:443?transport=tcp",
+              username: "openrelayproject",
+              credential: "openrelayproject",
+            },
           ],
+          iceCandidatePoolSize: 10,
+        });
+
+        debugP2P(`Creating peer connection for ${peerID}`, {
+          shouldCreateOffer,
+          iceServers: peerConnection.getConfiguration().iceServers.length,
         });
 
         // Create data channel for messages
@@ -636,6 +681,13 @@
 
         // Handle ICE candidates
         peerConnection.onicecandidate = (event) => {
+          debugP2P(`ICE candidate for ${peerID}`, {
+            hasCandidate: !!event.candidate,
+            candidate: event.candidate?.candidate,
+            type: event.candidate?.type,
+            protocol: event.candidate?.protocol,
+          });
+
           if (event.candidate) {
             signalingSocket.send(
               JSON.stringify({
@@ -644,51 +696,141 @@
                 data: event.candidate,
               })
             );
+          } else {
+            debugP2P(`ICE gathering complete for ${peerID}`);
           }
         };
 
         // Handle connection state changes
         peerConnection.onconnectionstatechange = () => {
+          debugP2P(`Connection state change for ${peerID}`, {
+            connectionState: peerConnection.connectionState,
+            iceConnectionState: peerConnection.iceConnectionState,
+            iceGatheringState: peerConnection.iceGatheringState,
+          });
+
           console.log(
             `Connection state with ${peerID}:`,
             peerConnection.connectionState
           );
+
           if (peerConnection.connectionState === "connected") {
             connectedPeers.add(peerID);
             updateStatus(`✅ Đã kết nối P2P với ${peerID}`, "success");
+            updatePeersDisplay();
           } else if (
             peerConnection.connectionState === "disconnected" ||
             peerConnection.connectionState === "failed"
           ) {
+            debugP2P(`Connection failed/disconnected for ${peerID}`, {
+              connectionState: peerConnection.connectionState,
+              iceConnectionState: peerConnection.iceConnectionState,
+            });
             connectedPeers.delete(peerID);
             removePeer(peerID);
           }
         };
 
+        // Additional ICE connection state monitoring
+        peerConnection.oniceconnectionstatechange = () => {
+          debugP2P(`ICE connection state change for ${peerID}`, {
+            iceConnectionState: peerConnection.iceConnectionState,
+            connectionState: peerConnection.connectionState,
+          });
+
+          if (peerConnection.iceConnectionState === "failed") {
+            debugP2P(
+              `ICE connection failed for ${peerID} - attempting restart`
+            );
+            // Attempt ICE restart
+            peerConnection.restartIce();
+          }
+        };
+
+        // ICE gathering state monitoring
+        peerConnection.onicegatheringstatechange = () => {
+          debugP2P(`ICE gathering state change for ${peerID}`, {
+            iceGatheringState: peerConnection.iceGatheringState,
+          });
+        };
+
         peers.set(peerID, peerConnection);
+
+        // Set connection timeout
+        const connectionTimeout = setTimeout(() => {
+          if (peerConnection.connectionState !== "connected") {
+            debugP2P(`Connection timeout for ${peerID}`, {
+              connectionState: peerConnection.connectionState,
+              iceConnectionState: peerConnection.iceConnectionState,
+            });
+
+            updateStatus(`⏰ Timeout kết nối với ${peerID}`, "error");
+            removePeer(peerID);
+          }
+        }, 30000); // 30 second timeout
+
+        // Clear timeout when connected
+        const originalOnConnectionStateChange =
+          peerConnection.onconnectionstatechange;
+        peerConnection.onconnectionstatechange = () => {
+          if (peerConnection.connectionState === "connected") {
+            clearTimeout(connectionTimeout);
+          }
+          if (originalOnConnectionStateChange) {
+            originalOnConnectionStateChange();
+          }
+        };
 
         // Create offer if needed
         if (shouldCreateOffer) {
-          const offer = await peerConnection.createOffer();
-          await peerConnection.setLocalDescription(offer);
+          try {
+            const offer = await peerConnection.createOffer({
+              offerToReceiveAudio: false,
+              offerToReceiveVideo: false,
+            });
+            await peerConnection.setLocalDescription(offer);
 
-          signalingSocket.send(
-            JSON.stringify({
-              type: "offer",
-              toPeerID: peerID,
-              data: offer,
-            })
-          );
+            debugP2P(`Created offer for ${peerID}`, {
+              offerType: offer.type,
+            });
+
+            signalingSocket.send(
+              JSON.stringify({
+                type: "offer",
+                toPeerID: peerID,
+                data: offer,
+              })
+            );
+          } catch (error) {
+            debugP2P(`Error creating offer for ${peerID}`, {
+              error: error.message,
+            });
+            clearTimeout(connectionTimeout);
+            removePeer(peerID);
+          }
         }
       }
 
       // Setup data channel
       function setupDataChannel(dataChannel, peerID) {
+        debugP2P(`Setting up data channel for ${peerID}`, {
+          readyState: dataChannel.readyState,
+          label: dataChannel.label,
+        });
+
         dataChannel.onopen = () => {
+          debugP2P(`Data channel opened with ${peerID}`, {
+            readyState: dataChannel.readyState,
+            bufferedAmount: dataChannel.bufferedAmount,
+          });
           console.log(`Data channel opened with ${peerID}`);
           connectedPeers.add(peerID);
+          updatePeersDisplay();
 
           // Send queued messages
+          debugP2P(
+            `Sending ${messageQueue.length} queued messages to ${peerID}`
+          );
           while (messageQueue.length > 0) {
             const queuedMessage = messageQueue.shift();
             broadcastMessage(queuedMessage);
@@ -696,41 +838,71 @@
         };
 
         dataChannel.onmessage = (event) => {
+          debugP2P(`Received message from ${peerID}`, {
+            dataLength: event.data.length,
+          });
           const message = JSON.parse(event.data);
           displayMessage(message, false);
         };
 
         dataChannel.onclose = () => {
+          debugP2P(`Data channel closed with ${peerID}`);
           console.log(`Data channel closed with ${peerID}`);
           connectedPeers.delete(peerID);
+          updatePeersDisplay();
         };
 
         dataChannel.onerror = (error) => {
+          debugP2P(`Data channel error with ${peerID}`, {
+            error: error.message || error,
+            readyState: dataChannel.readyState,
+          });
           console.error(`Data channel error with ${peerID}:`, error);
         };
+
+        // Store data channel globally for easier access
+        window.dataChannels.set(peerID, dataChannel);
       }
 
       // Handle WebRTC offer
       async function handleOffer(message) {
         const peerID = message.fromPeerID;
 
+        debugP2P(`Received offer from ${peerID}`, {
+          offerType: message.data.type,
+          hasSdp: !!message.data.sdp,
+        });
+
         if (!peers.has(peerID)) {
           await createPeerConnection(peerID, false);
         }
 
         const peerConnection = peers.get(peerID);
-        await peerConnection.setRemoteDescription(message.data);
 
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
+        try {
+          await peerConnection.setRemoteDescription(message.data);
+          debugP2P(`Set remote description for ${peerID}`);
 
-        signalingSocket.send(
-          JSON.stringify({
-            type: "answer",
-            toPeerID: peerID,
-            data: answer,
-          })
-        );
+          const answer = await peerConnection.createAnswer();
+          await peerConnection.setLocalDescription(answer);
+
+          debugP2P(`Created and set answer for ${peerID}`, {
+            answerType: answer.type,
+          });
+
+          signalingSocket.send(
+            JSON.stringify({
+              type: "answer",
+              toPeerID: peerID,
+              data: answer,
+            })
+          );
+        } catch (error) {
+          debugP2P(`Error handling offer from ${peerID}`, {
+            error: error.message,
+          });
+          console.error(`Error handling offer from ${peerID}:`, error);
+        }
       }
 
       // Handle WebRTC answer
@@ -738,8 +910,29 @@
         const peerID = message.fromPeerID;
         const peerConnection = peers.get(peerID);
 
+        debugP2P(`Received answer from ${peerID}`, {
+          answerType: message.data.type,
+          hasSdp: !!message.data.sdp,
+          hasPeerConnection: !!peerConnection,
+        });
+
         if (peerConnection) {
-          await peerConnection.setRemoteDescription(message.data);
+          try {
+            await peerConnection.setRemoteDescription(message.data);
+            debugP2P(`Set remote description (answer) for ${peerID}`);
+          } catch (error) {
+            debugP2P(`Error setting remote description for ${peerID}`, {
+              error: error.message,
+            });
+            console.error(
+              `Error setting remote description for ${peerID}:`,
+              error
+            );
+          }
+        } else {
+          debugP2P(
+            `No peer connection found for ${peerID} when handling answer`
+          );
         }
       }
 
@@ -748,8 +941,28 @@
         const peerID = message.fromPeerID;
         const peerConnection = peers.get(peerID);
 
+        debugP2P(`Received ICE candidate from ${peerID}`, {
+          candidate: message.data.candidate,
+          type: message.data.type,
+          protocol: message.data.protocol,
+          hasPeerConnection: !!peerConnection,
+        });
+
         if (peerConnection) {
-          await peerConnection.addIceCandidate(message.data);
+          try {
+            await peerConnection.addIceCandidate(message.data);
+            debugP2P(`Added ICE candidate for ${peerID}`);
+          } catch (error) {
+            debugP2P(`Error adding ICE candidate for ${peerID}`, {
+              error: error.message,
+              candidate: message.data.candidate,
+            });
+            console.error(`Error adding ICE candidate for ${peerID}:`, error);
+          }
+        } else {
+          debugP2P(
+            `No peer connection found for ${peerID} when handling ICE candidate`
+          );
         }
       }
 
@@ -777,15 +990,35 @@
           timestamp: new Date().toISOString(),
         };
 
+        debugP2P(`Sending message`, {
+          messageLength: messageText.length,
+          connectedPeersCount: connectedPeers.size,
+          queueLength: messageQueue.length,
+        });
+
         // Display own message
         displayMessage(message, true);
 
         // Send to connected peers or queue
         if (connectedPeers.size > 0) {
           broadcastMessage(message);
+
+          // Check if message was actually sent
+          if (connectedPeers.size === 0) {
+            // All connections failed during broadcast
+            messageQueue.push(message);
+            updateStatus(
+              "📤 Kết nối P2P bị lỗi - Tin nhắn đã được xếp hàng",
+              "error"
+            );
+          }
         } else {
           messageQueue.push(message);
           updateStatus("📤 Tin nhắn đã được xếp hàng chờ kết nối", "info");
+          debugP2P(`Message queued`, {
+            queueLength: messageQueue.length,
+            totalPeers: peers.size,
+          });
         }
 
         input.value = "";
@@ -795,35 +1028,64 @@
       function broadcastMessage(message) {
         const messageStr = JSON.stringify(message);
         let sentCount = 0;
+        let failedCount = 0;
 
-        peers.forEach((peerConnection, peerID) => {
-          if (connectedPeers.has(peerID)) {
-            const dataChannel =
-              peerConnection.getDataChannels?.()?.[0] ||
-              Array.from(peerConnection.getTransceivers()).find(
-                (t) => t.sender?.track?.kind === "application"
-              )?.sender?.track;
+        debugP2P(`Broadcasting message`, {
+          messageLength: messageStr.length,
+          connectedPeersCount: connectedPeers.size,
+          totalPeersCount: peers.size,
+        });
 
-            // Find data channel
-            const channels = [];
-            peerConnection.getTransceivers().forEach((transceiver) => {
-              if (transceiver.sender && transceiver.sender.track === null) {
-                // This might be a data channel transceiver
-              }
+        connectedPeers.forEach((peerID) => {
+          if (window.dataChannels && window.dataChannels.has(peerID)) {
+            const channel = window.dataChannels.get(peerID);
+
+            debugP2P(`Attempting to send to ${peerID}`, {
+              readyState: channel.readyState,
+              bufferedAmount: channel.bufferedAmount,
             });
 
-            // Alternative: store data channels in a map
-            if (window.dataChannels && window.dataChannels.has(peerID)) {
-              const channel = window.dataChannels.get(peerID);
-              if (channel.readyState === "open") {
+            if (channel.readyState === "open") {
+              try {
                 channel.send(messageStr);
                 sentCount++;
+                debugP2P(`Message sent to ${peerID}`);
+              } catch (error) {
+                debugP2P(`Failed to send message to ${peerID}`, {
+                  error: error.message,
+                  readyState: channel.readyState,
+                });
+                failedCount++;
+                // Remove from connected peers if send fails
+                connectedPeers.delete(peerID);
               }
+            } else {
+              debugP2P(`Data channel not open for ${peerID}`, {
+                readyState: channel.readyState,
+              });
+              failedCount++;
+              // Remove from connected peers if channel not open
+              connectedPeers.delete(peerID);
             }
+          } else {
+            debugP2P(`No data channel found for ${peerID}`);
+            failedCount++;
+            connectedPeers.delete(peerID);
           }
         });
 
-        console.log(`Message sent to ${sentCount} peers`);
+        debugP2P(`Broadcast complete`, {
+          sentCount,
+          failedCount,
+          connectedPeersAfter: connectedPeers.size,
+        });
+
+        console.log(
+          `Message sent to ${sentCount} peers, ${failedCount} failed`
+        );
+
+        // Update UI to reflect actual connection status
+        updatePeersDisplay();
       }
 
       // Display message in UI
@@ -904,12 +1166,61 @@
       // Store data channels globally for easier access
       window.dataChannels = new Map();
 
-      // Override setupDataChannel to store channels
-      const originalSetupDataChannel = setupDataChannel;
-      setupDataChannel = function (dataChannel, peerID) {
-        window.dataChannels.set(peerID, dataChannel);
-        originalSetupDataChannel(dataChannel, peerID);
-      };
+      // Connection health check
+      function checkConnectionHealth() {
+        debugP2P(`Connection health check`, {
+          totalPeers: peers.size,
+          connectedPeers: connectedPeers.size,
+          dataChannels: window.dataChannels.size,
+          signalingConnected: signalingSocket?.readyState === WebSocket.OPEN,
+        });
+
+        // Check each peer connection
+        peers.forEach((peerConnection, peerID) => {
+          const isConnected = connectedPeers.has(peerID);
+          const hasDataChannel = window.dataChannels.has(peerID);
+          const dataChannel = window.dataChannels.get(peerID);
+
+          debugP2P(`Peer ${peerID} status`, {
+            connectionState: peerConnection.connectionState,
+            iceConnectionState: peerConnection.iceConnectionState,
+            iceGatheringState: peerConnection.iceGatheringState,
+            isConnected,
+            hasDataChannel,
+            dataChannelState: dataChannel?.readyState,
+          });
+
+          // Clean up failed connections
+          if (
+            peerConnection.connectionState === "failed" ||
+            peerConnection.iceConnectionState === "failed"
+          ) {
+            debugP2P(`Cleaning up failed connection for ${peerID}`);
+            removePeer(peerID);
+          }
+        });
+
+        updatePeersDisplay();
+      }
+
+      // Periodic connection health check
+      setInterval(checkConnectionHealth, 10000); // Every 10 seconds
+
+      // Manual retry connection function
+      function retryConnections() {
+        debugP2P(`Manual retry connections triggered`);
+
+        // Request fresh peer list from signaling server
+        if (signalingSocket && signalingSocket.readyState === WebSocket.OPEN) {
+          signalingSocket.send(JSON.stringify({ type: "get-peers" }));
+        }
+
+        // Clean up failed connections
+        checkConnectionHealth();
+      }
+
+      // Add retry button to UI (you can call this manually from console)
+      window.retryP2PConnections = retryConnections;
 
       // Cleanup on page unload
       window.addEventListener("beforeunload", () => {
