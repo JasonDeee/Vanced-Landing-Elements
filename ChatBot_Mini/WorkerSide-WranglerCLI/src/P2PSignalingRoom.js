@@ -73,6 +73,7 @@ export class P2PSignalingRoom {
 		const url = new URL(request.url);
 		const peerID = url.searchParams.get('peerID');
 		const roomID = url.searchParams.get('roomID');
+		const nickname = url.searchParams.get('nickname') || peerID;
 
 		if (!peerID || !roomID) {
 			return new Response('Missing peerID or roomID', { status: 400 });
@@ -92,6 +93,7 @@ export class P2PSignalingRoom {
 		const session = {
 			peerID: peerID,
 			roomID: roomID,
+			nickname: nickname,
 			webSocket: server,
 			connectedAt: new Date().toISOString(),
 			lastActivity: new Date().toISOString(),
@@ -103,12 +105,14 @@ export class P2PSignalingRoom {
 		this.peers.set(peerID, {
 			peerID: peerID,
 			roomID: roomID,
+			nickname: nickname,
 			type: peerID.startsWith('admin_') ? 'admin' : 'client',
 			connectedAt: session.connectedAt,
 		});
 
 		p2pSignalingLog('WebSocket connection established', {
 			peerID,
+			nickname,
 			roomID,
 			totalSessions: this.sessions.size,
 		});
@@ -133,15 +137,17 @@ export class P2PSignalingRoom {
 				type: 'connected',
 				peerID: peerID,
 				roomID: roomID,
-				peersInRoom: Array.from(this.peers.keys()).filter((id) => id !== peerID),
+				nickname: nickname,
+				usersInRoom: Array.from(this.peers.keys()).filter((id) => id !== peerID),
 			})
 		);
 
-		// Notify other peers about new connection
+		// Notify other users about new connection
 		this.broadcastToRoom(
 			{
-				type: 'peer-joined',
+				type: 'user-joined',
 				peerID: peerID,
+				nickname: nickname,
 				roomID: roomID,
 			},
 			peerID
