@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini Chat Room - WebSocket</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 800px;
+        height: 600px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        margin-bottom: 5px;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 14px;
+      }
+
+      .login-screen {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+      }
+
+      .login-form {
+        background: #f8f9fa;
+        padding: 30px;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+      }
+
+      .login-form h2 {
+        color: #333;
+        margin-bottom: 20px;
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: 500;
+      }
+
+      .input-group input,
+      .input-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      .input-group input:focus,
+      .input-group select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .chat-screen {
+        flex: 1;
+        display: none;
+        flex-direction: column;
+      }
+
+      .chat-info {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 1px solid #e1e5e9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .user-info {
+        font-weight: 500;
+        color: #333;
+      }
+
+      .room-info {
+        font-size: 14px;
+        color: #666;
+      }
+
+      .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #fafafa;
+      }
+
+      .message {
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        border-radius: 10px;
+        max-width: 70%;
+        word-wrap: break-word;
+      }
+
+      .message.own {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-left: auto;
+        text-align: right;
+      }
+
+      .message.other {
+        background: white;
+        border: 1px solid #e1e5e9;
+        margin-right: auto;
+      }
+
+      .message-header {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-bottom: 5px;
+      }
+
+      .message.own .message-header {
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .message.other .message-header {
+        color: #666;
+      }
+
+      .message-input {
+        display: flex;
+        padding: 20px;
+        background: white;
+        border-top: 1px solid #e1e5e9;
+      }
+
+      .message-input input {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 25px;
+        font-size: 16px;
+        margin-right: 10px;
+      }
+
+      .message-input input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .send-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .status {
+        padding: 10px 20px;
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        margin: 10px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .status.error {
+        background: #ffebee;
+        border-left-color: #f44336;
+        color: #c62828;
+      }
+
+      .status.success {
+        background: #e8f5e8;
+        border-left-color: #4caf50;
+        color: #2e7d32;
+      }
+
+      .users-list {
+        background: #f0f0f0;
+        padding: 10px 20px;
+        border-bottom: 1px solid #e1e5e9;
+        font-size: 14px;
+      }
+
+      .user-tag {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        margin-right: 8px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          width: 95%;
+          height: 90vh;
+        }
+
+        .message {
+          max-width: 85%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>💬 Mini Chat Room</h1>
+        <p>WebSocket Chat - Hoạt động qua mọi mạng</p>
+      </div>
+
+      <!-- Login Screen -->
+      <div class="login-screen" id="loginScreen">
+        <div class="login-form">
+          <h2>Tham gia Chat Room</h2>
+          <div class="input-group">
+            <label for="nickname">Nickname của bạn:</label>
+            <input
+              type="text"
+              id="nickname"
+              placeholder="Nhập tên hiển thị..."
+              maxlength="20"
+            />
+          </div>
+          <div class="input-group">
+            <label for="roomId">Room ID:</label>
+            <select id="roomId">
+              <option value="public-room-1">🌍 Public Room 1</option>
+              <option value="public-room-2">🎮 Gaming Room</option>
+              <option value="public-room-3">💼 Work Chat</option>
+              <option value="custom">🔧 Custom Room</option>
+            </select>
+          </div>
+          <div class="input-group" id="customRoomGroup" style="display: none">
+            <label for="customRoom">Custom Room ID:</label>
+            <input
+              type="text"
+              id="customRoom"
+              placeholder="Nhập room ID tùy chỉnh..."
+            />
+          </div>
+          <button class="btn" id="joinBtn" onclick="joinRoom()">
+            Tham gia Chat
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Screen -->
+      <div class="chat-screen" id="chatScreen">
+        <div class="chat-info">
+          <div class="user-info" id="userInfo"></div>
+          <div class="room-info" id="roomInfo"></div>
+        </div>
+        <div class="users-list" id="usersList" style="display: none"></div>
+        <div class="status" id="connectionStatus">Đang kết nối...</div>
+        <div class="messages-container" id="messagesContainer"></div>
+        <div class="message-input">
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="Nhập tin nhắn..."
+            maxlength="500"
+          />
+          <button class="send-btn" onclick="sendMessage()">Gửi</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Global variables
+      let currentUser = {
+        nickname: "",
+        peerID: "",
+        roomID: "",
+      };
+
+      let chatSocket = null;
+      let connectedUsers = new Set(); // Set of connected user IDs in room
+      let messageQueue = []; // Queue messages until connected
+      let reconnectAttempts = 0;
+      let maxReconnectAttempts = 5;
+      let reconnectDelay = 1000; // Start with 1 second
+      let pingInterval = null;
+      let isConnecting = false;
+      let isManualDisconnect = false;
+
+      const CHAT_SERVER =
+        "wss://vanced-chatbot.caocv-work.workers.dev/p2p/room/";
+
+      // UI Event Handlers
+      document.getElementById("roomId").addEventListener("change", function () {
+        const customGroup = document.getElementById("customRoomGroup");
+        if (this.value === "custom") {
+          customGroup.style.display = "block";
+        } else {
+          customGroup.style.display = "none";
+        }
+      });
+
+      document
+        .getElementById("messageInput")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            sendMessage();
+          }
+        });
+
+      document
+        .getElementById("nickname")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            joinRoom();
+          }
+        });
+
+      // Generate unique peer ID
+      function generatePeerID() {
+        return (
+          "user_" +
+          Math.random().toString(36).substr(2, 9) +
+          "_" +
+          Date.now().toString(36)
+        );
+      }
+
+      // Join room function
+      async function joinRoom() {
+        const nickname = document.getElementById("nickname").value.trim();
+        const roomSelect = document.getElementById("roomId").value;
+
+        let roomID;
+        if (roomSelect === "custom") {
+          roomID = document.getElementById("customRoom").value.trim();
+          if (!roomID) {
+            alert("Vui lòng nhập Room ID tùy chỉnh!");
+            return;
+          }
+        } else {
+          roomID = roomSelect;
+        }
+
+        if (!nickname) {
+          alert("Vui lòng nhập nickname!");
+          return;
+        }
+
+        // Set user info
+        currentUser.nickname = nickname;
+        currentUser.peerID = generatePeerID();
+        currentUser.roomID = roomID;
+
+        // Switch to chat screen
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("chatScreen").style.display = "flex";
+
+        // Update UI
+        document.getElementById("userInfo").textContent = `👤 ${nickname}`;
+        document.getElementById("roomInfo").textContent = `🏠 ${roomID}`;
+
+        // Connect to chat server
+        await connectToChatServer();
+      }
+
+      // Connect to chat server with auto-reconnect
+      async function connectToChatServer() {
+        if (isConnecting) {
+          console.log("Already connecting, skipping...");
+          return;
+        }
+
+        isConnecting = true;
+
+        try {
+          updateStatus("Đang kết nối đến chat server...", "info");
+
+          const wsUrl = `${CHAT_SERVER}${currentUser.roomID}?peerID=${
+            currentUser.peerID
+          }&roomID=${currentUser.roomID}&nickname=${encodeURIComponent(
+            currentUser.nickname
+          )}`;
+          chatSocket = new WebSocket(wsUrl);
+
+          chatSocket.onopen = () => {
+            updateStatus("✅ Đã kết nối - Sẵn sàng chat!", "success");
+            console.log("Connected to chat server");
+
+            // Reset reconnect attempts on successful connection
+            reconnectAttempts = 0;
+            reconnectDelay = 1000;
+            isConnecting = false;
+
+            // Send queued messages
+            while (messageQueue.length > 0) {
+              const queuedMessage = messageQueue.shift();
+              sendMessageViaWebSocket(queuedMessage);
+            }
+
+            // Start ping interval to keep connection alive
+            startPingInterval();
+          };
+
+          chatSocket.onmessage = async (event) => {
+            const message = JSON.parse(event.data);
+            await handleChatMessage(message);
+          };
+
+          chatSocket.onclose = (event) => {
+            console.log("WebSocket closed:", event.code, event.reason);
+            isConnecting = false;
+            stopPingInterval();
+
+            if (!isManualDisconnect) {
+              updateStatus("❌ Mất kết nối đến server", "error");
+              attemptReconnect();
+            }
+          };
+
+          chatSocket.onerror = (error) => {
+            console.error("Chat socket error:", error);
+            isConnecting = false;
+            updateStatus("❌ Lỗi kết nối WebSocket", "error");
+          };
+        } catch (error) {
+          isConnecting = false;
+          updateStatus("❌ Không thể kết nối: " + error.message, "error");
+          console.error("Connection error:", error);
+          attemptReconnect();
+        }
+      }
+
+      // Start ping interval to keep connection alive
+      function startPingInterval() {
+        stopPingInterval(); // Clear any existing interval
+
+        pingInterval = setInterval(() => {
+          if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({ type: "ping" }));
+            console.log("Sent ping to server");
+          } else {
+            stopPingInterval();
+          }
+        }, 30000); // Ping every 30 seconds
+      }
+
+      // Stop ping interval
+      function stopPingInterval() {
+        if (pingInterval) {
+          clearInterval(pingInterval);
+          pingInterval = null;
+        }
+      }
+
+      // Attempt to reconnect with exponential backoff
+      function attemptReconnect() {
+        if (isManualDisconnect || reconnectAttempts >= maxReconnectAttempts) {
+          if (reconnectAttempts >= maxReconnectAttempts) {
+            updateStatus(
+              "❌ Không thể kết nối lại. Vui lòng refresh trang.",
+              "error"
+            );
+          }
+          return;
+        }
+
+        reconnectAttempts++;
+        const delay = Math.min(
+          reconnectDelay * Math.pow(2, reconnectAttempts - 1),
+          30000
+        );
+
+        updateStatus(
+          `🔄 Đang thử kết nối lại... (${reconnectAttempts}/${maxReconnectAttempts})`,
+          "info"
+        );
+
+        setTimeout(() => {
+          if (!isManualDisconnect) {
+            connectToChatServer();
+          }
+        }, delay);
+      }
+
+      // Handle chat messages
+      async function handleChatMessage(message) {
+        console.log("Received chat message:", message);
+
+        switch (message.type) {
+          case "connected":
+            updateStatus(`✅ Đã tham gia room: ${message.roomID}`, "success");
+            // Request user list
+            chatSocket.send(JSON.stringify({ type: "get-users" }));
+            break;
+
+          case "user-joined":
+            if (message.peerID !== currentUser.peerID) {
+              const nickname = message.nickname || message.peerID;
+              updateStatus(`👋 ${nickname} đã tham gia`, "info");
+              connectedUsers.add(message.peerID);
+              updateUsersDisplay();
+            }
+            break;
+
+          case "user-left":
+            if (message.peerID !== currentUser.peerID) {
+              const nickname = message.nickname || message.peerID;
+              updateStatus(`👋 ${nickname} đã rời khỏi room`, "info");
+              connectedUsers.delete(message.peerID);
+              updateUsersDisplay();
+            }
+            break;
+
+          case "user-list":
+            updateUsersList(message.users);
+            break;
+
+          case "chat-message":
+            // Display received message
+            if (message.fromPeerID !== currentUser.peerID) {
+              displayMessage(message, false);
+            }
+            break;
+
+          case "pong":
+            console.log("Received pong from server - connection alive");
+            break;
+
+          default:
+            console.log("Unknown message type:", message.type);
+        }
+      }
+
+      // Send message
+      function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const messageText = input.value.trim();
+
+        if (!messageText) return;
+
+        const message = {
+          from: currentUser.nickname,
+          fromPeerID: currentUser.peerID,
+          text: messageText,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Display own message
+        displayMessage(message, true);
+
+        // Send via WebSocket or queue
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+          sendMessageViaWebSocket(message);
+        } else {
+          messageQueue.push(message);
+          updateStatus("📤 Tin nhắn đã được xếp hàng chờ kết nối", "info");
+        }
+
+        input.value = "";
+      }
+
+      // Send message via WebSocket
+      function sendMessageViaWebSocket(message) {
+        chatSocket.send(
+          JSON.stringify({
+            type: "chat-message",
+            from: message.from,
+            fromPeerID: message.fromPeerID,
+            text: message.text,
+            timestamp: message.timestamp,
+            roomID: currentUser.roomID,
+          })
+        );
+      }
+
+      // Display message in UI
+      function displayMessage(message, isOwn) {
+        const container = document.getElementById("messagesContainer");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${isOwn ? "own" : "other"}`;
+
+        const time = new Date(message.timestamp).toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        messageDiv.innerHTML = `
+                <div class="message-header">${
+                  isOwn ? "Bạn" : message.from
+                } • ${time}</div>
+                <div>${escapeHtml(message.text)}</div>
+            `;
+
+        container.appendChild(messageDiv);
+        container.scrollTop = container.scrollHeight;
+      }
+
+      // Update status
+      function updateStatus(message, type = "info") {
+        const statusDiv = document.getElementById("connectionStatus");
+        statusDiv.textContent = message;
+        statusDiv.className = `status ${type}`;
+      }
+
+      // Update users list
+      function updateUsersList(users) {
+        const usersDiv = document.getElementById("usersList");
+
+        if (users.length <= 1) {
+          usersDiv.style.display = "none";
+          return;
+        }
+
+        usersDiv.style.display = "block";
+        const otherUsers = users.filter((u) => u.peerID !== currentUser.peerID);
+
+        usersDiv.innerHTML = `
+                <strong>👥 Người dùng online (${otherUsers.length}):</strong> 
+                ${otherUsers
+                  .map(
+                    (u) =>
+                      `<span class="user-tag">${u.nickname || u.peerID}</span>`
+                  )
+                  .join("")}
+            `;
+      }
+
+      // Update users display
+      function updateUsersDisplay() {
+        const usersDiv = document.getElementById("usersList");
+        const connectedCount = connectedUsers.size;
+
+        if (connectedCount === 0) {
+          usersDiv.style.display = "none";
+          return;
+        }
+
+        usersDiv.style.display = "block";
+        usersDiv.innerHTML = `
+                <strong>💬 Đang chat (${connectedCount}):</strong> 
+                ${Array.from(connectedUsers)
+                  .map((id) => `<span class="user-tag">${id}</span>`)
+                  .join("")}
+            `;
+      }
+
+      // Escape HTML
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Cleanup on page unload
+      window.addEventListener("beforeunload", () => {
+        isManualDisconnect = true;
+        stopPingInterval();
+
+        if (chatSocket) {
+          chatSocket.close();
+        }
+      });
+
+      // Handle page visibility changes to manage connections
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          console.log("Page hidden - maintaining connection");
+        } else {
+          console.log("Page visible - checking connection");
+
+          // Check if connection is still alive when page becomes visible
+          if (chatSocket && chatSocket.readyState !== WebSocket.OPEN) {
+            console.log(
+              "Connection lost while page was hidden, reconnecting..."
+            );
+            connectToChatServer();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

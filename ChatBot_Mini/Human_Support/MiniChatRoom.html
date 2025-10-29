@@ -348,9 +348,8 @@
         roomID: "",
       };
 
-      let signalingSocket = null;
-      let peers = new Map(); // Map of peerID -> RTCPeerConnection
-      let connectedPeers = new Set(); // Set of successfully connected peer IDs
+      let chatSocket = null;
+      let connectedUsers = new Set(); // Set of connected user IDs in room
       let messageQueue = []; // Queue messages until connected
       let reconnectAttempts = 0;
       let maxReconnectAttempts = 5;
@@ -359,7 +358,7 @@
       let isConnecting = false;
       let isManualDisconnect = false;
 
-      const SIGNALING_SERVER =
+      const CHAT_SERVER =
         "wss://vanced-chatbot.caocv-work.workers.dev/p2p/room/";
 
       // Debug configuration
@@ -445,12 +444,12 @@
         document.getElementById("userInfo").textContent = `👤 ${nickname}`;
         document.getElementById("roomInfo").textContent = `🏠 ${roomID}`;
 
-        // Connect to signaling server
-        await connectToSignalingServer();
+        // Connect to chat server
+        await connectToChatServer();
       }
 
-      // Connect to signaling server with auto-reconnect
-      async function connectToSignalingServer() {
+      // Connect to chat server with auto-reconnect
+      async function connectToChatServer() {
         if (isConnecting) {
           console.log("Already connecting, skipping...");
           return;
@@ -459,30 +458,40 @@
         isConnecting = true;
 
         try {
-          updateStatus("Đang kết nối đến server...", "info");
+          updateStatus("Đang kết nối đến chat server...", "info");
 
-          const wsUrl = `${SIGNALING_SERVER}${currentUser.roomID}?peerID=${currentUser.peerID}&roomID=${currentUser.roomID}`;
-          signalingSocket = new WebSocket(wsUrl);
+          const wsUrl = `${CHAT_SERVER}${currentUser.roomID}?peerID=${
+            currentUser.peerID
+          }&roomID=${currentUser.roomID}&nickname=${encodeURIComponent(
+            currentUser.nickname
+          )}`;
+          chatSocket = new WebSocket(wsUrl);
 
-          signalingSocket.onopen = () => {
-            updateStatus("✅ Đã kết nối đến signaling server", "success");
-            console.log("Connected to signaling server");
+          chatSocket.onopen = () => {
+            updateStatus("✅ Đã kết nối - Sẵn sàng chat!", "success");
+            console.log("Connected to chat server");
 
             // Reset reconnect attempts on successful connection
             reconnectAttempts = 0;
             reconnectDelay = 1000;
             isConnecting = false;
 
+            // Send queued messages
+            while (messageQueue.length > 0) {
+              const queuedMessage = messageQueue.shift();
+              sendMessageViaWebSocket(queuedMessage);
+            }
+
             // Start ping interval to keep connection alive
             startPingInterval();
           };
 
-          signalingSocket.onmessage = async (event) => {
+          chatSocket.onmessage = async (event) => {
             const message = JSON.parse(event.data);
-            await handleSignalingMessage(message);
+            await handleChatMessage(message);
           };
 
-          signalingSocket.onclose = (event) => {
+          chatSocket.onclose = (event) => {
             console.log("WebSocket closed:", event.code, event.reason);
             isConnecting = false;
             stopPingInterval();
@@ -493,8 +502,8 @@
             }
           };
 
-          signalingSocket.onerror = (error) => {
-            console.error("Signaling error:", error);
+          chatSocket.onerror = (error) => {
+            console.error("Chat socket error:", error);
             isConnecting = false;
             updateStatus("❌ Lỗi kết nối WebSocket", "error");
           };
@@ -511,11 +520,8 @@
         stopPingInterval(); // Clear any existing interval
 
         pingInterval = setInterval(() => {
-          if (
-            signalingSocket &&
-            signalingSocket.readyState === WebSocket.OPEN
-          ) {
-            signalingSocket.send(JSON.stringify({ type: "ping" }));
+          if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({ type: "ping" }));
             console.log("Sent ping to server");
           } else {
             stopPingInterval();
@@ -556,57 +562,49 @@
 
         setTimeout(() => {
           if (!isManualDisconnect) {
-            connectToSignalingServer();
+            connectToChatServer();
           }
         }, delay);
       }
 
-      // Handle signaling messages
-      async function handleSignalingMessage(message) {
-        console.log("Received signaling message:", message);
+      // Handle chat messages
+      async function handleChatMessage(message) {
+        console.log("Received chat message:", message);
 
         switch (message.type) {
           case "connected":
             updateStatus(`✅ Đã tham gia room: ${message.roomID}`, "success");
-            // Request peer list
-            signalingSocket.send(JSON.stringify({ type: "get-peers" }));
+            // Request user list
+            chatSocket.send(JSON.stringify({ type: "get-users" }));
             break;
 
-          case "peer-joined":
+          case "user-joined":
             if (message.peerID !== currentUser.peerID) {
-              updateStatus(`👋 ${message.peerID} đã tham gia`, "info");
-              // Create offer to new peer
-              await createPeerConnection(message.peerID, true);
+              const nickname = message.nickname || message.peerID;
+              updateStatus(`👋 ${nickname} đã tham gia`, "info");
+              connectedUsers.add(message.peerID);
+              updateUsersDisplay();
             }
             break;
 
-          case "peer-left":
+          case "user-left":
             if (message.peerID !== currentUser.peerID) {
-              updateStatus(`👋 ${message.peerID} đã rời khỏi room`, "info");
-              removePeer(message.peerID);
+              const nickname = message.nickname || message.peerID;
+              updateStatus(`👋 ${nickname} đã rời khỏi room`, "info");
+              connectedUsers.delete(message.peerID);
+              updateUsersDisplay();
             }
             break;
 
-          case "peer-list":
-            updatePeersList(message.peers);
-            // Connect to existing peers
-            for (const peer of message.peers) {
-              if (peer.peerID !== currentUser.peerID) {
-                await createPeerConnection(peer.peerID, false);
-              }
+          case "user-list":
+            updateUsersList(message.users);
+            break;
+
+          case "chat-message":
+            // Display received message
+            if (message.fromPeerID !== currentUser.peerID) {
+              displayMessage(message, false);
             }
-            break;
-
-          case "offer":
-            await handleOffer(message);
-            break;
-
-          case "answer":
-            await handleAnswer(message);
-            break;
-
-          case "ice-candidate":
-            await handleIceCandidate(message);
             break;
 
           case "pong":
