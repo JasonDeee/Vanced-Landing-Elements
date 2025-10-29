@@ -173,18 +173,16 @@ export class P2PSignalingRoom {
 			});
 
 			switch (message.type) {
-				case 'offer':
-				case 'answer':
-				case 'ice-candidate':
-					await this.relaySignalingMessage(fromPeerID, message);
+				case 'chat-message':
+					await this.handleChatMessage(fromPeerID, message);
 					break;
 
 				case 'ping':
 					await this.handlePing(fromPeerID);
 					break;
 
-				case 'get-peers':
-					await this.sendPeerList(fromPeerID);
+				case 'get-users':
+					await this.sendUserList(fromPeerID);
 					break;
 
 				default:
@@ -202,67 +200,36 @@ export class P2PSignalingRoom {
 	}
 
 	/**
-	 * Relay signaling messages between peers
+	 * Handle chat messages
 	 */
-	async relaySignalingMessage(fromPeerID, message) {
-		const { toPeerID, type, data } = message;
-
-		// If toPeerID is 'ROOM_BROADCAST', send to all peers in room except sender
-		if (toPeerID === 'ROOM_BROADCAST' || toPeerID === 'ALL') {
-			this.broadcastToRoom(
-				{
-					type: type,
-					fromPeerID: fromPeerID,
-					data: data,
-					timestamp: new Date().toISOString(),
-				},
-				fromPeerID
-			);
-
-			p2pSignalingLog('Broadcasted message to room', {
-				type,
-				from: fromPeerID,
-				recipients: this.sessions.size - 1,
-			});
-		} else {
-			// Send to specific peer
-			const targetSession = this.sessions.get(toPeerID);
-
-			if (targetSession && targetSession.isAlive) {
-				targetSession.webSocket.send(
-					JSON.stringify({
-						type: type,
-						fromPeerID: fromPeerID,
-						toPeerID: toPeerID,
-						data: data,
-						timestamp: new Date().toISOString(),
-					})
-				);
-
-				p2pSignalingLog('Relayed message to specific peer', {
-					type,
-					from: fromPeerID,
-					to: toPeerID,
-				});
-			} else {
-				p2pSignalingLog('Target peer not found or disconnected', {
-					targetPeerID: toPeerID,
-					from: fromPeerID,
-				});
-
-				// Send error back to sender
-				const senderSession = this.sessions.get(fromPeerID);
-				if (senderSession && senderSession.isAlive) {
-					senderSession.webSocket.send(
-						JSON.stringify({
-							type: 'error',
-							message: 'Target peer not found',
-							targetPeerID: toPeerID,
-						})
-					);
-				}
-			}
+	async handleChatMessage(fromPeerID, message) {
+		const session = this.sessions.get(fromPeerID);
+		if (!session || !session.isAlive) {
+			p2pSignalingLog('Chat message from inactive session', { fromPeerID });
+			return;
 		}
+
+		// Update last activity
+		session.lastActivity = new Date().toISOString();
+
+		// Broadcast chat message to all other users in room
+		const chatMessage = {
+			type: 'chat-message',
+			from: message.from || session.nickname,
+			fromPeerID: fromPeerID,
+			text: message.text,
+			timestamp: message.timestamp || new Date().toISOString(),
+			roomID: this.roomId,
+		};
+
+		this.broadcastToRoom(chatMessage, fromPeerID);
+
+		p2pSignalingLog('Chat message broadcasted', {
+			from: fromPeerID,
+			nickname: session.nickname,
+			textLength: message.text?.length,
+			recipients: this.sessions.size - 1,
+		});
 	}
 
 	/**
@@ -278,34 +245,35 @@ export class P2PSignalingRoom {
 				JSON.stringify({
 					type: 'pong',
 					timestamp: new Date().toISOString(),
-					peersInRoom: Array.from(this.peers.keys()),
+					usersInRoom: Array.from(this.peers.keys()),
 					roomID: this.roomId,
 				})
 			);
 
 			p2pSignalingLog('Responded to ping', {
 				fromPeerID,
-				peersInRoom: this.sessions.size,
+				usersInRoom: this.sessions.size,
 			});
 		}
 	}
 
 	/**
-	 * Send peer list to requesting peer
+	 * Send user list to requesting user
 	 */
-	async sendPeerList(fromPeerID) {
+	async sendUserList(fromPeerID) {
 		const session = this.sessions.get(fromPeerID);
 		if (session && session.isAlive) {
-			const peerList = Array.from(this.peers.values()).map((peer) => ({
+			const userList = Array.from(this.peers.values()).map((peer) => ({
 				peerID: peer.peerID,
+				nickname: peer.nickname,
 				type: peer.type,
 				connectedAt: peer.connectedAt,
 			}));
 
 			session.webSocket.send(
 				JSON.stringify({
-					type: 'peer-list',
-					peers: peerList,
+					type: 'user-list',
+					users: userList,
 					roomID: this.roomId,
 				})
 			);
@@ -349,10 +317,15 @@ export class P2PSignalingRoom {
 		this.sessions.delete(peerID);
 		this.peers.delete(peerID);
 
-		// Notify other peers about disconnection
+		// Get nickname before removing
+		const peer = this.peers.get(peerID);
+		const nickname = peer?.nickname || peerID;
+
+		// Notify other users about disconnection
 		this.broadcastToRoom({
-			type: 'peer-left',
+			type: 'user-left',
 			peerID: peerID,
+			nickname: nickname,
 			roomID: this.roomId,
 		});
 
