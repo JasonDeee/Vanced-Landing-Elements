@@ -268,126 +268,217 @@
 
       // Request human support
       async function requestHumanSupport() {
-        updateStatus("Khởi tạo WebSocket WebRTC connection...", "waiting");
+        updateStatus("Khởi tạo WebSocket chat connection...", "waiting");
 
-        // Generate custom PeerID
-        const peerID = `vanced_${currentMachineId}_${Date.now()}`;
-        const roomID = `room_${currentMachineId}`;
+        // Generate custom PeerID and room
+        const peerID = `client_${currentMachineId}_${Date.now()}`;
+        const roomID = `support_${currentMachineId}`;
 
-        debugLog("Generated PeerID for WebSocket WebRTC", {
+        debugLog("Generated client info for WebSocket chat", {
           machineId: currentMachineId,
           peerID: peerID,
           roomID: roomID,
         });
 
         try {
-          // Add connection timeout
+          // Save support request to Spreadsheet first
+          await saveSupportRequestToSpreadsheet(peerID, roomID);
+
+          // Connect to WebSocket chat server
+          const wsUrl = `wss://vanced-chatbot.caocv-work.workers.dev/p2p/room/${roomID}?peerID=${peerID}&roomID=${roomID}&nickname=Client_${currentMachineId}`;
+
+          debugLog("Connecting to WebSocket", { wsUrl });
+
+          const chatSocket = new WebSocket(wsUrl);
+
+          // Connection timeout
           const connectionTimeout = setTimeout(() => {
-            debugLog("WebSocket WebRTC connection timeout");
-            updateStatus("⏰ Timeout kết nối WebSocket WebRTC", "error");
-            if (peer) {
-              peer.destroy();
+            debugLog("WebSocket connection timeout");
+            updateStatus("⏰ Timeout kết nối WebSocket", "error");
+            if (chatSocket) {
+              chatSocket.close();
             }
-          }, 30000); // 30 seconds timeout
+          }, 30000);
 
-          // Initialize WebSocket WebRTC Client
-          const webrtcConfig = {
-            signalingServerUrl: "https://vanced-chatbot.caocv-work.workers.dev", // TODO: Update with your Workers URL
-            roomID: roomID,
-          };
-
-          debugLog("Using WebSocket WebRTC config", webrtcConfig);
-          peer = createWebSocketPeer(peerID, webrtcConfig);
-
-          peer.on("open", (id) => {
+          chatSocket.onopen = () => {
             clearTimeout(connectionTimeout);
-            debugLog("Peer opened successfully", {
-              id: id,
-              expectedId: peerID,
-              match: id === peerID,
-            });
-            document.getElementById("currentPeerID").textContent = id;
-
-            // Save to Spreadsheet
-            savePeerIDToSpreadsheet(id);
+            debugLog("WebSocket connected successfully");
+            document.getElementById("currentPeerID").textContent = peerID;
 
             // Show waiting UI
             showWaitingUI();
 
             // Start countdown
             startCountdown();
-          });
 
-          peer.on("connection", (conn) => {
-            debugLog("Admin connected via WebSocket WebRTC!", conn.peer);
-            connection = conn;
-            isConnected = true;
+            updateStatus("✅ Đang chờ tư vấn viên kết nối...", "waiting");
+          };
 
-            // Stop countdown
-            if (countdownTimer) {
-              clearInterval(countdownTimer);
-            }
+          chatSocket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            handleChatMessage(message);
+          };
 
-            // Setup connection handlers
-            setupConnection(conn);
-
-            // Show chat UI
-            showChatUI();
-            updateStatus("✅ Đã kết nối với tư vấn viên!", "connected");
-          });
-
-          peer.on("error", (error) => {
+          chatSocket.onclose = (event) => {
             clearTimeout(connectionTimeout);
-            debugLog("Custom WebRTC error details", {
-              message: error.message,
-              error: error,
+            debugLog("WebSocket closed", {
+              code: event.code,
+              reason: event.reason,
             });
-
-            let errorMessage = "❌ Lỗi Custom WebRTC connection";
-            if (error.message && error.message.includes("network")) {
-              errorMessage = "❌ Lỗi mạng - Kiểm tra internet";
-            } else if (error.message && error.message.includes("signaling")) {
-              errorMessage = "❌ Signaling server lỗi - Thử lại sau";
+            if (!isConnected) {
+              updateStatus("❌ Mất kết nối WebSocket", "error");
             }
+          };
 
-            updateStatus(errorMessage, "error");
-          });
+          chatSocket.onerror = (error) => {
+            clearTimeout(connectionTimeout);
+            debugLog("WebSocket error", error);
+            updateStatus("❌ Lỗi kết nối WebSocket", "error");
+          };
 
-          peer.on("close", () => {
-            debugLog("Custom WebRTC connection closed");
-            updateStatus("❌ Custom WebRTC connection đã đóng", "error");
-          });
+          // Store socket globally
+          window.chatSocket = chatSocket;
         } catch (error) {
           debugLog("Request support error", error.message);
-          updateStatus("❌ Lỗi khởi tạo WebSocket WebRTC", "error");
+          updateStatus("❌ Lỗi khởi tạo WebSocket chat", "error");
         }
       }
 
-      // Save PeerID to Spreadsheet
-      async function savePeerIDToSpreadsheet(peerID) {
+      // Handle chat messages from WebSocket
+      function handleChatMessage(message) {
+        debugLog("Received WebSocket message", message);
+
+        switch (message.type) {
+          case "connected":
+            debugLog("Connected to chat room", message);
+            break;
+
+          case "user-joined":
+            if (message.peerID.startsWith("admin_")) {
+              debugLog("Admin joined the chat!", message);
+              isConnected = true;
+
+              // Stop countdown
+              if (countdownTimer) {
+                clearInterval(countdownTimer);
+              }
+
+              // Show chat UI
+              showChatUI();
+              updateStatus("✅ Đã kết nối với tư vấn viên!", "connected");
+
+              // Save connection info to spreadsheet
+              saveConnectionToSpreadsheet(message.peerID, message.nickname);
+            }
+            break;
+
+          case "user-left":
+            if (message.peerID.startsWith("admin_")) {
+              debugLog("Admin left the chat", message);
+              updateStatus("❌ Tư vấn viên đã ngắt kết nối", "error");
+              isConnected = false;
+            }
+            break;
+
+          case "chat-message":
+            if (message.fromPeerID.startsWith("admin_")) {
+              debugLog("Received message from admin", message);
+              displayMessage(message.text, "admin");
+            }
+            break;
+
+          case "pong":
+            debugLog("Received pong from server");
+            break;
+
+          default:
+            debugLog("Unknown message type", message);
+        }
+      }
+
+      // Save support request to Spreadsheet
+      async function saveSupportRequestToSpreadsheet(peerID, roomID) {
         try {
-          const p2pData = {
+          const supportData = {
             clientPeerID: peerID,
+            roomID: roomID,
             adminPeerID: null,
             status: "waiting",
             adminNickname: null,
             timestamp: new Date().toISOString(),
             connectionStartTime: null,
+            chatHistory: [],
           };
 
           const url = new URL(SPREADSHEET_URL);
-          url.searchParams.append("action", "updateP2PRequest");
+          url.searchParams.append("action", "createSupportRequest");
           url.searchParams.append("machineId", currentMachineId);
-          url.searchParams.append("p2pData", JSON.stringify(p2pData));
+          url.searchParams.append("supportData", JSON.stringify(supportData));
 
-          debugLog("Saving PeerID to Spreadsheet", p2pData);
+          debugLog("Saving support request to Spreadsheet", supportData);
 
           const response = await fetch(url.toString());
           const data = await response.json();
 
           debugLog("Spreadsheet save response", data);
         } catch (error) {
-          debugLog("Save PeerID error", error.message);
+          debugLog("Save support request error", error.message);
+        }
+      }
+
+      // Save connection info when admin joins
+      async function saveConnectionToSpreadsheet(adminPeerID, adminNickname) {
+        try {
+          const connectionData = {
+            adminPeerID: adminPeerID,
+            adminNickname: adminNickname,
+            status: "connected",
+            connectionStartTime: new Date().toISOString(),
+          };
+
+          const url = new URL(SPREADSHEET_URL);
+          url.searchParams.append("action", "updateSupportConnection");
+          url.searchParams.append("machineId", currentMachineId);
+          url.searchParams.append(
+            "connectionData",
+            JSON.stringify(connectionData)
+          );
+
+          debugLog("Saving connection info to Spreadsheet", connectionData);
+
+          const response = await fetch(url.toString());
+          const data = await response.json();
+
+          debugLog("Connection save response", data);
+        } catch (error) {
+          debugLog("Save connection error", error.message);
+        }
+      }
+
+      // Save chat message to Spreadsheet
+      async function saveChatMessageToSpreadsheet(message) {
+        try {
+          const messageData = {
+            from: message.from || "Admin",
+            fromPeerID: message.fromPeerID,
+            text: message.text,
+            timestamp: message.timestamp,
+            type: "admin",
+          };
+
+          const url = new URL(SPREADSHEET_URL);
+          url.searchParams.append("action", "saveChatMessage");
+          url.searchParams.append("machineId", currentMachineId);
+          url.searchParams.append("messageData", JSON.stringify(messageData));
+
+          debugLog("Saving chat message to Spreadsheet", messageData);
+
+          const response = await fetch(url.toString());
+          const data = await response.json();
+
+          debugLog("Message save response", data);
+        } catch (error) {
+          debugLog("Save message error", error.message);
         }
       }
 
@@ -435,44 +526,53 @@
         }
       }
 
-      // Setup connection handlers
-      function setupConnection(conn) {
-        conn.on("data", (data) => {
-          debugLog("Received message", data);
-          displayMessage(data.message, "admin");
-        });
-
-        conn.on("close", () => {
-          debugLog("Connection closed by admin");
-          updateStatus("❌ Tư vấn viên đã ngắt kết nối", "error");
-          isConnected = false;
-        });
-
-        conn.on("error", (error) => {
-          debugLog("Connection error", error);
-          updateStatus("❌ Lỗi kết nối P2P", "error");
-        });
+      // Setup WebSocket ping to keep connection alive
+      function startPingInterval() {
+        if (
+          window.chatSocket &&
+          window.chatSocket.readyState === WebSocket.OPEN
+        ) {
+          setInterval(() => {
+            if (
+              window.chatSocket &&
+              window.chatSocket.readyState === WebSocket.OPEN
+            ) {
+              window.chatSocket.send(JSON.stringify({ type: "ping" }));
+              debugLog("Sent ping to server");
+            }
+          }, 30000); // Ping every 30 seconds
+        }
       }
 
-      // Send message
+      // Send message via WebSocket
       function sendMessage() {
         const input = document.getElementById("messageInput");
         const message = input.value.trim();
 
-        if (!message || !connection) return;
+        if (
+          !message ||
+          !window.chatSocket ||
+          window.chatSocket.readyState !== WebSocket.OPEN
+        )
+          return;
 
         // Display message locally
         displayMessage(message, "user");
 
-        // Send to admin
-        connection.send({
-          type: "message",
-          message: message,
+        // Create message object
+        const messageData = {
+          type: "chat-message",
+          from: `Client_${currentMachineId}`,
+          fromPeerID: document.getElementById("currentPeerID").textContent,
+          text: message,
           timestamp: new Date().toISOString(),
-          from: "client",
-        });
+          roomID: `support_${currentMachineId}`,
+        };
 
-        debugLog("Sent message", message);
+        // Send via WebSocket
+        window.chatSocket.send(JSON.stringify(messageData));
+
+        debugLog("Sent message via WebSocket", messageData);
         input.value = "";
       }
 
@@ -493,19 +593,26 @@
 
       // End chat
       function endChat() {
-        if (connection) {
-          connection.send({
-            type: "end_chat",
-            timestamp: new Date().toISOString(),
-            from: "client",
-          });
+        if (
+          window.chatSocket &&
+          window.chatSocket.readyState === WebSocket.OPEN
+        ) {
+          // Send end chat message
+          window.chatSocket.send(
+            JSON.stringify({
+              type: "chat-end",
+              from: `Client_${currentMachineId}`,
+              timestamp: new Date().toISOString(),
+              roomID: `support_${currentMachineId}`,
+            })
+          );
 
-          connection.close();
+          // Close WebSocket
+          window.chatSocket.close();
         }
 
-        if (peer) {
-          peer.destroy();
-        }
+        // Save chat end to spreadsheet
+        saveChatEndToSpreadsheet();
 
         updateStatus("✅ Đã kết thúc cuộc trò chuyện", "connected");
 
@@ -518,6 +625,31 @@
         document.getElementById("chatMessages").innerHTML = "";
 
         debugLog("Chat ended by client");
+      }
+
+      // Save chat end to Spreadsheet
+      async function saveChatEndToSpreadsheet() {
+        try {
+          const endData = {
+            status: "ended",
+            endTime: new Date().toISOString(),
+            endedBy: "client",
+          };
+
+          const url = new URL(SPREADSHEET_URL);
+          url.searchParams.append("action", "endSupportChat");
+          url.searchParams.append("machineId", currentMachineId);
+          url.searchParams.append("endData", JSON.stringify(endData));
+
+          debugLog("Saving chat end to Spreadsheet", endData);
+
+          const response = await fetch(url.toString());
+          const data = await response.json();
+
+          debugLog("Chat end save response", data);
+        } catch (error) {
+          debugLog("Save chat end error", error.message);
+        }
       }
 
       // List of alternative PeerJS servers

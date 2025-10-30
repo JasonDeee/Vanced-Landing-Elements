@@ -321,10 +321,19 @@
         </div>
     </div>
 
-    <script src="p2p-utils.js"></script>
-    <script src="admin-dashboard.js"></script>
-    
     <script>
+        // Configuration
+        const SPREADSHEET_URL = "https://script.google.com/macros/s/AKfycbzZPxkICg1AHucIZ2AFQmnLLg_hjG8s9ouJUU9eSG1043AronwRwV45i5tMOQT5VuPDvw/exec";
+        const CHAT_SERVER = 'wss://vanced-chatbot.caocv-work.workers.dev/p2p/room/';
+
+        // Global variables
+        let adminNickname = '';
+        let currentClient = null;
+        let chatSocket = null;
+        let clientList = [];
+        let refreshInterval = null;
+        let currentChatHistory = []; // Store chat history locally
+
         // Initialize on page load
         window.onload = function() {
             // Check if admin is already logged in
@@ -343,6 +352,8 @@
                 return;
             }
             
+            adminNickname = nickname;
+            
             // Save nickname
             localStorage.setItem('vancedAdminNickname', nickname);
             
@@ -354,9 +365,335 @@
             document.getElementById('currentAdmin').textContent = nickname;
             
             // Initialize admin dashboard
-            if (typeof initializeAdminDashboard === 'function') {
-                initializeAdminDashboard(nickname);
+            initializeAdminDashboard();
+        }
+
+        // Initialize admin dashboard
+        function initializeAdminDashboard() {
+            console.log('Initializing admin dashboard for:', adminNickname);
+            
+            // Start refreshing client list
+            refreshClientList();
+            
+            // Set up auto-refresh every 10 seconds
+            refreshInterval = setInterval(refreshClientList, 10000);
+        }
+
+        // Refresh client list from Spreadsheet
+        async function refreshClientList() {
+            try {
+                const url = new URL(SPREADSHEET_URL);
+                url.searchParams.append('action', 'getSupportRequests');
+                
+                console.log('Fetching support requests...');
+                
+                const response = await fetch(url.toString());
+                const data = await response.json();
+                
+                console.log('Support requests response:', data);
+                
+                if (data.status === 'success' && data.requests) {
+                    clientList = data.requests;
+                    updateClientListUI();
+                } else {
+                    console.error('Failed to fetch support requests:', data);
+                }
+            } catch (error) {
+                console.error('Error fetching client list:', error);
             }
+        }
+
+        // Update client list UI
+        function updateClientListUI() {
+            const clientListElement = document.getElementById('clientList');
+            
+            if (clientList.length === 0) {
+                clientListElement.innerHTML = '<div class="empty-state"><p>Không có yêu cầu hỗ trợ nào</p></div>';
+                return;
+            }
+            
+            let html = '';
+            clientList.forEach(client => {
+                const isActive = currentClient && currentClient.machineId === client.machineId;
+                const statusClass = client.status === 'waiting' ? 'status-waiting' : 
+                                  client.status === 'connected' ? 'status-connected' : 'status-warn';
+                
+                const timeAgo = getTimeAgo(client.timestamp);
+                
+                html += `
+                    <div class="client-item ${isActive ? 'active' : ''}" onclick="selectClient('${client.machineId}')">
+                        <div class="client-info">
+                            <h4>${client.machineId} <span class="status-badge ${statusClass}">${client.status}</span></h4>
+                            <div class="client-meta">
+                                <div>PeerID: ${client.clientPeerID}</div>
+                                <div>Room: ${client.roomID}</div>
+                                <div>Thời gian: ${timeAgo}</div>
+                                ${client.adminNickname ? `<div>Admin: ${client.adminNickname}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            clientListElement.innerHTML = html;
+        }
+
+        // Select client to chat
+        async function selectClient(machineId) {
+            const client = clientList.find(c => c.machineId === machineId);
+            if (!client) return;
+            
+            console.log('Selecting client:', client);
+            
+            // Disconnect from previous client if any
+            if (chatSocket) {
+                chatSocket.close();
+            }
+            
+            currentClient = client;
+            currentChatHistory = []; // Reset chat history
+            
+            // Update UI
+            updateClientListUI();
+            updateChatHeader(client);
+            
+            // Connect to client's room
+            await connectToClientRoom(client);
+            
+            // Load chat history
+            await loadChatHistory(client.machineId);
+        }
+
+        // Connect to client's WebSocket room
+        async function connectToClientRoom(client) {
+            try {
+                const adminPeerID = `admin_${adminNickname}_${Date.now()}`;
+                const wsUrl = `${CHAT_SERVER}${client.roomID}?peerID=${adminPeerID}&roomID=${client.roomID}&nickname=${encodeURIComponent(adminNickname)}`;
+                
+                console.log('Connecting to client room:', wsUrl);
+                
+                chatSocket = new WebSocket(wsUrl);
+                
+                chatSocket.onopen = () => {
+                    console.log('Connected to client room');
+                    
+                    // Update client status to connected
+                    updateClientStatus(client.machineId, 'connected', adminPeerID);
+                    
+                    // Show chat input
+                    document.getElementById('chatInput').style.display = 'flex';
+                };
+                
+                chatSocket.onmessage = (event) => {
+                    const message = JSON.parse(event.data);
+                    handleChatMessage(message);
+                };
+                
+                chatSocket.onclose = () => {
+                    console.log('Disconnected from client room');
+                };
+                
+                chatSocket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+                
+            } catch (error) {
+                console.error('Error connecting to client room:', error);
+            }
+        }
+
+        // Handle chat messages
+        function handleChatMessage(message) {
+            console.log('Received message:', message);
+            
+            switch (message.type) {
+                case 'connected':
+                    console.log('Connected to room:', message.roomID);
+                    break;
+                    
+                case 'chat-message':
+                    if (message.fromPeerID.startsWith('client_')) {
+                        displayMessage(message.text, 'client', message.from, message.timestamp);
+                        
+                        // Add to local chat history
+                        currentChatHistory.push({
+                            from: message.from,
+                            fromPeerID: message.fromPeerID,
+                            text: message.text,
+                            timestamp: message.timestamp,
+                            type: 'client'
+                        });
+                        
+                        // Save entire chat history to spreadsheet
+                        saveChatHistoryToSpreadsheet();
+                    }
+                    break;
+                    
+                case 'chat-end':
+                    console.log('Client ended chat');
+                    displaySystemMessage('Khách hàng đã kết thúc cuộc trò chuyện');
+                    
+                    // Add end message to history and save
+                    currentChatHistory.push({
+                        from: 'System',
+                        fromPeerID: 'system',
+                        text: 'Khách hàng đã kết thúc cuộc trò chuyện',
+                        timestamp: new Date().toISOString(),
+                        type: 'system'
+                    });
+                    saveChatHistoryToSpreadsheet();
+                    break;
+                    
+                default:
+                    console.log('Unknown message type:', message.type);
+            }
+        }
+
+        // Update client status in Spreadsheet
+        async function updateClientStatus(machineId, status, adminPeerID = null) {
+            try {
+                const statusData = {
+                    status: status,
+                    adminPeerID: adminPeerID,
+                    adminNickname: adminNickname,
+                    connectionStartTime: new Date().toISOString()
+                };
+                
+                const url = new URL(SPREADSHEET_URL);
+                url.searchParams.append('action', 'updateSupportConnection');
+                url.searchParams.append('machineId', machineId);
+                url.searchParams.append('connectionData', JSON.stringify(statusData));
+                
+                const response = await fetch(url.toString());
+                const data = await response.json();
+                
+                console.log('Status update response:', data);
+            } catch (error) {
+                console.error('Error updating client status:', error);
+            }
+        }
+
+        // Load chat history
+        async function loadChatHistory(machineId) {
+            try {
+                const url = new URL(SPREADSHEET_URL);
+                url.searchParams.append('action', 'getChatHistory');
+                url.searchParams.append('machineId', machineId);
+                
+                const response = await fetch(url.toString());
+                const data = await response.json();
+                
+                console.log('Chat history response:', data);
+                
+                if (data.status === 'success' && data.chatHistory) {
+                    displayChatHistory(data.chatHistory);
+                }
+            } catch (error) {
+                console.error('Error loading chat history:', error);
+            }
+        }
+
+        // Display chat history
+        function displayChatHistory(chatHistory) {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+            
+            // Update local chat history
+            currentChatHistory = [...chatHistory];
+            
+            chatHistory.forEach(msg => {
+                const sender = msg.type === 'client' ? 'client' : 
+                              msg.type === 'admin' ? 'admin' : 'system';
+                displayMessage(msg.text, sender, msg.from, msg.timestamp);
+            });
+        }
+
+        // Update chat header
+        function updateChatHeader(client) {
+            const chatHeader = document.getElementById('chatHeader');
+            chatHeader.innerHTML = `
+                <div>
+                    <h3>💬 Chat với ${client.machineId}</h3>
+                    <p>Status: ${client.status} | Room: ${client.roomID}</p>
+                </div>
+            `;
+        }
+
+        // Display message in chat
+        function displayMessage(text, sender, from, timestamp) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const time = new Date(timestamp).toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${escapeHtml(text)}</div>
+                <div class="message-time">${from} • ${time}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Display system message
+        function displaySystemMessage(text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message system';
+            messageDiv.style.textAlign = 'center';
+            messageDiv.style.fontStyle = 'italic';
+            messageDiv.style.color = '#666';
+            messageDiv.textContent = text;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Save entire chat history to Spreadsheet
+        async function saveChatHistoryToSpreadsheet() {
+            if (!currentClient || currentChatHistory.length === 0) return;
+            
+            try {
+                const url = new URL(SPREADSHEET_URL);
+                url.searchParams.append('action', 'saveChatHistory');
+                url.searchParams.append('machineId', currentClient.machineId);
+                url.searchParams.append('chatHistory', JSON.stringify(currentChatHistory));
+                
+                const response = await fetch(url.toString());
+                const data = await response.json();
+                
+                console.log('Chat history save response:', data);
+            } catch (error) {
+                console.error('Error saving chat history:', error);
+            }
+        }
+
+        // Get time ago string
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffMs = now - time;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'Vừa xong';
+            if (diffMins < 60) return `${diffMins} phút trước`;
+            
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return `${diffHours} giờ trước`;
+            
+            const diffDays = Math.floor(diffHours / 24);
+            return `${diffDays} ngày trước`;
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
         
         // Filter clients
@@ -370,25 +707,89 @@
             });
         }
         
-        // Refresh client list
-        function refreshClientList() {
-            if (typeof adminDashboard !== 'undefined' && adminDashboard.refreshClientList) {
-                adminDashboard.refreshClientList();
-            }
-        }
-        
         // Send message
         function sendMessage() {
-            if (typeof adminDashboard !== 'undefined' && adminDashboard.sendMessage) {
-                adminDashboard.sendMessage();
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !chatSocket || chatSocket.readyState !== WebSocket.OPEN || !currentClient) {
+                return;
             }
+            
+            // Display message locally
+            displayMessage(message, 'admin', adminNickname, new Date().toISOString());
+            
+            // Create message object
+            const messageData = {
+                type: 'chat-message',
+                from: adminNickname,
+                fromPeerID: `admin_${adminNickname}_${Date.now()}`,
+                text: message,
+                timestamp: new Date().toISOString(),
+                roomID: currentClient.roomID
+            };
+            
+            // Send via WebSocket
+            chatSocket.send(JSON.stringify(messageData));
+            
+            // Add to local chat history
+            currentChatHistory.push({
+                from: adminNickname,
+                fromPeerID: messageData.fromPeerID,
+                text: message,
+                timestamp: messageData.timestamp,
+                type: 'admin'
+            });
+            
+            // Save entire chat history to spreadsheet
+            saveChatHistoryToSpreadsheet();
+            
+            console.log('Sent message:', messageData);
+            input.value = '';
         }
         
         // End chat
         function endChat() {
-            if (typeof adminDashboard !== 'undefined' && adminDashboard.endChat) {
-                adminDashboard.endChat();
-            }
+            if (!currentClient || !chatSocket) return;
+            
+            // Add end message to chat history
+            currentChatHistory.push({
+                from: 'System',
+                fromPeerID: 'system',
+                text: `Cuộc trò chuyện đã kết thúc bởi ${adminNickname}`,
+                timestamp: new Date().toISOString(),
+                type: 'system'
+            });
+            
+            // Save final chat history to spreadsheet
+            saveChatHistoryToSpreadsheet();
+            
+            // Send end chat message
+            chatSocket.send(JSON.stringify({
+                type: 'chat-end',
+                from: adminNickname,
+                timestamp: new Date().toISOString(),
+                roomID: currentClient.roomID
+            }));
+            
+            // Update client status
+            updateClientStatus(currentClient.machineId, 'ended');
+            
+            // Close WebSocket
+            chatSocket.close();
+            chatSocket = null;
+            
+            // Reset UI
+            currentClient = null;
+            currentChatHistory = [];
+            document.getElementById('chatInput').style.display = 'none';
+            document.getElementById('chatHeader').innerHTML = '<div class="empty-state"><p>Chọn khách hàng để bắt đầu chat</p></div>';
+            document.getElementById('chatMessages').innerHTML = '<div class="empty-state"><p>💬 Chọn khách hàng từ danh sách bên trái</p></div>';
+            
+            // Update client list
+            updateClientListUI();
+            
+            console.log('Chat ended by admin');
         }
         
         // Logout

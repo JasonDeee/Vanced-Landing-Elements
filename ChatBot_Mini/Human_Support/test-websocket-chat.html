@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test WebSocket Chat System</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        display: flex;
+        gap: 20px;
+      }
+      .panel {
+        flex: 1;
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .status {
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      .chat-area {
+        border: 1px solid #ddd;
+        height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        margin: 10px 0;
+        background: #fafafa;
+      }
+      .message {
+        margin: 5px 0;
+        padding: 8px;
+        border-radius: 5px;
+      }
+      .client-msg {
+        background: #007bff;
+        color: white;
+        text-align: right;
+      }
+      .admin-msg {
+        background: #28a745;
+        color: white;
+        text-align: left;
+      }
+      .system-msg {
+        background: #6c757d;
+        color: white;
+        text-align: center;
+        font-style: italic;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      input[type="text"] {
+        width: 70%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .log {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Test WebSocket Chat System</h1>
+
+    <div class="container">
+      <!-- Client Panel -->
+      <div class="panel">
+        <h2>👤 Client Panel</h2>
+        <div>
+          <label>Machine ID:</label>
+          <input
+            type="text"
+            id="clientMachineId"
+            value="TEST_MACHINE_001"
+            style="width: 200px"
+          />
+        </div>
+        <div class="status" id="clientStatus">Ready to connect</div>
+
+        <button id="clientConnectBtn" onclick="connectClient()">
+          Connect as Client
+        </button>
+        <button id="clientDisconnectBtn" onclick="disconnectClient()" disabled>
+          Disconnect
+        </button>
+
+        <div class="chat-area" id="clientChat"></div>
+        <div>
+          <input
+            type="text"
+            id="clientMessageInput"
+            placeholder="Type message..."
+            onkeypress="if(event.key==='Enter') sendClientMessage()"
+          />
+          <button onclick="sendClientMessage()">Send</button>
+        </div>
+
+        <div class="log" id="clientLog"></div>
+      </div>
+
+      <!-- Admin Panel -->
+      <div class="panel">
+        <h2>👨‍💼 Admin Panel</h2>
+        <div>
+          <label>Admin Nickname:</label>
+          <input
+            type="text"
+            id="adminNickname"
+            value="TestAdmin"
+            style="width: 200px"
+          />
+        </div>
+        <div class="status" id="adminStatus">Ready to connect</div>
+
+        <button id="adminRefreshBtn" onclick="refreshSupportRequests()">
+          Refresh Requests
+        </button>
+        <button id="adminConnectBtn" onclick="connectAdmin()" disabled>
+          Connect to Client
+        </button>
+        <button id="adminDisconnectBtn" onclick="disconnectAdmin()" disabled>
+          Disconnect
+        </button>
+
+        <div id="supportRequests" style="margin: 10px 0">
+          <h4>Support Requests:</h4>
+          <div id="requestsList">No requests found</div>
+        </div>
+
+        <div class="chat-area" id="adminChat"></div>
+        <div>
+          <input
+            type="text"
+            id="adminMessageInput"
+            placeholder="Type message..."
+            onkeypress="if(event.key==='Enter') sendAdminMessage()"
+          />
+          <button onclick="sendAdminMessage()">Send</button>
+        </div>
+
+        <div class="log" id="adminLog"></div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px">
+      <h3>🔧 Test Actions</h3>
+      <button onclick="testSpreadsheetConnection()">Test Spreadsheet</button>
+      <button onclick="testWebSocketConnection()">Test WebSocket Server</button>
+      <button onclick="clearAllLogs()">Clear Logs</button>
+    </div>
+
+    <script>
+      // Configuration
+      const SPREADSHEET_URL =
+        "https://script.google.com/macros/s/AKfycbzZPxkICg1AHucIZ2AFQmnLLg_hjG8s9ouJUU9eSG1043AronwRwV45i5tMOQT5VuPDvw/exec";
+      const CHAT_SERVER =
+        "wss://vanced-chatbot.caocv-work.workers.dev/p2p/room/";
+
+      // Global variables
+      let clientSocket = null;
+      let adminSocket = null;
+      let currentSupportRequests = [];
+      let selectedRequest = null;
+
+      // Utility functions
+      function log(panel, message, type = "info") {
+        const logElement = document.getElementById(`${panel}Log`);
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement("div");
+        logEntry.textContent = `[${timestamp}] ${message}`;
+        logEntry.style.color =
+          type === "error" ? "red" : type === "success" ? "green" : "black";
+        logElement.appendChild(logEntry);
+        logElement.scrollTop = logElement.scrollHeight;
+        console.log(`[${panel.toUpperCase()}] ${message}`);
+      }
+
+      function updateStatus(panel, message, type = "info") {
+        const statusElement = document.getElementById(`${panel}Status`);
+        statusElement.textContent = message;
+        statusElement.className = `status ${type}`;
+        log(panel, `Status: ${message}`, type);
+      }
+
+      function addMessage(panel, message, sender, timestamp = null) {
+        const chatElement = document.getElementById(`${panel}Chat`);
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${sender}-msg`;
+
+        const time = timestamp
+          ? new Date(timestamp).toLocaleTimeString()
+          : new Date().toLocaleTimeString();
+        messageDiv.innerHTML = `<strong>${sender}:</strong> ${message} <small>(${time})</small>`;
+
+        chatElement.appendChild(messageDiv);
+        chatElement.scrollTop = chatElement.scrollHeight;
+      }
+
+      // Client functions
+      async function connectClient() {
+        const machineId = document
+          .getElementById("clientMachineId")
+          .value.trim();
+        if (!machineId) {
+          alert("Please enter Machine ID");
+          return;
+        }
+
+        try {
+          updateStatus("client", "Creating support request...", "info");
+
+          // Create support request in Spreadsheet
+          const peerID = `client_${machineId}_${Date.now()}`;
+          const roomID = `support_${machineId}`;
+
+          const supportData = {
+            clientPeerID: peerID,
+            roomID: roomID,
+            adminPeerID: null,
+            status: "waiting",
+            adminNickname: null,
+            timestamp: new Date().toISOString(),
+            connectionStartTime: null,
+            chatHistory: [],
+          };
+
+          const url = new URL(SPREADSHEET_URL);
+          url.searchParams.append("action", "createSupportRequest");
+          url.searchParams.append("machineId", machineId);
+          url.searchParams.append("supportData", JSON.stringify(supportData));
+
+          const response = await fetch(url.toString());
+          const data = await response.json();
+
+          log("client", "Support request created", "success");
+
+          // Connect to WebSocket
+          const wsUrl = `${CHAT_SERVER}${roomID}?peerID=${peerID}&roomID=${roomID}&nickname=Client_${machineId}`;
+          log("client", `Connecting to: ${wsUrl}`);
+
+          clientSocket = new WebSocket(wsUrl);
+
+          clientSocket.onopen = () => {
+            updateStatus("client", "Connected to chat server", "success");
+            document.getElementById("clientConnectBtn").disabled = true;
+            document.getElementById("clientDisconnectBtn").disabled = false;
+          };
+
+          clientSocket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            handleClientMessage(message);
+          };
+
+          clientSocket.onclose = () => {
+            updateStatus("client", "Disconnected from server", "error");
+            document.getElementById("clientConnectBtn").disabled = false;
+            document.getElementById("clientDisconnectBtn").disabled = true;
+          };
+
+          clientSocket.onerror = (error) => {
+            log("client", `WebSocket error: ${error}`, "error");
+          };
+        } catch (error) {
+          log("client", `Connection error: ${error.message}`, "error");
+          updateStatus("client", "Connection failed", "error");
+        }
+      }
+
+      function handleClientMessage(message) {
+        log("client", `Received: ${JSON.stringify(message)}`);
+
+        switch (message.type) {
+          case "connected":
+            log("client", "Connected to room", "success");
+            break;
+          case "user-joined":
+            if (message.peerID.startsWith("admin_")) {
+              addMessage(
+                "client",
+                `${message.nickname} joined the chat`,
+                "system"
+              );
+              updateStatus("client", "Admin connected!", "success");
+            }
+            break;
+          case "user-left":
+            if (message.peerID.startsWith("admin_")) {
+              addMessage(
+                "client",
+                `${message.nickname} left the chat`,
+                "system"
+              );
+              updateStatus("client", "Admin disconnected", "info");
+            }
+            break;
+          case "chat-message":
+            if (message.fromPeerID.startsWith("admin_")) {
+              addMessage("client", message.text, "admin", message.timestamp);
+            }
+            break;
+        }
+      }
+
+      function sendClientMessage() {
+        const input = document.getElementById("clientMessageInput");
+        const message = input.value.trim();
+
+        if (
+          !message ||
+          !clientSocket ||
+          clientSocket.readyState !== WebSocket.OPEN
+        )
+          return;
+
+        const messageData = {
+          type: "chat-message",
+          from: `Client_${document.getElementById("clientMachineId").value}`,
+          fromPeerID: `client_${
+            document.getElementById("clientMachineId").value
+          }_${Date.now()}`,
+          text: message,
+          timestamp: new Date().toISOString(),
+          roomID: `support_${document.getElementById("clientMachineId").value}`,
+        };
+
+        clientSocket.send(JSON.stringify(messageData));
+        addMessage("client", message, "client");
+        input.value = "";
+
+        log("client", `Sent: ${message}`);
+      }
+
+      function disconnectClient() {
+        if (clientSocket) {
+          clientSocket.close();
+          clientSocket = null;
+        }
+      }
+
+      // Admin functions
+      async function refreshSupportRequests() {
+        try {
+          updateStatus("admin", "Fetching support requests...", "info");
+
+          const url = new URL(SPREADSHEET_URL);
+          url.searchParams.append("action", "getSupportRequests");
+
+          const response = await fetch(url.toString());
+          const data = await response.json();
+
+          log(
+            "admin",
+            `Fetched ${data.requests?.length || 0} requests`,
+            "success"
+          );
+
+          if (data.status === "success" && data.requests) {
+            currentSupportRequests = data.requests;
+            updateRequestsList();
+            updateStatus(
+              "admin",
+              `Found ${data.requests.length} requests`,
+              "success"
+            );
+          } else {
+            log("admin", "No requests found", "info");
+            updateStatus("admin", "No requests found", "info");
+          }
+        } catch (error) {
+          log("admin", `Error fetching requests: ${error.message}`, "error");
+          updateStatus("admin", "Failed to fetch requests", "error");
+        }
+      }
+
+      function updateRequestsList() {
+        const requestsList = document.getElementById("requestsList");
+
+        if (currentSupportRequests.length === 0) {
+          requestsList.innerHTML = "No requests found";
+          return;
+        }
+
+        let html = "";
+        currentSupportRequests.forEach((request, index) => {
+          const timeAgo = getTimeAgo(request.timestamp);
+          html += `
+                    <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px; cursor: pointer;" 
+                         onclick="selectRequest(${index})">
+                        <strong>${request.machineId}</strong> - ${request.status}
+                        <br><small>Room: ${request.roomID} | ${timeAgo}</small>
+                    </div>
+                `;
+        });
+
+        requestsList.innerHTML = html;
+      }
+
+      function selectRequest(index) {
+        selectedRequest = currentSupportRequests[index];
+        log("admin", `Selected request: ${selectedRequest.machineId}`, "info");
+        document.getElementById("adminConnectBtn").disabled = false;
+      }
+
+      async function connectAdmin() {
+        if (!selectedRequest) {
+          alert("Please select a support request first");
+          return;
+        }
+
+        const nickname = document.getElementById("adminNickname").value.trim();
+        if (!nickname) {
+          alert("Please enter admin nickname");
+          return;
+        }
+
+        try {
+          updateStatus("admin", "Connecting to client room...", "info");
+
+          const adminPeerID = `admin_${nickname}_${Date.now()}`;
+          const wsUrl = `${CHAT_SERVER}${
+            selectedRequest.roomID
+          }?peerID=${adminPeerID}&roomID=${
+            selectedRequest.roomID
+          }&nickname=${encodeURIComponent(nickname)}`;
+
+          log("admin", `Connecting to: ${wsUrl}`);
+
+          adminSocket = new WebSocket(wsUrl);
+
+          adminSocket.onopen = () => {
+            updateStatus("admin", "Connected to client room", "success");
+            document.getElementById("adminConnectBtn").disabled = true;
+            document.getElementById("adminDisconnectBtn").disabled = false;
+
+            // Update client status in Spreadsheet
+            updateClientStatus(
+              selectedRequest.machineId,
+              "connected",
+              adminPeerID,
+              nickname
+            );
+          };
+
+          adminSocket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            handleAdminMessage(message);
+          };
+
+          adminSocket.onclose = () => {
+            updateStatus("admin", "Disconnected from client room", "error");
+            document.getElementById("adminConnectBtn").disabled = false;
+            document.getElementById("adminDisconnectBtn").disabled = true;
+          };
+
+          adminSocket.onerror = (error) => {
+            log("admin", `WebSocket error: ${error}`, "error");
+          };
+        } catch (error) {
+          log("admin", `Connection error: ${error.message}`, "error");
+          updateStatus("admin", "Connection failed", "error");
+        }
+      }
+
+      function handleAdminMessage(message) {
+        log("admin", `Received: ${JSON.stringify(message)}`);
+
+        switch (message.type) {
+          case "connected":
+            log("admin", "Connected to room", "success");
+            break;
+          case "chat-message":
+            if (message.fromPeerID.startsWith("client_")) {
+              addMessage("admin", message.text, "client", message.timestamp);
+            }
+            break;
+        }
+      }
+
+      function sendAdminMessage() {
+        const input = document.getElementById("adminMessageInput");
+        const message = input.value.trim();
+
+        if (
+          !message ||
+          !adminSocket ||
+          adminSocket.readyState !== WebSocket.OPEN
+        )
+          return;
+
+        const messageData = {
+          type: "chat-message",
+          from: document.getElementById("adminNickname").value,
+          fromPeerID: `admin_${
+            document.getElementById("adminNickname").value
+          }_${Date.now()}`,
+          text: message,
+          timestamp: new Date().toISOString(),
+          roomID: selectedRequest.roomID,
+        };
+
+        adminSocket.send(JSON.stringify(messageData));
+        addMessage("admin", message, "admin");
+        input.value = "";
+
+        log("admin", `Sent: ${message}`);
+      }
+
+      function disconnectAdmin() {
+        if (adminSocket) {
+          adminSocket.close();
+          adminSocket = null;
+        }
+      }
+
+      // Utility functions
+      async function updateClientStatus(
+        machineId,
+        status,
+        adminPeerID,
+        adminNickname
+      ) {
+        try {
+          const statusData = {
+            status: status,
+            adminPeerID: adminPeerID,
+            adminNickname: adminNickname,
+            connectionStartTime: new Date().toISOString(),
+          };
+
+          const url = new URL(SPREADSHEET_URL);
+          url.searchParams.append("action", "updateSupportConnection");
+          url.searchParams.append("machineId", machineId);
+          url.searchParams.append("connectionData", JSON.stringify(statusData));
+
+          const response = await fetch(url.toString());
+          const data = await response.json();
+
+          log("admin", "Client status updated", "success");
+        } catch (error) {
+          log("admin", `Error updating status: ${error.message}`, "error");
+        }
+      }
+
+      function getTimeAgo(timestamp) {
+        const now = new Date();
+        const time = new Date(timestamp);
+        const diffMs = now - time;
+        const diffMins = Math.floor(diffMs / 60000);
+
+        if (diffMins < 1) return "Just now";
+        if (diffMins < 60) return `${diffMins}m ago`;
+
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours}h ago`;
+
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays}d ago`;
+      }
+
+      // Test functions
+      async function testSpreadsheetConnection() {
+        try {
+          const url = new URL(SPREADSHEET_URL);
+          url.searchParams.append("action", "getSupportRequests");
+
+          const response = await fetch(url.toString());
+          const data = await response.json();
+
+          alert(`Spreadsheet test: ${data.status} - ${data.message}`);
+        } catch (error) {
+          alert(`Spreadsheet test failed: ${error.message}`);
+        }
+      }
+
+      async function testWebSocketConnection() {
+        try {
+          const testSocket = new WebSocket(
+            `${CHAT_SERVER}test123?peerID=test&roomID=test123&nickname=Test`
+          );
+
+          testSocket.onopen = () => {
+            alert("WebSocket test: Connection successful!");
+            testSocket.close();
+          };
+
+          testSocket.onerror = (error) => {
+            alert(`WebSocket test failed: ${error}`);
+          };
+        } catch (error) {
+          alert(`WebSocket test failed: ${error.message}`);
+        }
+      }
+
+      function clearAllLogs() {
+        document.getElementById("clientLog").innerHTML = "";
+        document.getElementById("adminLog").innerHTML = "";
+        document.getElementById("clientChat").innerHTML = "";
+        document.getElementById("adminChat").innerHTML = "";
+      }
+
+      // Initialize
+      window.onload = function () {
+        log("client", "Client panel initialized");
+        log("admin", "Admin panel initialized");
+      };
+    </script>
+  </body>
+</html>

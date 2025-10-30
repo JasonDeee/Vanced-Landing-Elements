@@ -1638,3 +1638,498 @@ function handleSignalingAPI(action, params) {
       };
   }
 }
+
+// ====== MAIN HANDLER FUNCTIONS ======
+
+/**
+ * Main handler function for GET requests
+ */
+function doGet(e) {
+  try {
+    const action = e.parameter.action;
+
+    if (!action) {
+      return createResponse("error", "Missing action parameter");
+    }
+
+    debugLog("Received GET request", { action, parameters: e.parameter });
+
+    switch (action) {
+      case "initChat":
+        return handleInitChat(e.parameter);
+      case "validateChat":
+        return handleValidateChat(e.parameter);
+      case "updateP2PRequest":
+        return handleUpdateP2PRequest(e.parameter);
+      case "getP2PRequests":
+        return handleGetP2PRequests(e.parameter);
+      case "updateP2PConnection":
+        return handleUpdateP2PConnection(e.parameter);
+      // New WebSocket chat actions
+      case "createSupportRequest":
+        return handleCreateSupportRequest(e.parameter);
+      case "getSupportRequests":
+        return handleGetSupportRequests(e.parameter);
+      case "updateSupportConnection":
+        return handleUpdateSupportConnection(e.parameter);
+      case "saveChatMessage":
+        return handleSaveChatMessage(e.parameter);
+      case "saveChatHistory":
+        return handleSaveChatHistory(e.parameter);
+      case "getChatHistory":
+        return handleGetChatHistory(e.parameter);
+      case "endSupportChat":
+        return handleEndSupportChat(e.parameter);
+      default:
+        return createResponse("error", "Unknown action: " + action);
+    }
+  } catch (error) {
+    debugLog("Error in doGet", error);
+    return createResponse("error", "Internal server error: " + error.message);
+  }
+}
+
+/**
+ * Main handler function for POST requests
+ */
+function doPost(e) {
+  try {
+    const postData = JSON.parse(e.postData.contents);
+    const action = postData.action;
+
+    if (!action) {
+      return createResponse("error", "Missing action parameter");
+    }
+
+    debugLog("Received POST request", { action, data: postData });
+
+    switch (action) {
+      case "updateAll":
+        return handleUpdateAll(postData);
+      case "saveChatMessage":
+        return handleSaveChatMessage(postData);
+      case "endSupportChat":
+        return handleEndSupportChat(postData);
+      default:
+        return createResponse("error", "Unknown POST action: " + action);
+    }
+  } catch (error) {
+    debugLog("Error in doPost", error);
+    return createResponse("error", "Internal server error: " + error.message);
+  }
+}
+
+// ====== WEBSOCKET CHAT SUPPORT FUNCTIONS ======
+
+/**
+ * Create support request (WebSocket chat)
+ */
+function handleCreateSupportRequest(params) {
+  try {
+    const { machineId, supportData } = params;
+
+    if (!machineId || !supportData) {
+      return createResponse("error", "Missing required parameters");
+    }
+
+    const data = JSON.parse(supportData);
+    debugLog("Creating support request", { machineId, data });
+
+    // Get or create Support Requests sheet
+    const sheet = getSupportRequestsSheet();
+
+    // Check if request already exists
+    const existingRow = findSupportRequestRow(sheet, machineId);
+
+    if (existingRow > 0) {
+      // Update existing request
+      sheet
+        .getRange(existingRow, 2, 1, 8)
+        .setValues([
+          [
+            data.clientPeerID,
+            data.roomID,
+            data.adminPeerID || "",
+            data.status,
+            data.adminNickname || "",
+            data.timestamp,
+            data.connectionStartTime || "",
+            JSON.stringify(data.chatHistory || []),
+          ],
+        ]);
+    } else {
+      // Create new request
+      sheet.appendRow([
+        machineId,
+        data.clientPeerID,
+        data.roomID,
+        data.adminPeerID || "",
+        data.status,
+        data.adminNickname || "",
+        data.timestamp,
+        data.connectionStartTime || "",
+        JSON.stringify(data.chatHistory || []),
+      ]);
+    }
+
+    return createResponse("success", "Support request created", { machineId });
+  } catch (error) {
+    debugLog("Error creating support request", error);
+    return createResponse(
+      "error",
+      "Failed to create support request: " + error.message
+    );
+  }
+}
+
+/**
+ * Get all support requests for admin dashboard
+ */
+function handleGetSupportRequests(params) {
+  try {
+    const sheet = getSupportRequestsSheet();
+    const data = sheet.getDataRange().getValues();
+
+    if (data.length <= 1) {
+      return createResponse("success", "No support requests found", {
+        requests: [],
+      });
+    }
+
+    const requests = [];
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      requests.push({
+        machineId: row[0],
+        clientPeerID: row[1],
+        roomID: row[2],
+        adminPeerID: row[3],
+        status: row[4],
+        adminNickname: row[5],
+        timestamp: row[6],
+        connectionStartTime: row[7],
+        chatHistory: row[8] ? JSON.parse(row[8]) : [],
+      });
+    }
+
+    // Sort by timestamp (newest first)
+    requests.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    debugLog("Retrieved support requests", { count: requests.length });
+    return createResponse("success", "Support requests retrieved", {
+      requests,
+    });
+  } catch (error) {
+    debugLog("Error getting support requests", error);
+    return createResponse(
+      "error",
+      "Failed to get support requests: " + error.message
+    );
+  }
+}
+
+/**
+ * Update support connection status
+ */
+function handleUpdateSupportConnection(params) {
+  try {
+    const { machineId, connectionData } = params;
+
+    if (!machineId || !connectionData) {
+      return createResponse("error", "Missing required parameters");
+    }
+
+    const data = JSON.parse(connectionData);
+    debugLog("Updating support connection", { machineId, data });
+
+    const sheet = getSupportRequestsSheet();
+    const row = findSupportRequestRow(sheet, machineId);
+
+    if (row === 0) {
+      return createResponse("error", "Support request not found");
+    }
+
+    // Update connection info
+    if (data.adminPeerID) sheet.getRange(row, 4).setValue(data.adminPeerID);
+    if (data.status) sheet.getRange(row, 5).setValue(data.status);
+    if (data.adminNickname) sheet.getRange(row, 6).setValue(data.adminNickname);
+    if (data.connectionStartTime)
+      sheet.getRange(row, 8).setValue(data.connectionStartTime);
+
+    return createResponse("success", "Connection updated", { machineId });
+  } catch (error) {
+    debugLog("Error updating support connection", error);
+    return createResponse(
+      "error",
+      "Failed to update connection: " + error.message
+    );
+  }
+}
+
+/**
+ * Save chat message to history
+ */
+function handleSaveChatMessage(params) {
+  try {
+    const { machineId, messageData } = params;
+
+    if (!machineId || !messageData) {
+      return createResponse("error", "Missing required parameters");
+    }
+
+    const message = JSON.parse(messageData);
+    debugLog("Saving chat message", { machineId, message });
+
+    const sheet = getSupportRequestsSheet();
+    const row = findSupportRequestRow(sheet, machineId);
+
+    if (row === 0) {
+      return createResponse("error", "Support request not found");
+    }
+
+    // Get current chat history
+    const currentHistoryStr = sheet.getRange(row, 9).getValue();
+    let chatHistory = [];
+
+    if (currentHistoryStr) {
+      try {
+        chatHistory = JSON.parse(currentHistoryStr);
+      } catch (e) {
+        debugLog("Error parsing chat history, starting fresh", e);
+        chatHistory = [];
+      }
+    }
+
+    // Add new message
+    chatHistory.push({
+      from: message.from,
+      fromPeerID: message.fromPeerID,
+      text: message.text,
+      timestamp: message.timestamp,
+      type: message.type,
+    });
+
+    // Update chat history in sheet
+    sheet.getRange(row, 9).setValue(JSON.stringify(chatHistory));
+
+    return createResponse("success", "Message saved", {
+      machineId,
+      messageCount: chatHistory.length,
+    });
+  } catch (error) {
+    debugLog("Error saving chat message", error);
+    return createResponse("error", "Failed to save message: " + error.message);
+  }
+}
+
+/**
+ * Get chat history for a machine ID
+ */
+function handleGetChatHistory(params) {
+  try {
+    const { machineId } = params;
+
+    if (!machineId) {
+      return createResponse("error", "Missing machineId parameter");
+    }
+
+    const sheet = getSupportRequestsSheet();
+    const row = findSupportRequestRow(sheet, machineId);
+
+    if (row === 0) {
+      return createResponse("success", "No chat history found", {
+        chatHistory: [],
+      });
+    }
+
+    const historyStr = sheet.getRange(row, 9).getValue();
+    let chatHistory = [];
+
+    if (historyStr) {
+      try {
+        chatHistory = JSON.parse(historyStr);
+      } catch (e) {
+        debugLog("Error parsing chat history", e);
+        chatHistory = [];
+      }
+    }
+
+    debugLog("Retrieved chat history", {
+      machineId,
+      messageCount: chatHistory.length,
+    });
+    return createResponse("success", "Chat history retrieved", { chatHistory });
+  } catch (error) {
+    debugLog("Error getting chat history", error);
+    return createResponse(
+      "error",
+      "Failed to get chat history: " + error.message
+    );
+  }
+}
+
+/**
+ * End support chat session
+ */
+function handleEndSupportChat(params) {
+  try {
+    const { machineId, endData } = params;
+
+    if (!machineId || !endData) {
+      return createResponse("error", "Missing required parameters");
+    }
+
+    const data = JSON.parse(endData);
+    debugLog("Ending support chat", { machineId, data });
+
+    const sheet = getSupportRequestsSheet();
+    const row = findSupportRequestRow(sheet, machineId);
+
+    if (row === 0) {
+      return createResponse("error", "Support request not found");
+    }
+
+    // Update status and end time
+    sheet.getRange(row, 5).setValue(data.status || "ended");
+
+    // Add end info to chat history
+    const currentHistoryStr = sheet.getRange(row, 9).getValue();
+    let chatHistory = [];
+
+    if (currentHistoryStr) {
+      try {
+        chatHistory = JSON.parse(currentHistoryStr);
+      } catch (e) {
+        chatHistory = [];
+      }
+    }
+
+    // Add end message to history
+    chatHistory.push({
+      from: "System",
+      fromPeerID: "system",
+      text: `Chat ended by ${data.endedBy || "unknown"}`,
+      timestamp: data.endTime || new Date().toISOString(),
+      type: "system",
+    });
+
+    sheet.getRange(row, 9).setValue(JSON.stringify(chatHistory));
+
+    return createResponse("success", "Chat ended", { machineId });
+  } catch (error) {
+    debugLog("Error ending support chat", error);
+    return createResponse("error", "Failed to end chat: " + error.message);
+  }
+}
+
+// ====== SUPPORT SHEET MANAGEMENT ======
+
+/**
+ * Get or create Support Requests sheet
+ */
+function getSupportRequestsSheet() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = spreadsheet.getSheetByName("SupportRequests");
+
+  if (!sheet) {
+    // Create new sheet
+    sheet = spreadsheet.insertSheet("SupportRequests");
+
+    // Create headers
+    const headers = [
+      "MachineID",
+      "ClientPeerID",
+      "RoomID",
+      "AdminPeerID",
+      "Status",
+      "AdminNickname",
+      "Timestamp",
+      "ConnectionStartTime",
+      "ChatHistory",
+    ];
+
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+    // Format header
+    const headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setFontWeight("bold");
+    headerRange.setBackground("#f0f0f0");
+
+    debugLog("Created SupportRequests sheet");
+  }
+
+  return sheet;
+}
+
+/**
+ * Find support request row by machine ID
+ */
+function findSupportRequestRow(sheet, machineId) {
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === machineId) {
+      return i + 1; // Google Sheets row index starts from 1
+    }
+  }
+
+  return 0; // Not found
+}
+
+/**
+ * Create standardized response
+ */
+function createResponse(status, message, data = null) {
+  const response = {
+    status: status,
+    message: message,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (data) {
+    Object.assign(response, data);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(response)).setMimeType(
+    ContentService.MimeType.JSON
+  );
+}
+/**
+ * Save entire chat history (WebSocket chat)
+ */
+function handleSaveChatHistory(params) {
+  try {
+    const { machineId, chatHistory } = params;
+
+    if (!machineId || !chatHistory) {
+      return createResponse("error", "Missing required parameters");
+    }
+
+    const history = JSON.parse(chatHistory);
+    debugLog("Saving chat history", {
+      machineId,
+      messageCount: history.length,
+    });
+
+    const sheet = getSupportRequestsSheet();
+    const row = findSupportRequestRow(sheet, machineId);
+
+    if (row === 0) {
+      return createResponse("error", "Support request not found");
+    }
+
+    // Update chat history in sheet
+    sheet.getRange(row, 9).setValue(JSON.stringify(history));
+
+    return createResponse("success", "Chat history saved", {
+      machineId,
+      messageCount: history.length,
+    });
+  } catch (error) {
+    debugLog("Error saving chat history", error);
+    return createResponse(
+      "error",
+      "Failed to save chat history: " + error.message
+    );
+  }
+}
