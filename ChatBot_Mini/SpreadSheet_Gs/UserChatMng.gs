@@ -2133,3 +2133,170 @@ function handleSaveChatHistory(params) {
     );
   }
 }
+/**
+ * Handle initChat request from Workers
+ */
+function handleInitChat(params) {
+  try {
+    const { machineId, userIP } = params;
+
+    if (!machineId) {
+      return createResponse("error", "Missing machineId parameter");
+    }
+
+    debugLog("Handling initChat request", { machineId, userIP });
+
+    // Get current month sheet
+    const monthSheet = getCurrentMonthSheet();
+    const sheet = getOrCreateMonthSheet(monthSheet);
+
+    // Find existing user
+    const row = findMachineIdRow(sheet, machineId);
+
+    if (row === 0) {
+      // New user - create new row
+      const newRow = sheet.getLastRow() + 1;
+      const timestamp = new Date().toISOString();
+
+      sheet.getRange(newRow, 1, 1, 8).setValues([
+        [
+          machineId, // MachineID
+          userIP, // IP
+          "[]", // Conversation (empty array)
+          false, // RequestedForRealPerson
+          0, // RPM
+          RPD_LIMIT, // RPD (start with full limit)
+          timestamp, // LastRequestTimeStamp
+          "", // Summerize
+        ],
+      ]);
+
+      debugLog("Created new user", { machineId, row: newRow });
+
+      return createResponse("success", "New user created", {
+        status: "new_user",
+        chatHistory: [],
+        rpd: RPD_LIMIT,
+      });
+    } else {
+      // Existing user - get chat history
+      const data = sheet.getRange(row, 1, 1, 8).getValues()[0];
+      const [, , conversationStr, , , rpd, ,] = data;
+
+      let chatHistory = [];
+      if (conversationStr) {
+        try {
+          chatHistory = JSON.parse(conversationStr);
+        } catch (e) {
+          debugLog("Error parsing chat history", e);
+          chatHistory = [];
+        }
+      }
+
+      debugLog("Retrieved existing user", {
+        machineId,
+        row,
+        chatHistoryLength: chatHistory.length,
+        rpd,
+      });
+
+      return createResponse("success", "Existing user found", {
+        status: "existing_user",
+        chatHistory: chatHistory,
+        rpd: rpd || RPD_LIMIT,
+      });
+    }
+  } catch (error) {
+    debugLog("Error in handleInitChat", error);
+    return createResponse(
+      "error",
+      "Failed to initialize chat: " + error.message
+    );
+  }
+}
+
+/**
+ * Handle validateChat request from Workers
+ */
+function handleValidateChat(params) {
+  try {
+    const { machineId, message } = params;
+
+    if (!machineId || !message) {
+      return createResponse("error", "Missing required parameters");
+    }
+
+    debugLog("Validating chat request", {
+      machineId,
+      messageLength: message.length,
+    });
+
+    // Get current month sheet
+    const monthSheet = getCurrentMonthSheet();
+    const sheet = getOrCreateMonthSheet(monthSheet);
+
+    // Find user
+    const row = findMachineIdRow(sheet, machineId);
+    if (row === 0) {
+      return createResponse("error", "User not found");
+    }
+
+    // Get current data
+    const data = sheet.getRange(row, 1, 1, 8).getValues()[0];
+    const [, , conversationStr, , rpm, rpd, lastRequestTimeStamp] = data;
+
+    // Check RPD limit
+    if (rpd <= 0) {
+      return createResponse(
+        "rate_limited_daily",
+        "Bạn đã hết lượt chat trong ngày. Vui lòng quay lại vào ngày mai.",
+        {
+          rpdRemaining: 0,
+        }
+      );
+    }
+
+    // Check RPM limit (simple check - 1 message per minute)
+    const now = new Date();
+    const lastRequest = lastRequestTimeStamp
+      ? new Date(lastRequestTimeStamp)
+      : null;
+
+    if (lastRequest && now - lastRequest < 60000) {
+      // 60 seconds
+      return createResponse(
+        "rate_limited_minute",
+        "Vui lòng chờ 1 phút trước khi gửi tin nhắn tiếp theo.",
+        {
+          rpdRemaining: rpd,
+        }
+      );
+    }
+
+    // Parse current conversation
+    let currentConversation = [];
+    if (conversationStr) {
+      try {
+        currentConversation = JSON.parse(conversationStr);
+      } catch (e) {
+        debugLog("Error parsing conversation", e);
+        currentConversation = [];
+      }
+    }
+
+    debugLog("Chat validation passed", {
+      machineId,
+      rpd,
+      conversationLength: currentConversation.length,
+    });
+
+    return createResponse("valid", "Chat request is valid", {
+      status: "valid",
+      rpdRemaining: rpd,
+      currentConversation: currentConversation,
+    });
+  } catch (error) {
+    debugLog("Error in handleValidateChat", error);
+    return createResponse("error", "Failed to validate chat: " + error.message);
+  }
+}

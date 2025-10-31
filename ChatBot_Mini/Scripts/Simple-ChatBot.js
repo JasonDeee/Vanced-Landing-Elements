@@ -55,9 +55,18 @@ async function initializeChat() {
 
     // Generate browser fingerprint
     const fingerprint = window.VancedMachineID.generateFingerprint();
-    console.log("Generated fingerprint for initialization");
+    debugLog("Generated fingerprint for initialization", {
+      hasFingerprint: !!fingerprint,
+      fingerprintKeys: Object.keys(fingerprint || {}),
+      userAgent: fingerprint?.userAgent?.substring(0, 50),
+    });
 
     // Gửi request khởi tạo tới Workers
+    debugLog("Sending initChat request to Workers", {
+      endpoint: WORKERS_ENDPOINT,
+      action: "initChat",
+    });
+
     const response = await fetch(WORKERS_ENDPOINT, {
       method: "POST",
       headers: {
@@ -70,7 +79,13 @@ async function initializeChat() {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      debugLog("HTTP error from Workers", {
+        status: response.status,
+        statusText: response.statusText,
+        errorText: errorText.substring(0, 200),
+      });
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
