@@ -2,7 +2,7 @@
 import { TUNED_DATA, SYSTEM_PROMPT_TEMPLATE, SYSTEM_PROMT_SUFFIX, processTunedData } from './data.js';
 
 import { checkBanStatus, getBanListStats } from './BanList.js';
-import { P2PSignalingRoom } from './P2PSignalingRoom.js';
+import { WebSocketChatRoom } from './WebSocketChatRoom.js';
 
 /**
  * Vanced Customer Support Chatbot
@@ -68,9 +68,9 @@ export default {
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 		};
 
-		// Handle P2P signaling requests (separate from chat API)
-		if (url.pathname.startsWith('/p2p/')) {
-			return handleP2PRequest(request, env, ctx, corsHeaders);
+		// Handle WebSocket chat requests
+		if (url.pathname.startsWith('/chat/')) {
+			return handleWebSocketChatRequest(request, env, ctx, corsHeaders);
 		}
 
 		// Handle preflight request
@@ -112,7 +112,10 @@ export default {
 					case 'sendMessage':
 						response = await handleSendMessage(body, clientIP, env, ctx);
 						break;
-					// Legacy P2P support removed - now using Durable Objects WebSocket signaling
+					case 'requestHumanSupport':
+						response = await handleHumanSupportRequest(body, clientIP, env);
+						break;
+					// Simple chat system with human support escalation
 					default:
 						// Backward compatibility - treat as sendMessage
 						response = await handleSendMessage(body, clientIP, env, ctx);
@@ -691,18 +694,78 @@ async function updateSpreadsheetAsync(machineId, newConversation, structuredData
 }
 
 /**
- * Handle P2P signaling requests (separate from chat API for low latency)
+ * Handle human support request - simplified flow
+ * @param {Object} body - Request body
+ * @param {string} clientIP - Client IP
+ * @param {Object} env - Environment variables
  */
-async function handleP2PRequest(request, env, ctx, corsHeaders) {
+async function handleHumanSupportRequest(body, clientIP, env) {
+	const { machineId, supportData } = body;
+
+	if (!machineId || !supportData) {
+		return {
+			status: 'error',
+			message: 'Missing machineId or supportData',
+		};
+	}
+
+	try {
+		debugLog('Human support request received', {
+			machineId,
+			supportData: typeof supportData === 'string' ? JSON.parse(supportData) : supportData,
+		});
+
+		// Call Apps Script to save support request
+		const appsScriptResponse = await callAppsScript(
+			'createSupportRequest',
+			{
+				machineId: machineId,
+				supportData: typeof supportData === 'string' ? supportData : JSON.stringify(supportData),
+			},
+			env
+		);
+
+		if (appsScriptResponse.status === 'error') {
+			throw new Error(appsScriptResponse.message);
+		}
+
+		return {
+			status: 'success',
+			message: 'Support request created successfully',
+			machineId: machineId,
+			timestamp: new Date().toISOString(),
+		};
+	} catch (error) {
+		debugLog('Error in handleHumanSupportRequest', {
+			error: error.message,
+			machineId,
+		});
+
+		return {
+			status: 'error',
+			message: 'Failed to create support request',
+			error: error.message,
+		};
+	}
+}
+
+/**
+ * Handle WebSocket chat requests
+ * @param {Request} request - HTTP request
+ * @param {Object} env - Environment variables
+ * @param {Object} ctx - Execution context
+ * @param {Object} corsHeaders - CORS headers
+ */
+async function handleWebSocketChatRequest(request, env, ctx, corsHeaders) {
 	const url = new URL(request.url);
 
-	debugLog('P2P request received', {
+	debugLog('WebSocket chat request received', {
 		pathname: url.pathname,
 		method: request.method,
 		hasWebSocketUpgrade: request.headers.get('Upgrade') === 'websocket',
 	});
 
-	// Handle preflight requests for P2P endpoints
+	// Handle preflight requests
 	if (request.method === 'OPTIONS') {
 		return new Response(null, {
 			status: 204,
@@ -711,10 +774,10 @@ async function handleP2PRequest(request, env, ctx, corsHeaders) {
 	}
 
 	try {
-		// Extract room ID from URL path: /p2p/room/{roomID}
+		// Extract room ID from URL path: /chat/room/{roomID}
 		const pathParts = url.pathname.split('/');
-		if (pathParts.length < 4 || pathParts[1] !== 'p2p' || pathParts[2] !== 'room') {
-			return new Response('Invalid P2P path. Use /p2p/room/{roomID}', {
+		if (pathParts.length < 4 || pathParts[1] !== 'chat' || pathParts[2] !== 'room') {
+			return new Response('Invalid chat path. Use /chat/room/{roomID}', {
 				status: 400,
 				headers: corsHeaders,
 			});
@@ -729,13 +792,13 @@ async function handleP2PRequest(request, env, ctx, corsHeaders) {
 		}
 
 		// Get Durable Object instance for this room
-		const durableObjectId = env.P2P_SIGNALING_ROOM.idFromName(roomID);
-		const durableObject = env.P2P_SIGNALING_ROOM.get(durableObjectId);
+		const durableObjectId = env.WEBSOCKET_CHAT_ROOM.idFromName(roomID);
+		const durableObject = env.WEBSOCKET_CHAT_ROOM.get(durableObjectId);
 
 		// Forward request to Durable Object
 		const response = await durableObject.fetch(request);
 
-		debugLog('P2P request forwarded to Durable Object', {
+		debugLog('WebSocket chat request forwarded to Durable Object', {
 			roomID,
 			status: response.status,
 			hasWebSocket: !!response.webSocket,
@@ -748,28 +811,24 @@ async function handleP2PRequest(request, env, ctx, corsHeaders) {
 
 		// For regular HTTP responses, add CORS headers
 		const responseHeaders = new Headers(response.headers);
-
-		// Add CORS headers
 		Object.entries(corsHeaders).forEach(([key, value]) => {
 			responseHeaders.set(key, value);
 		});
 
-		const newResponse = new Response(response.body, {
+		return new Response(response.body, {
 			status: response.status,
 			statusText: response.statusText,
 			headers: responseHeaders,
 		});
-
-		return newResponse;
 	} catch (error) {
-		debugLog('Error handling P2P request', {
+		debugLog('Error handling WebSocket chat request', {
 			error: error.message,
 			pathname: url.pathname,
 		});
 
 		return new Response(
 			JSON.stringify({
-				error: 'P2P signaling error',
+				error: 'WebSocket chat error',
 				message: error.message,
 			}),
 			{
@@ -784,4 +843,7 @@ async function handleP2PRequest(request, env, ctx, corsHeaders) {
 }
 
 // Export Durable Object class
-export { P2PSignalingRoom };
+export { WebSocketChatRoom };
+
+// REMOVED: P2PSignalingRoom export - WebRTC signaling removed
+// WebSocket chat system uses different approach

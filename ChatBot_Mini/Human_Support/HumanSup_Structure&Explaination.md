@@ -2,59 +2,70 @@
 
 ## 🎯 Tổng quan hệ thống
 
-Hệ thống Human Support sử dụng **P2P WebRTC** để kết nối trực tiếp giữa Client và Admin, với **PeerJS** làm signaling server.
+Hệ thống Human Support sử dụng **WebSocket real-time chat** để kết nối giữa Client và Admin thông qua **Cloudflare Durable Objects**. Đã loại bỏ hoàn toàn P2P/WebRTC complexity.
 
 ### 🏗️ Kiến trúc tổng thể:
 
 ```
-┌─────────────┐    ┌──────────────┐    ┌─────────────┐
-│   Client    │    │ PeerJS Server│    │   Admin     │
-│   (User)    │    │ (Signaling)  │    │ (Advisor)   │
-└─────────────┘    └──────────────┘    └─────────────┘
-       │                   │                   │
-       │ 1. Custom PeerID  │                   │
-       ├──────────────────►│                   │
-       │ ◄─────────────────┤                   │
-       │   "ID registered" │                   │
-       │                   │                   │
-       │ 2. Lưu PeerID → Spreadsheet           │
-       ├───────────────────┼──────────────────►│
-       │                   │                   │
-       │                   │ 3. Admin đọc list│
-       │                   │ ◄─────────────────┤
-       │                   │                   │
-       │                   │ 4. connect(peerID)│
-       │                   │ ◄─────────────────┤
-       │ ◄─────────────────┤                   │
-       │ 5. P2P Connected  │                   │
-       │◄─────────────────────────────────────►│
-       │        Direct Chat                    │
+┌─────────────┐    ┌──────────────────┐    ┌─────────────┐
+│   Client    │    │ Cloudflare       │    │   Admin     │
+│   (User)    │    │ Durable Objects  │    │ (Advisor)   │
+└─────────────┘    │ WebSocketChatRoom│    └─────────────┘
+       │           └──────────────────┘           │
+       │ 1. Support Request                       │
+       ├─────────────────────────────────────────►│
+       │           Workers → Apps Script          │
+       │                   │                      │
+       │ 2. WebSocket Connect to /chat/room/{id}  │
+       ├──────────────────►│◄─────────────────────┤
+       │                   │                      │
+       │ 3. Real-time Chat │                      │
+       │◄─────────────────►│◄────────────────────►│
+       │    WebSocket Chat Room (Durable Object)  │
 ```
 
 ## 🔧 Technical Implementation
 
-### 📋 PeerID Strategy - **CUSTOM FORMAT**
+### 📋 WebSocket Room Strategy - **SIMPLE FORMAT**
 
-**Format:** `vanced_{machineId}_{timestamp}`
+**Room ID Format:** `support_{machineId}_{timestamp}`
 
-**Ví dụ:** `vanced_abc123def456_1704067200000`
+**Client PeerID:** `client_{machineId}_{timestamp}`
+
+**Admin PeerID:** `admin_{nickname}_{timestamp}`
 
 **Ưu điểm:**
 
 - ✅ Tích hợp với MachineID system hiện tại
-- ✅ Dễ debug và identify client
+- ✅ Dễ debug và identify participants
 - ✅ Predictable format cho admin
-- ✅ Có thể reconnect với cùng ID
+- ✅ Không cần P2P signaling complexity
 
-### 🗃️ Spreadsheet Schema Update
+### 🗃️ Apps Script Schema Update
 
-**Cột I (ConfirmedRealPersonRequest) - JSON Format:**
+**SupportRequests Sheet - Columns:**
+
+```
+A: MachineID
+B: ClientPeerID
+C: RoomID
+D: AdminPeerID
+E: Status
+F: AdminNickname
+G: Timestamp
+H: ConnectionStartTime
+I: ChatHistory (JSON)
+```
+
+**Support Request JSON Format:**
 
 ```json
 {
-  "clientPeerID": "vanced_abc123_1704067200000",
+  "machineId": "abc123def456",
+  "clientPeerID": "client_abc123_1704067200000",
+  "roomID": "support_abc123_1704067200000",
   "adminPeerID": "admin_john_1704067300000",
-  "status": "waiting|connected|closed|warn",
+  "status": "waiting|connected|ended",
   "adminNickname": "John",
   "timestamp": "2024-01-01T00:00:00Z",
   "connectionStartTime": "2024-01-01T00:05:00Z"
@@ -64,20 +75,26 @@ Hệ thống Human Support sử dụng **P2P WebRTC** để kết nối trực t
 **Status Values:**
 
 - `waiting` - Client đang chờ admin connect
-- `connected` - Đang chat P2P
-- `closed` - Đã hoàn thành và đóng kết nối
-- `warn` - Admin quên đóng kết nối (>25 phút)
+- `connected` - Đang chat WebSocket
+- `ended` - Đã hoàn thành và đóng kết nối
 
-**Cột Conversation - Enhanced Format:**
+**ChatHistory Format (WebSocket Messages):**
 
 ```json
 [
-  { "role": "user", "content": "Tôi cần hỗ trợ" },
-  { "role": "assistant", "content": "Tôi sẽ chuyển bạn sang tư vấn viên" },
-  { "role": "user", "content": "[RealPersonSaid] User: Xin chào admin!" },
   {
-    "role": "assistant",
-    "content": "[RealPersonSaid] Admin(John): Chào bạn, tôi có thể giúp gì?"
+    "from": "Client",
+    "fromPeerID": "client_abc123_1704067200000",
+    "text": "Xin chào, tôi cần hỗ trợ",
+    "timestamp": "2024-01-01T00:00:00Z",
+    "type": "chat-message"
+  },
+  {
+    "from": "Admin John",
+    "fromPeerID": "admin_john_1704067300000",
+    "text": "Chào bạn, tôi có thể giúp gì?",
+    "timestamp": "2024-01-01T00:01:00Z",
+    "type": "chat-message"
   }
 ]
 ```
@@ -91,17 +108,20 @@ Hệ thống Human Support sử dụng **P2P WebRTC** để kết nối trực t
 ```javascript
 // User click "Gặp tư vấn viên" button
 function requestHumanSupport() {
-  // Tạo custom PeerID
-  const peerID = `vanced_${machineId}_${Date.now()}`;
+  const timestamp = Date.now();
+  const roomID = `support_${machineId}_${timestamp}`;
+  const clientPeerID = `client_${machineId}_${timestamp}`;
 
-  // Khởi tạo PeerJS
-  const peer = new Peer(peerID);
+  // Gửi support request tới Workers
+  const supportData = {
+    roomID: roomID,
+    clientPeerID: clientPeerID,
+    timestamp: new Date().toISOString(),
+    status: "waiting",
+  };
 
-  peer.on("open", (id) => {
-    // Gửi request tới Workers → Spreadsheet
-    sendP2PRequestToWorkers(id);
-    showWaitingUI(); // Hiển thị UI chờ admin
-  });
+  sendSupportRequestToWorkers(supportData);
+  showWaitingUI(); // Hiển thị UI chờ admin
 }
 ```
 
@@ -109,23 +129,33 @@ function requestHumanSupport() {
 
 - Hiển thị loading spinner với message "Đang chờ tư vấn viên..."
 - Countdown timer 3 phút
-- Listen for admin connection
+- Chuẩn bị WebSocket connection
 
-**Bước 3: P2P Connection Established**
+**Bước 3: WebSocket Connection Established**
 
 ```javascript
-peer.on("connection", (conn) => {
-  console.log("Admin connected!");
+// Connect to WebSocket chat room
+const ws = new WebSocket(
+  `wss://your-worker.workers.dev/chat/room/${roomID}?peerID=${clientPeerID}&nickname=Client`
+);
+
+ws.onopen = () => {
+  console.log("Connected to chat room!");
   hideWaitingUI();
-  showP2PChatUI();
-  handleP2PChat(conn);
-});
+  showWebSocketChatUI();
+};
+
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  handleWebSocketMessage(message);
+};
 ```
 
-**Bước 4: P2P Chat Mode**
+**Bước 4: WebSocket Chat Mode**
 
-- Client chỉ chat P2P, không gửi tới Workers nữa
-- Admin đảm nhiệm việc lưu chat history lên Spreadsheet
+- Client chat real-time qua WebSocket
+- Admin cũng kết nối vào cùng room
+- Chat history được lưu tự động
 
 ### 👨‍💼 Admin Side Flow:
 
@@ -135,44 +165,47 @@ peer.on("connection", (conn) => {
 // Admin nhập nickname (không cần password)
 function adminLogin(nickname) {
   localStorage.setItem("adminNickname", nickname);
-  loadClientList();
+  loadSupportRequests();
 }
 ```
 
-**Bước 2: Client List Management**
+**Bước 2: Support Request List Management**
 
 - **UI Layout:** Giống Messenger full-screen
 - **Navigation Bar:**
-  - Search box (tìm MachineID/tên khách hàng)
+  - Search box (tìm MachineID)
   - Refresh button (manual update)
-- **Client List:**
-  - Normal: Trắng background
-  - Warning: Đỏ background (quên đóng kết nối >25 phút)
+- **Support Request List:**
+  - Waiting: Xanh background
+  - Connected: Vàng background
+  - Ended: Xám background
 
-**Bước 3: Connect to Client**
+**Bước 3: Connect to Client via WebSocket**
 
 ```javascript
-function connectToClient(clientPeerID) {
-  const adminID = `admin_${adminNickname}_${Date.now()}`;
-  const adminPeer = new Peer(adminID);
+function connectToClient(supportRequest) {
+  const adminPeerID = `admin_${adminNickname}_${Date.now()}`;
+  const roomID = supportRequest.roomID;
 
-  adminPeer.on("open", () => {
-    const conn = adminPeer.connect(clientPeerID);
-    conn.on("open", () => {
-      updateSpreadsheetStatus(clientPeerID, "connected", adminID);
-      startP2PChat(conn);
-    });
-  });
+  // Connect to WebSocket chat room
+  const ws = new WebSocket(
+    `wss://your-worker.workers.dev/chat/room/${roomID}?peerID=${adminPeerID}&nickname=${adminNickname}`
+  );
+
+  ws.onopen = () => {
+    updateSupportStatus(supportRequest.machineId, "connected", adminPeerID);
+    startWebSocketChat(ws, supportRequest);
+  };
 }
 ```
 
-**Bước 4: P2P Chat & History Management**
+**Bước 4: WebSocket Chat & History Management**
 
-- Admin chat trực tiếp với client
+- Admin chat real-time với client qua WebSocket
 - **Admin chịu trách nhiệm:**
-  - Lưu tất cả messages lên Spreadsheet
+  - Lưu chat history lên Apps Script
   - Đóng kết nối khi hoàn thành
-  - Update status = "closed"
+  - Update status = "ended"
 
 ## ⚠️ Connection Management
 
@@ -182,36 +215,41 @@ function connectToClient(clientPeerID) {
 
 ```javascript
 setTimeout(() => {
-  if (!isConnected) {
+  if (!isWebSocketConnected) {
     showTimeoutMessage();
-    peer.destroy();
-    // Fallback to email/phone contact
+    ws.close();
+    // Fallback to email/phone contact form
   }
 }, 3 * 60 * 1000); // 3 minutes
 ```
 
-**Admin Warning System (25 phút):**
+**WebSocket Connection Monitoring:**
 
 ```javascript
-// Apps Script function - chạy định kỳ
-function checkAbandonedConnections() {
-  const sheet = getOrCreateMonthSheet(getCurrentMonthSheet());
+// Durable Object cleanup - tự động sau 5 phút không hoạt động
+// Apps Script function - kiểm tra abandoned support requests
+function checkAbandonedSupportRequests() {
+  const sheet = getSupportRequestsSheet();
   const data = sheet.getDataRange().getValues();
 
   for (let i = 1; i < data.length; i++) {
-    const confirmData = data[i][8]; // Cột I
-    if (confirmData) {
-      const parsed = JSON.parse(confirmData);
-      const lastRequest = new Date(data[i][6]); // LastRequestTimeStamp
+    const [
+      machineId,
+      clientPeerID,
+      roomID,
+      adminPeerID,
+      status,
+      adminNickname,
+      timestamp,
+    ] = data[i];
+
+    if (status === "waiting" || status === "connected") {
+      const requestTime = new Date(timestamp);
       const now = new Date();
 
-      if (
-        now - lastRequest > 25 * 60 * 1000 &&
-        parsed.status !== "closed" &&
-        parsed.status !== "warn"
-      ) {
-        parsed.status = "warn";
-        sheet.getRange(i + 1, 9).setValue(JSON.stringify(parsed));
+      // Auto-end after 30 minutes
+      if (now - requestTime > 30 * 60 * 1000) {
+        sheet.getRange(i + 1, 5).setValue("ended"); // Status column
       }
     }
   }
@@ -239,56 +277,74 @@ function checkAbandonedConnections() {
 
 ```
 Human_Support/
-├── client-p2p.js          # Client P2P logic
-├── admin-dashboard.js     # Admin UI + P2P logic
-├── admin.html            # Admin interface (Messenger-style)
-├── p2p-utils.js          # Shared utilities
+├── websocket-chat-client.js    # Client WebSocket logic
+├── admin-dashboard.js          # Admin UI + WebSocket logic
+├── admin.html                  # Admin interface (Messenger-style)
+├── websocket-utils.js          # Shared WebSocket utilities
 └── styles/
-    ├── admin-dashboard.css # Admin UI styles
-    └── p2p-chat.css       # P2P chat styles
+    ├── admin-dashboard.css     # Admin UI styles
+    └── websocket-chat.css      # WebSocket chat styles
+
+WorkerSide-WranglerCLI/src/
+├── worker.js                   # Main Workers logic + WebSocket routing
+├── WebSocketChatRoom.js        # Durable Object for chat rooms
+└── data.js                     # Tuned data for AI
+
+SpreadSheet_Gs/
+└── UserChatMng.gs             # Apps Script with support request management
 ```
 
 ## 🔄 Data Flow Summary:
 
-### Phase 1: Request (Client → Spreadsheet)
+### Phase 1: Support Request (Client → Apps Script)
 
 ```
-Client click → Generate PeerID → Workers → Spreadsheet (cột I)
+Client click → Generate roomID → Workers → Apps Script (SupportRequests sheet)
 ```
 
-### Phase 2: Discovery (Admin → Spreadsheet)
+### Phase 2: Discovery (Admin → Apps Script)
 
 ```
-Admin refresh → Read cột I → Display waiting clients
+Admin refresh → Read SupportRequests → Display waiting clients
 ```
 
-### Phase 3: Connection (Admin → Client via PeerJS)
+### Phase 3: WebSocket Connection (Admin + Client → Durable Object)
 
 ```
-Admin select → PeerJS connect → P2P established
+Admin select → WebSocket connect → Durable Object chat room ← Client WebSocket
 ```
 
-### Phase 4: Chat (P2P Direct + Admin saves to Spreadsheet)
+### Phase 4: Real-time Chat (WebSocket + Admin saves to Apps Script)
 
 ```
-Client ↔ Admin (P2P) → Admin saves → Spreadsheet (Conversation)
+Client ↔ Admin (WebSocket) → Admin saves → Apps Script (ChatHistory)
 ```
 
 ## 🎯 Key Implementation Points:
 
-1. **Custom PeerID** dựa trên MachineID
-2. **Manual refresh** cho admin dashboard (không realtime)
+1. **WebSocket Rooms** dựa trên MachineID + timestamp
+2. **Durable Objects** cho scalable real-time chat
 3. **3 phút timeout** cho client waiting
-4. **25 phút warning** cho abandoned connections
+4. **30 phút auto-end** cho abandoned sessions
 5. **Admin responsibility** cho chat history management
 6. **Messenger-style UI** cho admin dashboard
-7. **Status tracking** với warn system
+7. **Simple WebSocket** thay vì P2P complexity
+8. **Apps Script integration** cho support request management
 
-## 🚀 Next Steps:
+## 🚀 Implementation Status:
 
-1. Implement client P2P logic
-2. Create admin dashboard UI
-3. Add P2P chat functionality
-4. Implement timeout & warning systems
-5. Add chat history management
-6. Testing & optimization
+1. ✅ **WebSocket Durable Object** - WebSocketChatRoom.js completed
+2. ✅ **Workers routing** - `/chat/room/{roomID}` endpoint
+3. ✅ **Apps Script support** - Support request management functions
+4. 📝 **Client WebSocket logic** - Need to implement
+5. 📝 **Admin dashboard UI** - Need to update for WebSocket
+6. 📝 **Timeout & cleanup systems** - Need to implement
+7. 📝 **Chat history management** - Need to integrate with Apps Script
+
+## 🔧 Technical Advantages:
+
+- **No P2P complexity** - Simpler to implement and debug
+- **Cloudflare Durable Objects** - Reliable, scalable WebSocket handling
+- **Real-time chat** - Instant messaging without signaling overhead
+- **Centralized history** - All chat data flows through Apps Script
+- **Easy monitoring** - All connections visible in Durable Object logs

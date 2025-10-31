@@ -1,21 +1,22 @@
 /**
- * Vanced Customer Support - P2P Signaling Room (Durable Object)
- * Handles WebRTC signaling for P2P connections between clients and admins
+ * Vanced Customer Support - WebSocket Chat Room (Durable Object)
+ * Handles simple WebSocket chat between clients and admins
+ * REMOVED: WebRTC signaling complexity - now simple chat only
  */
 
 // ====== DEBUG CONFIGURATION ======
-const P2P_DEBUG_ACTIVE = true;
+const WEBSOCKET_DEBUG_ACTIVE = true;
 
 /**
- * Debug logging function for P2P Signaling
+ * Debug logging function for WebSocket Chat
  * @param {string} message - Debug message
  * @param {any} data - Optional data to log
  */
-function p2pSignalingLog(message, data = null) {
-	if (!P2P_DEBUG_ACTIVE) return;
+function webSocketChatLog(message, data = null) {
+	if (!WEBSOCKET_DEBUG_ACTIVE) return;
 
 	const timestamp = new Date().toISOString();
-	const logMessage = `[P2P-SIGNALING ${timestamp}] ${message}`;
+	const logMessage = `[WEBSOCKET-CHAT ${timestamp}] ${message}`;
 
 	if (data !== null) {
 		console.log(`${logMessage}`, data);
@@ -24,8 +25,8 @@ function p2pSignalingLog(message, data = null) {
 	}
 }
 
-// ====== P2P SIGNALING ROOM DURABLE OBJECT ======
-export class P2PSignalingRoom {
+// ====== WEBSOCKET CHAT ROOM DURABLE OBJECT ======
+export class WebSocketChatRoom {
 	constructor(state, env) {
 		this.state = state;
 		this.env = env;
@@ -33,7 +34,7 @@ export class P2PSignalingRoom {
 		this.peers = new Map(); // Peer information
 		this.roomId = null;
 
-		p2pSignalingLog('P2P Signaling Room initialized');
+		webSocketChatLog('WebSocket Chat Room initialized');
 	}
 
 	/**
@@ -42,7 +43,7 @@ export class P2PSignalingRoom {
 	async fetch(request) {
 		const url = new URL(request.url);
 
-		p2pSignalingLog('Durable Object received request', {
+		webSocketChatLog('Durable Object received request', {
 			pathname: url.pathname,
 			method: request.method,
 			hasUpgrade: request.headers.get('Upgrade') === 'websocket',
@@ -58,7 +59,7 @@ export class P2PSignalingRoom {
 			return this.handleRoomInfo();
 		}
 
-		p2pSignalingLog('Path not found in Durable Object', {
+		webSocketChatLog('Path not found in Durable Object', {
 			pathname: url.pathname,
 			availablePaths: ['/api/room-info', 'WebSocket upgrade'],
 		});
@@ -110,7 +111,7 @@ export class P2PSignalingRoom {
 			connectedAt: session.connectedAt,
 		});
 
-		p2pSignalingLog('WebSocket connection established', {
+		webSocketChatLog('WebSocket connection established', {
 			peerID,
 			nickname,
 			roomID,
@@ -127,7 +128,7 @@ export class P2PSignalingRoom {
 		});
 
 		server.addEventListener('error', (error) => {
-			p2pSignalingLog('WebSocket error', { peerID, error });
+			webSocketChatLog('WebSocket error', { peerID, error });
 			this.handleWebSocketClose(peerID);
 		});
 
@@ -166,7 +167,7 @@ export class P2PSignalingRoom {
 		try {
 			const message = JSON.parse(messageData);
 
-			p2pSignalingLog('Received signaling message', {
+			webSocketChatLog('Received chat message', {
 				from: fromPeerID,
 				type: message.type,
 				to: message.toPeerID,
@@ -186,13 +187,13 @@ export class P2PSignalingRoom {
 					break;
 
 				default:
-					p2pSignalingLog('Unknown message type', {
+					webSocketChatLog('Unknown message type', {
 						type: message.type,
 						from: fromPeerID,
 					});
 			}
 		} catch (error) {
-			p2pSignalingLog('Error handling WebSocket message', {
+			webSocketChatLog('Error handling WebSocket message', {
 				error: error.message,
 				from: fromPeerID,
 			});
@@ -205,7 +206,7 @@ export class P2PSignalingRoom {
 	async handleChatMessage(fromPeerID, message) {
 		const session = this.sessions.get(fromPeerID);
 		if (!session || !session.isAlive) {
-			p2pSignalingLog('Chat message from inactive session', { fromPeerID });
+			webSocketChatLog('Chat message from inactive session', { fromPeerID });
 			return;
 		}
 
@@ -224,7 +225,7 @@ export class P2PSignalingRoom {
 
 		this.broadcastToRoom(chatMessage, fromPeerID);
 
-		p2pSignalingLog('Chat message broadcasted', {
+		webSocketChatLog('Chat message broadcasted', {
 			from: fromPeerID,
 			nickname: session.nickname,
 			textLength: message.text?.length,
@@ -250,7 +251,7 @@ export class P2PSignalingRoom {
 				})
 			);
 
-			p2pSignalingLog('Responded to ping', {
+			webSocketChatLog('Responded to ping', {
 				fromPeerID,
 				usersInRoom: this.sessions.size,
 			});
@@ -292,7 +293,7 @@ export class P2PSignalingRoom {
 					session.webSocket.send(JSON.stringify(message));
 					sentCount++;
 				} catch (error) {
-					p2pSignalingLog('Error broadcasting to peer', {
+					webSocketChatLog('Error broadcasting to peer', {
 						peerID,
 						error: error.message,
 					});
@@ -308,18 +309,18 @@ export class P2PSignalingRoom {
 	 * Handle WebSocket connection close
 	 */
 	handleWebSocketClose(peerID) {
-		p2pSignalingLog('WebSocket connection closed', {
+		webSocketChatLog('WebSocket connection closed', {
 			peerID,
 			remainingSessions: this.sessions.size - 1,
 		});
 
-		// Remove session and peer
-		this.sessions.delete(peerID);
-		this.peers.delete(peerID);
-
 		// Get nickname before removing
 		const peer = this.peers.get(peerID);
 		const nickname = peer?.nickname || peerID;
+
+		// Remove session and peer
+		this.sessions.delete(peerID);
+		this.peers.delete(peerID);
 
 		// Notify other users about disconnection
 		this.broadcastToRoom({
@@ -331,7 +332,7 @@ export class P2PSignalingRoom {
 
 		// If no more sessions, the Durable Object will be garbage collected
 		if (this.sessions.size === 0) {
-			p2pSignalingLog('All peers disconnected, room will be cleaned up', {
+			webSocketChatLog('All peers disconnected, room will be cleaned up', {
 				roomID: this.roomId,
 			});
 		}
@@ -365,7 +366,7 @@ export class P2PSignalingRoom {
 			const connectedTime = new Date(session.connectedAt).getTime();
 
 			if (now - connectedTime > timeout && !session.isAlive) {
-				p2pSignalingLog('Cleaning up inactive session', { peerID });
+				webSocketChatLog('Cleaning up inactive session', { peerID });
 				this.handleWebSocketClose(peerID);
 			}
 		}

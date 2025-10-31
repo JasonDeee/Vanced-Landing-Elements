@@ -33,28 +33,28 @@ Frontend (Chat UI) → Cloudflare Workers → OpenRouter API → Google Spreadsh
 
 ### 2. Backend (Cloudflare Workers)
 
-- `CldWorkers/Data.js` - Du lieu tuned dang [Cau hoi]-[Cau tra loi]
-- `CldWorkers/New_worker.js` - Logic chinh cua Workers
-- `CldWorkers/BanList.js` - Quan ly ban list
+- `WorkerSide-WranglerCLI/src/data.js` - Du lieu tuned dang [Cau hoi]-[Cau tra loi]
+- `WorkerSide-WranglerCLI/src/worker.js` - Logic chinh cua Workers (simplified)
+- `WorkerSide-WranglerCLI/src/BanList.js` - Quan ly ban list
 - `Scripts/MachineID.js` - Browser fingerprinting
 
 ### 3. Apps Script (Google Spreadsheet)
 
 - `SpreadSheet_Gs/UserChatMng.gs` - Quan ly chat history va rate limiting
 
-### 4. Human Support (P2P System)
+### 4. Human Support (Simplified)
 
-- `Human_Support/client-p2p.js` - Client P2P logic
-- `Human_Support/admin-dashboard.js` - Admin UI + P2P logic
-- `Human_Support/admin.html` - Admin interface (Messenger-style)
-- `Human_Support/p2p-utils.js` - Shared utilities
+- `Human_Support/` - Legacy P2P files (not used)
+- Human support now handled via email notifications
+- Admin gets notified when user needs human help
+- Simple escalation flow without P2P complexity
 
 ### 5. API Configuration
 
 - Model: `openai/gpt-oss-20b:free`
 - OpenRouter API Key: `process.env.OPENROUTER_API_KEY`
 - Apps Script URL: `process.env.APPS_SCRIPT_URL`
-- PeerJS: Public signaling server
+- Email: Admin notifications for human support
 
 ## PROGRESS CHECKLIST
 
@@ -102,26 +102,23 @@ Frontend (Chat UI) → Cloudflare Workers → OpenRouter API → Google Spreadsh
 - [x] Error handling va timeout protection
 - [x] POST method cho large data transfers
 
-### Phase 6: Human Support P2P System 🚧
+### Phase 6: Human Support System ✅
 
 - [x] Human support flow detection
-- [x] **P2P Architecture Design & Planning**
-- [x] **Client P2P Implementation (PeerJS)**
-- [x] **Admin Dashboard UI (Messenger-style)**
-- [x] **P2P Connection Management**
-- [x] **Chat History Management (Admin responsibility)**
-- [x] **Timeout & Warning Systems**
+- [x] **Human Support Request Flow**
+- [x] **Apps Script Support Request Management**
 - [x] **Email notification system**
-- [ ] **🎯 ĐANG LÀM: Custom Signaling Server Implementation**
+- [x] **Support request tracking in Spreadsheet**
+- [x] **Admin notification system**
 
-### Phase 6.5: Custom Signaling Server 🚧
+### Phase 6.5: WebSocket Chat System ✅
 
-- [ ] **🎯 HIỆN TẠI: Signaling Server Architecture Design**
-- [ ] **Backend Implementation (Apps Script vs WebSocket vs Cloudflare)**
-- [ ] **WebRTC Signaling Protocol Implementation**
-- [ ] **SDP & ICE Candidates Exchange**
-- [ ] **Connection State Management**
-- [ ] **Fallback & Error Handling**
+- [x] **Removed WebRTC/PeerJS complexity**
+- [x] **Implemented simple WebSocket chat**
+- [x] **WebSocketChatRoom Durable Object**
+- [x] **Admin-Client chat via WebSocket**
+- [x] **Simplified human support flow**
+- [x] **Real-time chat without P2P complexity**
 
 ### Phase 7: Testing & Polish
 
@@ -134,12 +131,12 @@ Frontend (Chat UI) → Cloudflare Workers → OpenRouter API → Google Spreadsh
 ## Luong hoat dong don gian
 
 ```
-User Message → Workers → Gemini (voi tuned data) → Response
+User Message → Workers → OpenRouter AI (voi tuned data) → Response
                 ↓
-        (Neu can CSKH) → Human Support UI
+        (Neu can CSKH) → Email Notification → Admin
 ```
 
-## CURRENT STATUS: Phase 5 COMPLETED ✅
+## CURRENT STATUS: Phase 6.5 COMPLETED ✅
 
 ### Da hoan thanh:
 
@@ -155,134 +152,108 @@ User Message → Workers → Gemini (voi tuned data) → Response
 10. ✅ Debug logging system
 11. ✅ Error handling va CORS
 12. ✅ Async data updates
+13. ✅ **Human Support Request System**
+14. ✅ **Apps Script Support Management**
+15. ✅ **Email Notification System**
+16. ✅ **Simplified Architecture**
 
-### Dang lam (Phase 6.5):
+### Session trước đã hoàn thành:
 
-- 🎯 **Custom Signaling Server** - Muc tieu chinh tiep theo
-- ✅ P2P Human Support System (UI & Logic) completed
-- ✅ All PeerJS public servers down - need custom solution
-- � ASignaling Server Architecture Design
-- 📝 Backend Implementation (Apps Script vs WebSocket vs Cloudflare)
-- 📝 WebRTC Signaling Protocol
+- ✅ **UserChatMng.gs Cleanup** - Xóa duplicate functions và unused code
+- ✅ **P2P System Removal** - Loại bỏ WebRTC/P2P complexity
+- ✅ **Simplified Human Support** - Chỉ giữ request flow
+- ✅ **Workers-only Architecture** - Tập trung vào core chatbot
+- ✅ **Apps Script Integration** - Support request management
 
-### Can lam tiep (Phase 7):
+### Đang làm (Phase 7):
 
+- 🎯 **System Integration & Testing** - Mục tiêu chính tiếp theo
 - 📝 End-to-end testing
 - 📝 UI/UX improvements
 - 📝 Mobile optimization
+- 📝 Performance monitoring
 
-## NEXT STEPS - Custom Signaling Server �
+## NEXT STEPS - System Integration & Testing 🎯
 
-### Van de hien tai:
+### Vấn đề đã giải quyết:
 
-**Tat ca PeerJS public servers deu down** - Can custom signaling server implementation
+**✅ Custom Signaling Server đã hoàn thành** - Sử dụng Cloudflare Durable Objects + WebSocket
 
-### Muc tieu:
+### Kiến trúc đã triển khai:
 
-Implement custom signaling server de thay the PeerJS:
+1. **✅ Simple Chat System** - Workers → OpenRouter AI → Response
+2. **✅ Human Support Detection** - AI detects when human help needed
+3. **✅ Support Request Flow** - Apps Script manages support requests
+4. **✅ Email Notifications** - Admin gets notified of support requests
+5. **✅ Clean Architecture** - No P2P/WebRTC complexity
 
-1. **WebRTC Signaling Protocol** - SDP offer/answer exchange
-2. **ICE Candidates Exchange** - Network connectivity info
-3. **Connection State Management** - Peer registration & discovery
-4. **Real-time Communication** - WebSocket hoac polling
-5. **Fallback Mechanisms** - Error handling & reconnection
+### Hệ thống hiện tại:
 
-### Tasks can lam:
+```
+Client Chat → Workers → OpenRouter AI → Response
+     ↓
+Human Support Detected → Apps Script (Support Request) → Email Notification
+     ↓
+Admin connects → WebSocket Chat Room → Real-time Chat
+```
 
-1. **Signaling Server Architecture** 🚧
+### Mục tiêu Phase 7 - System Integration:
 
-   - Chon backend platform (Apps Script vs WebSocket vs Cloudflare)
-   - Design signaling protocol
-   - Connection state management
-   - Error handling & timeouts
+1. **End-to-End Testing** 🎯
 
-2. **WebRTC Implementation** 📝
+   - Test complete chat flow: AI → Human support
+   - Verify WebSocket signaling stability
+   - Test P2P connection establishment
+   - Validate chat history persistence
 
-   - Replace PeerJS voi native WebRTC APIs
-   - SDP offer/answer handling
-   - ICE candidates exchange
-   - Connection establishment
+2. **Performance Optimization** 📝
 
-3. **Backend Integration** 📝
+   - Monitor WebSocket connection performance
+   - Optimize Durable Objects resource usage
+   - Test concurrent support sessions
+   - Memory and bandwidth optimization
 
-   - Signaling server endpoints
-   - Real-time communication (WebSocket/Polling)
-   - Peer registration & discovery
-   - Connection cleanup
+3. **UI/UX Improvements** 📝
 
-4. **Client Updates** 📝
-   - Remove PeerJS dependency
-   - Implement custom WebRTC client
-   - Update UI for new signaling flow
-   - Error handling & reconnection
+   - Mobile responsiveness testing
+   - Connection status indicators
+   - Better error messages
+   - Loading states and animations
 
-### Implementation Options Analysis:
+4. **Production Readiness** 📝
+   - Error monitoring and logging
+   - Fallback mechanisms testing
+   - Security review
+   - Documentation completion
 
-#### Option 1: Apps Script + Spreadsheet Signaling
+### Technical Implementation Completed:
 
-**Pros:**
+- **✅ worker.js** - Core Workers chat logic + WebSocket routing
+- **✅ WebSocketChatRoom.js** - Durable Object for real-time chat
+- **✅ Simple-ChatBot.js** - Frontend chat interface
+- **✅ UserChatMng.gs** - Apps Script backend
+- **✅ Human Support Detection** - AI-based support request detection
+- **✅ WebSocket Chat System** - Admin-client real-time communication
+- **✅ Email Notifications** - Admin notification system
 
-- ✅ Su dung infrastructure co san
-- ✅ Khong can server moi
-- ✅ Integrated voi system hien tai
-- ✅ Don gian implement
+### Recommended Next Actions:
 
-**Cons:**
+1. **🎯 Integration Testing** (Ưu tiên cao)
 
-- ❌ Polling-based (khong real-time)
-- ❌ Rate limiting issues
-- ❌ Latency cao cho signaling
-- ❌ Khong scale tot
+   - Test AI chat → Human support flow
+   - Verify WebSocket signaling works end-to-end
+   - Test multiple concurrent support sessions
 
-#### Option 2: Cloudflare Workers + Durable Objects
+2. **📝 Performance Monitoring**
 
-**Pros:**
+   - Add metrics for WebSocket connections
+   - Monitor Durable Objects usage
+   - Track P2P connection success rates
 
-- ✅ Real-time WebSocket support
-- ✅ Global edge network
-- ✅ Scalable architecture
-- ✅ Integrated voi Workers hien tai
-
-**Cons:**
-
-- ❌ Phuc tap implement
-- ❌ Can hoc Durable Objects
-- ❌ Cost implications
-- ❌ WebSocket limits
-
-#### Option 3: Simple WebSocket Server (Node.js)
-
-**Pros:**
-
-- ✅ Full control over signaling
-- ✅ Real-time WebSocket
-- ✅ Mature WebRTC libraries
-- ✅ Easy to implement
-
-**Cons:**
-
-- ❌ Can host server rieng
-- ❌ Infrastructure management
-- ❌ Scaling challenges
-- ❌ Additional complexity
-
-### Recommended Approach: **Apps Script Signaling** (Phase 1)
-
-**Ly do:**
-
-- 🎯 Fastest to implement
-- 🎯 Uses existing infrastructure
-- 🎯 Good enough for customer support use case
-- 🎯 Can upgrade later if needed
-
-### Technical Specifications:
-
-- **Signaling Protocol:** HTTP polling via Apps Script
-- **SDP Exchange:** Store offers/answers in Spreadsheet
-- **ICE Candidates:** Batch exchange via polling
-- **Connection Discovery:** Spreadsheet-based peer registry
-- **Polling Interval:** 2-3 seconds for signaling
-- **Timeout:** 30 seconds for connection establishment
+3. **📝 UI Polish**
+   - Improve connection status feedback
+   - Add typing indicators
+   - Better mobile experience
 
 ## Technical Notes
 
@@ -293,13 +264,15 @@ Implement custom signaling server de thay the PeerJS:
 - ✅ Async updates voi ctx.waitUntil() cho performance
 - ✅ P2P Architecture design completed
 - ✅ P2P Human Support system UI & logic completed
-- 🚨 **PeerJS public servers all down** - blocking P2P connections
-- 🎯 **Custom Signaling Server** implementation required
-- **Recommended:** Apps Script + Spreadsheet signaling (polling-based)
-- **Alternative:** Cloudflare Workers + Durable Objects (WebSocket)
-- **Fallback:** Simple Node.js WebSocket server
-- Focus: WebRTC signaling protocol implementation
-- Custom signaling: SDP exchange + ICE candidates via HTTP polling
+- ✅ **Simplified Architecture** - Removed P2P/WebRTC complexity
+- ✅ **Workers-only chat system** - Clean and maintainable
+- ✅ **Human support detection** - AI-based escalation
+- ✅ **Email notification system** - Admin gets support requests
+- ✅ **Apps Script integration** - Support request management
+- **Architecture:** Cloudflare Workers + OpenRouter AI + Apps Script
+- **Chat Flow:** Simple request/response pattern
+- **Human Support:** Email-based notification system
+- Focus: Core chatbot functionality and reliability
 
 ## Debug Status
 

@@ -12,6 +12,9 @@ compatibility_date = "2024-01-15"
 [env.development]
 vars = { }
 
+# Default environment (for --env="")
+[vars]
+
 # Build configuration
 [build]
 command = ""
@@ -21,15 +24,21 @@ command = ""
 #   { pattern = "chat.yourdomain.com/*", zone_name = "yourdomain.com" }
 # ]
 
-# Durable Objects configuration
+# Durable Objects configuration - WebSocket Chat System
 [[durable_objects.bindings]]
-name = "P2P_SIGNALING_ROOM"
-class_name = "P2PSignalingRoom"
+name = "WEBSOCKET_CHAT_ROOM"
+class_name = "WebSocketChatRoom"
 
 # Durable Objects migrations (SQLite for Free Plan)
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["P2PSignalingRoom"]
+
+[[migrations]]
+tag = "v2"
+renamed_classes = [
+  { from = "P2PSignalingRoom", to = "WebSocketChatRoom" }
+]
 
 # KV namespaces (cho future chat history storage)
 # kv_namespaces = [
